@@ -1,0 +1,21 @@
+Changes in version 0.1.3 (2023-12)
+- Update by KVS
+- Update type: Minor
+- Updateds to fix errors introduced by Matrix update
+
+Changes in version 0.1.2 (2023-06)
+- Update by KVS
+- Update type: Major
+- Updated description
+- clusterGeneSets() was updated with new (slightly changed) default paramters based on new grid search
+- clusterGeneSets() was updated to automatically detect the best clustering resolution (of the once tested) and set that as the default used throughout the pacakge.
+- Plot functions were modified to handle user suppled resolutions. Specifcally plotUMAP, plotProportions, plotViolin, plotClustree
+- Plot functions were modified to automatically handle different humber of conditions. Specifically plotUMAP, plotViolin
+- The plotClusterLabels() and updateClusterLabels() function were introduced. Jointly the enable in depth analysis and finetuning of cluster labels.
+- The following plot functions where updated with a highligth functionality: plotUMAP, plotProportion, plotViolin
+- All functions were updated to use resolution as argument instead of defaultResolution.
+- Added show method for gsList to summarize object instead of printing everything.
+
+Changes in version 0.1.0 (2022-10-10)
+- Created by EH
+- Package Established

@@ -1,0 +1,52 @@
+Package: geneSetSimplifyR
+Type: Package
+Title: Simplify Gene-Set Enrichment Analysis
+Version: 0.1.3
+Authors@R: c(
+  person(given = "Ella",
+    family = "Hedeboe",
+    email = "ellahedeboe@hotmail.com",
+    role = "aut",
+    comment = c(ORCID = "0000-0002-3978-4661")),
+  person(given = "Kristoffer",
+    family = "Vitting-Seerup",
+    email = "krivi@dtu.dk",
+    role = c("cre", "aut"),
+    comment = c(ORCID = "0000-0002-6450-0608"))
+    )
+Description: geneSetSimplifyR seeks to simplify gene-set enrichment analysis
+  (GSEA) via clustering of gene sets.
+  Given a list of gene sets of interest the package clusters these using LSI
+  and SNN and subsequently the clusters are labelled using TF-IDF to find the 
+  best suitable two-word label for each cluster. The package contains several
+  plotting functions so the user can quickly visualize the clustering output and
+  draw biological meaningful insights.
+License: What license is it under?
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+URL: https://github.com/ehedeboe/geneSetSimplifyR
+BugReports: https://github.com/ehedeboe/geneSetSimplifyR
+Imports: 
+    dplyr,
+    forcats,
+    ggplot2,
+    igraph,
+    ggraph,
+    magrittr,
+    plyr,
+    Seurat,
+    Signac,
+    tibble,
+    tidyr,
+    tidyseurat,
+    tidytext,
+    rmdformats,
+    fgsea,
+    pheatmap,
+    knitr
+RoxygenNote: 7.3.2
+Depends: 
+    R (>= 4.2),
+    clustree
+VignetteBuilder: knitr

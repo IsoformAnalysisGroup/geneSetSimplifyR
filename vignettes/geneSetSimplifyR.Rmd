@@ -1,0 +1,421 @@
+---
+title: 'Vignette for geneSetSimplifyR'
+author: "Kristoffer Vitting-Seerup & Ella Hedeboe"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    rmdformats::downcute:
+        default_style: "dark"
+vignette: >
+  %\VignetteIndexEntry{geneSetSimplifyR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+rmdformats::downcute(default_style='dark')
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = TRUE
+)
+```
+
+# Background and Rational
+
+Gene-set enrichment analysis (GSEA) is one of the most useful types of bioinformatic analysis since it summarizes long list of genes (e.g. TP53, CD1) into more high-level biological concepts (e.g. "cell cycle", "DNA repair"). While GSEA are potentially extremely powerful for profiling the high-level biological changes in a system this is often hampered by very long list of significant gene sets. This point is demonstrated by our [recent article](https://www.biorxiv.org/content/10.1101/2022.08.29.505720v3) where we re-analyze 100 RNA-seq data sets and show the average average dataset had 1700+ gene sets significantly enriched among differentially expressed genes.
+
+It is naturally not possible to manually analyze such long list so in practice scientics often just show the most significant/enriched gene-sets or cherry pick gene-sets based on prior biological hypothesis. Neither is naturally desirable (or good scientific practice?) hence approaches to analyzing such long list of gene sets are neeeded.
+
+That is why we created `geneSetSimplifyR`. `geneSetSimplifyR` solves this problem by:
+
+-   Group gene-sets into a small number of highly redundant/overlapping clusters througth unsupervised clustering
+-   Intelligently assign labels to each cluster making it easy to figure out the core biology behind a cluster
+-   Provide a host of intuitive plots enable both visualization and exploation of these clusters
+
+`geneSetSimplifyR` works on the output from *any* gene-set enrichment analysis tool but work especially well with [fgsea](https://bioconductor.org/packages/fgsea/).
+
+# Installation
+
+`geneSetSimplifyR` can be installed from github by copy pasting this command into R:
+
+```{r installation, eval=FALSE}
+if (!requireNamespace("devtools", quietly = TRUE)){
+  install.packages("devtools")
+}
+#devtools::install_github("kvittingseerup/geneSetSimplifyR", build_vignettes = TRUE)
+#install.packages("/Users/chiaoyuhsieh/Downloads/Projects/geneSetSimplifyR", repos = NULL, type="source", INSTALL_opts="--no-multiarch")
+devtools::load_all()
+```
+
+# geneSetSimplifyR workflow
+
+## Overview
+
+`geneSetSimplifyR` works on the output from *any* gene-set enrichment analysis tool but work especially well with [fgsea](https://bioconductor.org/packages/fgsea/).
+
+The input to `geneSetSimplifyR` is simply:
+
+-   A list of the gene-sets that should be clustered
+-   Optionally(!) meta data about the enrichment analysis that can be used for downstream visualization. Specifically `geneSetSimplifyR` support visualization of
+-   enrichment scores for each gene-set (e.g. NES, odds ratio, etc)
+-   multi-conditional data (joint comparison of several analysis each finding gene-sets of interest).
+
+The `geneSetSimplifyR` workflow has two parts:
+
+1)  [Cluster and label gene-sets]
+2)  [Visual exploration of the gene-set clustering]
+3)  [Exploring and verifying clusters]
+
+Each part will be elaborated on in separate sections below
+
+## Cluster and label gene-sets
+
+We start by loading the `geneSetSimplifyR` library and it's associated example data
+
+```{r load, message=FALSE}
+library(geneSetSimplifyR)
+library(tidyseurat)
+
+data("exampleGeneSets")
+data("exampleEnrichment")
+```
+
+Lets expore the data to see what should look like
+
+```{r explore example data}
+### The gene sets are a list
+class(exampleGeneSets)
+
+### Where each entry is a gene set and its annoated genes
+str(head(exampleGeneSets,2))
+
+### The optional data have both enrichme
+```
+
+```{r nt_score and source}
+head(exampleEnrichment, 2)
+```
+
+The *enrichment_score* can be used for visualization downstream and the *source* column can be used to compare the result of multiple analysis. In this case the example data is a subset of the colorectal data analyzed in XXX et al where gene-set enrichment was done both for differentially expressed genes ("Expression") and differentially spliced genes ("Splicing").
+
+With the data read we are now ready to use `geneSetSimplifyR`. The main functionalities are:
+
+-   Clusters gene-sets based on the overlap in genes annotated to the gene-sets
+-   Intelligently labels the clusters from the most informative words in the gene-set name
+
+All functionality is wrapped into the *geneSetSimplifyR()* function:
+
+```{r geneSetSimplifyeR}
+exampleGsList <- geneSetSimplifyR(
+  geneSetsList = exampleGeneSets,
+  geneSetsDF = exampleEnrichment,
+  resolution = c(0.1, 0.6, 1.1, 1.6), # for quick run - delete when running on real data
+  verbose = FALSE
+)
+
+exampleGsList
+```
+
+Please note that:
+
+1)  While the visualizations in `geneSetSimplifyR` have a deep integration with the enrichment scores and source annotation these are neither needed or used for the clustering/labeling therefore *geneSetsDF* argument is optional.
+2)  The *resolution* argument is the hyper-parameter that controls the "level" of clustering with higher values typically resulting in smaller values.
+3)  Here we only use a few small *resolution* for very quick run on the example data. In practice we recommend using a large range of resolutions as
+
+-   These can be utilized and explored downstream
+-   `geneSetSimplifyR` automatically picks the optimal *resolution* from the once tested - here resulting i 4 clusters
+
+The optimal *resolution* was determined to be 1.1 as shown by:
+
+```{r optimal cluster}
+extractResolution(exampleGsList)
+```
+
+<br> <br>
+
+## Visual exploration of the gene-set clustering
+
+Now with the clustering and labeling done we are ready to explore the data visually. If you did not run the code above to generate the example dataset you can load the example gsList as follows:
+
+```{r load example, message=FALSE}
+data("exampleGsList")
+exampleGsList
+```
+
+To get an overview of the clusters the simplest visualization is a bar chart.
+
+```{r barchart, width="75%"}
+plotBarchart(
+  geneSetsList = exampleGsList,
+  highligthClusterNo = c(0,1)
+)
+```
+
+Showing we have 4 clusters with "mitotic cell" and "cancer cluster" being the largest. We also immediately see that the "mitotic cell" cluster is to a large extend (primarly?) driven by splicing gene sets while the "cancer cluster" is exclusively driven by expression associated gene-sets. This naturally suggest lot of genes involved in cell cycle are affected by splicing.
+
+Also note that the `highligthClusterNo` is available for most plotting function maiking it easy to visualy communicate which clusters you think are most interesting.
+
+We can also visualize the gene-sets cluster in an UMAP plot:
+
+```{r umap highlight}
+plotUMAP(
+  geneSetsList = exampleGsList,
+  highligthClusterNo = c(0,1),
+  removeClusterId = TRUE,
+  pointAlpha = 1 # because there are relatively few gene-sets here
+)
+```
+
+Which automatically plots the source as the shape. The UMAP plot function has many arguments enabling fine-tuning the plot. Here we just want to highlight the use of `removeClusterId`. While the cluster numbers are useful for quick referral to clusters (important later) it is often desirable to remove. Hence the `removeClusterId` argument (implemented in all plot functions) remove the cluster number (e.g. "1: " of the "1: cancer cluster").
+
+We already mentioned how we see differences in cluster composition. This can naturally also be directly visualized:
+
+```{r proportion, width="75%"}
+plotProportions(
+  geneSetsList = exampleGsList,
+  highligthClusterNo = c(0,1),
+  removeClusterId = TRUE
+)
+```
+
+We can also utilize that we have enrichment scores for each gene set. The simplest is visualization is plotting the median enrichment as lollipop plot:
+
+```{r enrichment, width="75%"}
+plotEnrichments(
+  geneSetsList = exampleGsList,
+  highligthClusterNo = c(0,1),
+  removeClusterId = TRUE
+)
+```
+
+But we can also visualize all enrichment scores in a violin plot
+
+```{r violin, warning=FALSE, width="75%"}
+plotViolin(
+  geneSetsList = exampleGsList,
+  highligthClusterNo = c(0,1),
+  removeClusterId = FALSE
+)
+```
+
+These plots are usefull for showing differences in regulation (one cluster being up regulated while another is down regulated).
+
+We can investigate how the clusters relate to one another using the per-cluster average deprogram:
+
+```{r dendogram, warning=FALSE, width="75%"}
+plotDendogram(
+  geneSetsList = exampleGsList,
+  removeClusterId = TRUE
+)
+```
+
+Showing the well known fact that UMAPs can be a somewhat misleading in exactly how clusters are placed compared to each other (see how the "ezh2" vs "cancer" relate to one another in this vs the UMAP).
+
+## Exploring and verifying clusters
+
+The most important thing to get correct is the clustering "level" controlled by the `resolution` argument (as shown above in the [Cluster and label gene-sets] section). This parameter is automatically tuned by `geneSetSimplifyR` but we still always recommend visualizing how different cluster resolution affect the clusters via the [clustree R package](https://cran.r-project.org/web/packages/clustree/index.html) here wrapped in the *plotClustree()* function:
+
+```{r plotClustree}
+plotClustree(exampleGsList)
+```
+
+This is a very powerful way to see how the gene-sets are distributed into different clusters and for helping with verifying the clustering "level", as determined by the resolution, is correct.
+
+This can naturally be followed up by e.g. a UMAP of a different resolution - here of the 1.6:
+
+```{r umap new res}
+plotUMAP(
+  geneSetsList = exampleGsList,
+  resolution = 1.6,
+  pointAlpha = 1 # because there are relatively few gene-sets here
+)
+```
+
+Please note the `resolution` paramter is also implemented for all plotting functions.
+
+In this case we might determine this resolution better fit our data. Lets update the default resolution
+
+```{r update res}
+exampleGsList <- updateResolution(
+  geneSetsList = exampleGsList,
+  resolution = 1.6
+)
+
+exampleGsList
+```
+
+<br>
+
+Once we have verified the cluster resolution is suitable (for your analysis) we can continue to verifying the cluster labels. While we spend a lot of time optimizing the approach `geneSetSimplifyR` uses to extract informative labels for each cluster it is not a perfect process. Therefore we have build functionality to both explore and change cluster labels.
+
+```{r plot labels, warning=FALSE}
+plotClusterLabels(
+  geneSetsList = exampleGsList,
+  clusterNumber = 0,
+  maxChar = 35 # shorten gene-set names to fit in vignette
+) +
+  theme_bw(base_size = 8) # make font smaller to fit in vignette
+```
+
+From which a LOT of summary info can be seen for this particular cluster:
+
+-   The label TF-IDF meaning the two-words that are most enriched in this cluster compared to other clusters (bottom left)
+-   The gene-sets most central in the KNN graph produced (top right)
+-   The weighted TF IDF - that is the TF IDF scores weighted by gene-set centrality. This is the one that defines the cluster label (top left).
+-   The most frequent words in the gene-set names (top mid)
+-   The most frequent genes in the gene-sets (bottom mid)
+-   The largest gene-sets in the cluster (bottom right)
+
+We recommend that you always inspect the output from *plotClusterLabels()* for ALL your clusters to ensure the labeling are appropriate.
+
+In this case it is clear that the "rodrigues" part of the cluster 0's name is simply the author who published the most central gene-sets so we would like to update that. In this case the cluster name is not self-evident but we would like to call it "cancer response" because these are the most frequent words and also summarize the most central gene-sets decently. The gsList is then updated to reflec this
+
+```{r update label, warning=FALSE}
+exampleGsList <- updateClusterLabels(
+  geneSetsList = exampleGsList,
+  clusterNumber = 0,
+  newClusterName = 'cancer response'
+)
+
+plotUMAP(
+  geneSetsList = exampleGsList,
+  pointAlpha = 1 # because there are relatively few gene-sets here
+)
+```
+
+To verify the clustering you can naturally also look at all the gene-sets annotated to a cluster:
+
+```{r extract full table, warning=FALSE}
+gsTable <- extractTable(
+  geneSetsList = exampleGsList,
+  summarize = FALSE
+)
+
+head(gsTable)
+```
+
+We recommend this table to ALWAYS be add to the supplementary material of an article(!) as it is key to both transparency and reproducibility!
+
+For reporting purpose this table can also be summarized:
+
+```{r extract summary table, warning=FALSE}
+gsSummary <- extractTable(
+  geneSetsList = exampleGsList,
+  summarize = TRUE
+)
+
+head(gsSummary)
+```
+
+## Extra details
+
+### Plot modifications
+
+All visualization functions returns a ggplot2 object:
+
+```{r ggplot2 example, width="75%"}
+data("exampleGsList")
+
+p1 <- plotBarchart(
+  geneSetsList = exampleGsList,
+  highligthClusterNo = c(0,1)
+)
+class(p1)
+
+p1
+```
+
+This also means all plots can easily be modified using standard ggplot2 operations:
+
+```{r ggplot2 mod, width="75%"}
+p1 + 
+  ggtitle('New plot tilte')
+```
+
+Such ggplot2 operation are *really* easy to google since ggplot2 have millions of users. So if you want to modify any plot in some way just google that in conjunction with ggplot2 and you will find your answer (e.g. "ggplot2 change fill color")
+
+```{r ggplot2 mod2, width="75%"}
+p1 + 
+  scale_fill_manual(values = c('black','green'))
+```
+
+### geneSetSimplifyR under the hood
+
+The *geneSetSimplifyR()* function is actually just a high-level function which itself calls 3 sub-functions:
+
+1.  *initializeList()* which create the initial gsList object
+2.  *clusterGeneSets()* which performs the clustering
+3.  *labelClusters()* which adds the labels
+
+Each of these functions can naturally be called consecutively allowing more user control of how each step is done.
+
+For a detailed description of each step please refer to the paper.
+
+# How to do gene-set enrichment analysis
+
+Lets look at how to produce the input for `geneSetSimplifyR` via the `fgsea` package package and it's example data
+
+```{r fgsea data}
+library(fgsea)
+
+data(examplePathways)
+data(exampleRanks)
+```
+
+And here are the genes of interest (e.g. significant genes) from the `fgsea` package:
+
+```{r example gene-sets}
+sigGenes <- tail(names(exampleRanks), 750)
+head(sigGenes)
+```
+
+Then we can run a simple over-representation analysis (ORA) using the `fgsea` package as follows:
+
+```{r fora}
+oraRes <- fora(
+  pathways = examplePathways,
+  genes    = sigGenes,
+  universe = names(exampleRanks)
+)
+sum(oraRes$padj < 0.05)
+```
+
+Note that the universe is ONLY consist of genes that actually had a change to be in the set of interesting genes (e.g. all genes tested) NOT all known genes!
+
+Next we subset to significant genesets and calculate the enrichment score as `geneSetSimplifyR` can also use these for visualization.
+
+```{r enrichment calculation}
+
+n_genes <- length(sigGenes)
+n_universe <- length(exampleRanks)
+
+
+oraSig <-
+  tibble::as_tibble(oraRes) %>% 
+  dplyr::filter(
+    padj < 0.05
+  ) %>% 
+  dplyr::mutate(
+    enrichment_score = log2(
+      (
+        ( overlap / size       ) /
+        ( n_genes / n_universe )
+      ) + 0.06
+    )
+  )
+
+nrow(oraSig)
+
+head(oraSig)
+```
+
+In this toy data there are only 59 significant gene sets but that is because it an artificail dataset only meant to illustrate the workflow. As discussed in the introduction 1000+ significant gene sets are very common. But even thougth it is possible to manually consider 59 gene sets lets use `geneSetSimplifyR` to analyze them anyway. This could be done as follows but will not be done in this section of the vignette since it is covered above in the [geneSetSimplifyR workflow]
+
+exampleGsList \<- geneSetSimplifyR( geneSetsList = examplePathways, geneSetsDF = oraSig, verbose = FALSE )
+
+# SessionInfo
+
+```{r session info}
+sessionInfo()
+```
