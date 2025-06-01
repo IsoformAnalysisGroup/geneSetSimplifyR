@@ -37,14 +37,13 @@ kvsElbow <- function(
 
 
   if(!any(stepwiseZ > zScoreCutoff)) {
-    # return(NA)
-    return(13) # Temporal default value
+    cutoffIndex <- 13
+  } else {
+    ### Extract index of of cutoff
+    cutoffIndex <- max(which(
+      stepwiseZ > zScoreCutoff
+    )) + 1
   }
-
-  ### Extract index of of cutoff
-  cutoffIndex <- max(which(
-    stepwiseZ > zScoreCutoff
-  )) + 1
 
   resList <- list(
     elbow_cutoff = cutoffIndex
