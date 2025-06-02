@@ -43,9 +43,7 @@ That is why we created `geneSetSimplifyR`. `geneSetSimplifyR` solves this proble
 if (!requireNamespace("devtools", quietly = TRUE)){
   install.packages("devtools")
 }
-#devtools::install_github("kvittingseerup/geneSetSimplifyR", build_vignettes = TRUE)
-#install.packages("/Users/chiaoyuhsieh/Downloads/Projects/geneSetSimplifyR", repos = NULL, type="source", INSTALL_opts="--no-multiarch")
-devtools::load_all()
+devtools::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes=TRUE)
 ```
 
 # geneSetSimplifyR workflow
