@@ -4,7 +4,7 @@
 #' the 'geneSetSimplifyR' workflow with default parameters.
 #'
 #' To read more about the individual functions see their corresponding help pages:
-#' \code{\link{initializeList}}, \code{\link{clusterGenesets}}, \code{\link{labelClusters}}
+#' \code{\link{initializeList}}, \code{\link{clusterGeneSets}}, \code{\link{labelClusters}}
 #'
 #' @param geneSetsList A list containing the gene sets to be analyzed.
 #' The name of each element in the list should be a gene set and each element should contain
@@ -21,7 +21,7 @@
 #' @return 'gsList' object with labelled clusters for all clustered resolutions.
 #' @export
 #'
-#' @examples gsListObject <- geneSetSimplifyR(geneSetsDF, geneSetsList)
+#' @examples gsListObject <- geneSetSimplifyR(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 geneSetSimplifyR <- function(
     geneSetsList,
     geneSetsDF = NULL,

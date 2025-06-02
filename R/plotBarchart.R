@@ -10,7 +10,7 @@
 #' @return A list of ggplot objects.
 #' @export
 #'
-#' @examples plotBarchart(geneSetsList)
+#' @examples plotBarchart(exampleGsList)
 plotBarchart <- function(
     geneSetsList,
     resolution = NULL,

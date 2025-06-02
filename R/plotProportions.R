@@ -13,7 +13,6 @@
 #' @export
 #'
 #' @examples
-#' data("exampleGsList")
 #' plotProportions(exampleGsList)
 plotProportions <- function(
     geneSetsList,

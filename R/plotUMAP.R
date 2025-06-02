@@ -27,7 +27,7 @@
 #' @return A list of ggplot objects.
 #' @export
 #'
-#' @examples plotUMAP(geneSetsList)
+#' @examples plotUMAP(exampleGsList)
 plotUMAP <- function(
     ### High level
     geneSetsList,

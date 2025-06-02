@@ -48,7 +48,7 @@ changeUsedResolution <- function(
 #' @export
 #'
 #' @examples
-#' gsListObject <- updateResolution(gsListObject)
+#' gsListObject <- updateResolution(exampleGsList, 1.1)
 updateResolution <- function(
     geneSetsList,
     resolution
@@ -73,7 +73,7 @@ updateResolution <- function(
 #' @export
 #'
 #' @examples
-#' gsListObject <- updateResolution(gsListObject)
+#' gsListObject <- updateResolution(exampleGsList, 1.1)
 extractResolution <- function(
     geneSetsList
 ) {

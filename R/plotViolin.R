@@ -8,10 +8,11 @@
 #' @param highligthClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap
 #'
 #' @return A list of ggplot objects.
+#' @import tidyseurat
 #' @importFrom dplyr mutate
 #' @export
 #'
-#' @examples plotViolin(geneSetsList)
+#' @examples plotViolin(geneSetsList = exampleGsList, highligthClusterNo = c(0,1), removeClusterId = FALSE)
 plotViolin <- function(
     geneSetsList,
     resolution = NULL,

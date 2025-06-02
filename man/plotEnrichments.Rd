@@ -27,5 +27,5 @@ A list of ggplot objects.
 Creates a lollipop plot of showing mean enrichment and size of each gene-set cluster.
 }
 \examples{
-plotEnrichments(geneSetsList)
+plotEnrichments(exampleGsList)
 }

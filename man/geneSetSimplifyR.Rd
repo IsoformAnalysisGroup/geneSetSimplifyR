@@ -36,8 +36,8 @@ Wrapper function that runs the three core functions of
 the 'geneSetSimplifyR' workflow with default parameters.
 
 To read more about the individual functions see their corresponding help pages:
-\code{\link{initializeList}}, \code{\link{clusterGenesets}}, \code{\link{labelClusters}}
+\code{\link{initializeList}}, \code{\link{clusterGeneSets}}, \code{\link{labelClusters}}
 }
 \examples{
-gsListObject <- geneSetSimplifyR(geneSetsDF, geneSetsList)
+gsListObject <- geneSetSimplifyR(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 }

@@ -10,7 +10,7 @@
 #' @noRd
 #'
 #' @examples
-#' gsListObject <- getLabels(geneSetsList = gsListObject, stopWords = stopWords, clusterResolution = 2.1)
+#' gsListObject <- getLabels(geneSetsList = exampleGsList, stopWords = stopWords, clusterResolution = 2.1)
 getLabels <- function(geneSetsList,
                       stopWords,
                       clusterResolution,

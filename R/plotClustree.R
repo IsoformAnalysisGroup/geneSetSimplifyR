@@ -4,7 +4,7 @@
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param node_alpha Numeric value indicating the alpha of nodes
-#' @param node_text_sixe Numeric value indicating node text size
+#' @param node_text_size Numeric value indicating node text size
 #' @param node_size_range Numeric vector with two values indicating the
 #' minimum and maximum point size of nodes, respectively
 #' @param edge_width Numeric value indicating the width of plotted edges
@@ -14,7 +14,7 @@
 #' @return A ggplot2 object
 #' @export
 #'
-#' @examples plotClustertree(geneSetsList)
+#' @examples plotClustree(exampleGsList)
 plotClustree <- function(
     geneSetsList,
     node_alpha = 1,

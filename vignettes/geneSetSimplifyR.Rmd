@@ -75,10 +75,12 @@ We start by loading the `geneSetSimplifyR` library and it's associated example d
 
 ```{r load, message=FALSE}
 library(geneSetSimplifyR)
-library(tidyseurat)
 
 data("exampleGeneSets")
 data("exampleEnrichment")
+
+### Or use fgsea to load your own gmt file:
+# exampleGeneSets <- fgsea::gmtPathways(path_to_your_gmt_file)
 ```
 
 Lets expore the data to see what should look like
@@ -87,10 +89,8 @@ Lets expore the data to see what should look like
 ### The gene sets are a list
 class(exampleGeneSets)
 
-### Where each entry is a gene set and its annoated genes
+### Where each entry is a gene set and its annotated genes
 str(head(exampleGeneSets,2))
-
-### The optional data have both enrichme
 ```
 
 ```{r nt_score and source}

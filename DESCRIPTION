@@ -21,13 +21,16 @@ Description: geneSetSimplifyR seeks to simplify gene-set enrichment analysis
   best suitable two-word label for each cluster. The package contains several
   plotting functions so the user can quickly visualize the clustering output and
   draw biological meaningful insights.
-License: What license is it under?
+License: GPL-3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
 URL: https://github.com/ehedeboe/geneSetSimplifyR
 BugReports: https://github.com/ehedeboe/geneSetSimplifyR
 Imports: 
+    cluster,
+    purrr,
+    stringr,
     dplyr,
     forcats,
     ggplot2,
@@ -36,10 +39,10 @@ Imports:
     magrittr,
     plyr,
     Seurat,
+    SeuratObject,
     Signac,
     tibble,
     tidyr,
-    tidyseurat,
     tidytext,
     rmdformats,
     fgsea,
@@ -48,5 +51,6 @@ Imports:
 RoxygenNote: 7.3.2
 Depends: 
     R (>= 4.2),
-    clustree
+    clustree,
+    tidyseurat
 VignetteBuilder: knitr

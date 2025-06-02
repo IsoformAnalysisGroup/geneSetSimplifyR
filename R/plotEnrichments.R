@@ -10,7 +10,7 @@
 #' @return A list of ggplot objects.
 #' @export
 #'
-#' @examples plotEnrichments(geneSetsList)
+#' @examples plotEnrichments(exampleGsList)
 plotEnrichments <- function(
     geneSetsList,
     resolution = NULL,

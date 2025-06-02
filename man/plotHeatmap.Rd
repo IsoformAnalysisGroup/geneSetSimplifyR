@@ -12,8 +12,7 @@ plotHeatmap(
   transpose = FALSE,
   cutree_rows = NA,
   cutree_cols = NA,
-  drawPlot = TRUE,
-  ...
+  drawPlot = TRUE
 )
 }
 \arguments{
@@ -30,6 +29,8 @@ plotHeatmap(
 \item{cutree_rows}{pheatmap control paramter. Number of clusters the rows are divided into}
 
 \item{cutree_cols}{pheatmap control paramter. Number of clusters the columns are divided into}
+
+\item{drawPlot}{Whether to show the plot. Default to TRUE.}
 }
 \value{
 A list of ggplot objects.
@@ -38,5 +39,5 @@ A list of ggplot objects.
 Creates a heatmap of showing mean enrichment each gene-set cluster in each sources (usefull for datasets with many data sources).
 }
 \examples{
-plotEnrichment(geneSetsList)
+plotHeatmap(exampleGsList)
 }

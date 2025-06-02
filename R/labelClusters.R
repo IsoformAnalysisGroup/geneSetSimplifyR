@@ -10,10 +10,11 @@
 #' @export
 #'
 #' @examples
+#' geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+#' gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
 #' gsListObject <- labelClusters(geneSetsList = gsListObject)
 labelClusters <-
   function(geneSetsList,
-           removeClusterId = FALSE,
            stopWords = geneSetSimplifyR::stopWords,
            nLabels = 10,
            verbose = TRUE
@@ -27,10 +28,6 @@ labelClusters <-
     if (length(geneSetsList@cluster) == 0) {
       stop("No clustering performed for 'geneSetsList'.
          Please run 'clusterGeneSets()' and 'labelClusters()' before plotting.")
-    }
-
-    if (!is.logical(removeClusterId)) {
-      stop("'removeClusterId' should be logical.")
     }
 
     if (!is.vector(stopWords)) {

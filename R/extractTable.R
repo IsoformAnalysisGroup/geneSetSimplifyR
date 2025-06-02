@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-#' plotTable(gsListObject)
+#' extractTable(exampleGsList, 1.1)
 extractTable <- function(
     geneSetsList,
     resolution = NULL,

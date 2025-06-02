@@ -12,8 +12,8 @@
 #' @export
 #'
 #' @examples
-#' gsListObject <- plotClusterLabels(geneSetsList = gsListObject)
-
+#' exampleGsList <- updateClusterLabels(geneSetsList = exampleGsList, 
+#' clusterNumber = 0, newClusterName = 'cancer response')
 updateClusterLabels <- function(
     geneSetsList,
     resolution = NULL,

@@ -6,7 +6,7 @@
 #' @return Elbow cutoff
 #'
 #' @examples
-#' elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
+#' # elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
 kvsElbow <- function(
     variance,
     zScoreCutoff=2.5

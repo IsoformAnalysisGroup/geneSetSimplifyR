@@ -27,5 +27,5 @@ Table with clustering summary
 Extract summary table of clustering
 }
 \examples{
-plotTable(gsListObject)
+extractTable(exampleGsList, 1.1)
 }

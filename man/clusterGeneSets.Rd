@@ -26,5 +26,7 @@ clusterGeneSets(
 Cluster gene sets
 }
 \examples{
-gsListObject <- clusterGeneSets(geneSetsList = gsListObject)
+# Create gsListObject
+geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
 }

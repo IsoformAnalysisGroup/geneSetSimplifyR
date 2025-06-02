@@ -27,5 +27,5 @@ A list of ggplot objects.
 Creates a violin plot of the enrichment scores for each cluster.
 }
 \examples{
-plotViolin(geneSetsList)
+plotViolin(geneSetsList = exampleGsList, highligthClusterNo = c(0,1), removeClusterId = FALSE)
 }

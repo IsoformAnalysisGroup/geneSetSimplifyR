@@ -27,5 +27,5 @@ A list of ggplot objects.
 Creates a bar chart showing the size of each gene-set cluster colored by condition.
 }
 \examples{
-plotBarchart(geneSetsList)
+plotBarchart(exampleGsList)
 }

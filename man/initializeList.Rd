@@ -30,5 +30,5 @@ See the vignette for examples.}
 Initialize a 'gsList' object from a dataframe with gene sets and enrichment scores and a gene sets database.
 }
 \examples{
-gsListObject <- initializeList(geneSetsDF = geneSetsDF, geneSetsList = geneSetsList)
+gsListObject <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 }

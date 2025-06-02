@@ -19,5 +19,5 @@ The new 'resolution' must have been used as a resolution in the 'clusterGeneSets
 Update default resolution of gsList
 }
 \examples{
-gsListObject <- updateResolution(gsListObject)
+gsListObject <- updateResolution(exampleGsList, 1.1)
 }

@@ -19,6 +19,8 @@ plotClustree(
 
 \item{node_alpha}{Numeric value indicating the alpha of nodes}
 
+\item{node_text_size}{Numeric value indicating node text size}
+
 \item{node_size_range}{Numeric vector with two values indicating the
 minimum and maximum point size of nodes, respectively}
 
@@ -27,8 +29,6 @@ minimum and maximum point size of nodes, respectively}
 \item{node_text_angle}{Numeric value indicating the rotation of node labels}
 
 \item{resolutionsToPlot}{Resolutions to include in plot. Use Null to plot all. Default is NULL}
-
-\item{node_text_sixe}{Numeric value indicating node text size}
 }
 \value{
 A ggplot2 object
@@ -37,5 +37,5 @@ A ggplot2 object
 Graphs a clustering tree plot showing t
 }
 \examples{
-plotClustertree(geneSetsList)
+plotClustree(exampleGsList)
 }

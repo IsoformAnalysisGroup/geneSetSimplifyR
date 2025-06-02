@@ -29,6 +29,5 @@ each cluster that comes from each of the two sources in the analyzed data.
 Gene-sets found in both sources contribute to the fraction of both sources.
 }
 \examples{
-data("exampleGsList")
 plotProportions(exampleGsList)
 }

@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-#' gsListObject <- plotClusterLabels(geneSetsList = gsListObject)
+#' gsListObject <- plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
 
 plotClusterLabels <- function(
     geneSetsList,

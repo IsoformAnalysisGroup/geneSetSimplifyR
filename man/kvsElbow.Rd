@@ -18,5 +18,5 @@ Elbow cutoff
 Determine the elbow cutoff to be used to run UMAP
 }
 \examples{
-elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
+# elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
 }

@@ -62,5 +62,5 @@ each point will be shaped by the source indicating whether the gene set was foun
 significant in either or both sources.
 }
 \examples{
-plotUMAP(geneSetsList)
+plotUMAP(exampleGsList)
 }

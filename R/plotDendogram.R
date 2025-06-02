@@ -10,7 +10,7 @@
 #' @return A list of ggplot objects.
 #' @export
 #'
-#' @examples plotProportions(geneSetsList)
+#' @examples plotProportions(exampleGsList)
 plotDendogram <- function(
     geneSetsList,
     resolution = NULL,

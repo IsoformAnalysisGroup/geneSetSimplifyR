@@ -21,5 +21,5 @@ A plot showing the hierarchical clustering of the cluster averages
 (dendogram). A tool made for showing how clusters (not individual gene-sets) relate to each other.
 }
 \examples{
-plotProportions(geneSetsList)
+plotProportions(exampleGsList)
 }

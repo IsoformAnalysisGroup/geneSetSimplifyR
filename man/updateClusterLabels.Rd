@@ -30,5 +30,6 @@ The 'resolution' must have been used as a resolution in the 'clusterGeneSets()' 
 Plot label information for a particular cluster
 }
 \examples{
-gsListObject <- plotClusterLabels(geneSetsList = gsListObject)
+exampleGsList <- updateClusterLabels(geneSetsList = exampleGsList, 
+clusterNumber = 0, newClusterName = 'cancer response')
 }

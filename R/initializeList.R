@@ -20,7 +20,7 @@
 #' @export
 #'
 #' @examples
-#' gsListObject <- initializeList(geneSetsDF = geneSetsDF, geneSetsList = geneSetsList)
+#' gsListObject <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 initializeList <- function(
     geneSetsList,
     geneSetsDF = NULL,

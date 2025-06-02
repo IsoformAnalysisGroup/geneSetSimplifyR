@@ -9,11 +9,11 @@
 #' @param transpose A logic indicating whether to transpose the heatmap (swich rows and cols)
 #' @param cutree_rows pheatmap control paramter. Number of clusters the rows are divided into
 #' @param cutree_cols pheatmap control paramter. Number of clusters the columns are divided into
-#'
+#' @param drawPlot Whether to show the plot. Default to TRUE.
 #' @return A list of ggplot objects.
 #' @export
 #'
-#' @examples plotEnrichment(geneSetsList)
+#' @examples plotHeatmap(exampleGsList)
 plotHeatmap <- function(
     geneSetsList,
     resolution = NULL,
@@ -22,11 +22,9 @@ plotHeatmap <- function(
     transpose = FALSE,
     cutree_rows = NA,
     cutree_cols = NA,
-    drawPlot = TRUE,
-    ...
+    drawPlot = TRUE
 ) {
   scaleCols = FALSE
-
   # Check input
   if (!class(geneSetsList) == "gsList") {
     stop("'geneSetsList' should be a gsList object")
@@ -114,7 +112,7 @@ plotHeatmap <- function(
   }
 
   ### Determine colors
-  if(any( plotMatrix < 0)) {
+  if(any(!is.na(plotMatrix) & plotMatrix < 0)) {
     myColors <- colorRampPalette(c('blue','white',"red"))( 100 )
     myBreaks   <- seq(
       max(abs(plotMatrix), na.rm = T) * -1,
@@ -181,8 +179,7 @@ plotHeatmap <- function(
     labels_row = make_bold_names(plotMatrix, rownames, clusterNameToHighligth),
     labels_col = make_bold_names(plotMatrix, colnames, clusterNameToHighligth),
     angle_col = 315,
-    silent = ! drawPlot,
-    ...
+    silent = ! drawPlot
   )
   if(!drawPlot) {
     return(tmp)

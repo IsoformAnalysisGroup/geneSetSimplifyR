@@ -16,5 +16,5 @@ default resolution
 Extract default resolution
 }
 \examples{
-gsListObject <- updateResolution(gsListObject)
+gsListObject <- updateResolution(exampleGsList, 1.1)
 }

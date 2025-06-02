@@ -30,5 +30,5 @@ a ggplot2 object.
 Plot label information for a particular cluster
 }
 \examples{
-gsListObject <- plotClusterLabels(geneSetsList = gsListObject)
+gsListObject <- plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
 }

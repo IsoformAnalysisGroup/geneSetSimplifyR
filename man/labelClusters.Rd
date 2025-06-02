@@ -6,7 +6,6 @@
 \usage{
 labelClusters(
   geneSetsList,
-  removeClusterId = FALSE,
   stopWords = geneSetSimplifyR::stopWords,
   nLabels = 10,
   verbose = TRUE
@@ -29,5 +28,7 @@ To add new stop words 'stopWords <- c(geneSetSimplifyR::stopWords, 'new word 1',
 Label clusters in clustered gene sets list object
 }
 \examples{
+geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
 gsListObject <- labelClusters(geneSetsList = gsListObject)
 }
