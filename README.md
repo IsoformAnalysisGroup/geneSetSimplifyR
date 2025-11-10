@@ -22,6 +22,11 @@ devtools::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes=TRUE)
 ```{bash}
 # Run this in bash
 git clone git@github.com:chihs-dtu/geneSetSimplifyR.git
+
 # Run this in R with the directory where the repository is cloned.
 devtools::install("PATH_TO_DIRECTORY")
 ```
+
+## Start using geneSetSimplifyR
+- check the vignette [here](vignettes/geneSetSimplifyR.html)
+
