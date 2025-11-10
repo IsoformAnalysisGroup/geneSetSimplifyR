@@ -11,7 +11,10 @@ conda install r-signac -c bioconda
 
 ## Install geneSetSimplifyR and fGSEA in R
 ```{r}
-library(devtools)
-install_github("alserglab/fgsea")
-install_github("chihs-dtu/geneSetSimplifyR", build_vignettes=TRUE)
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("fgsea")
+
+devtool::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes=TRUE)
 ```
