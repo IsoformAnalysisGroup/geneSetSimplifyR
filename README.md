@@ -16,5 +16,12 @@ if (!require("BiocManager", quietly = TRUE))
 
 BiocManager::install("fgsea")
 
-devtool::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes=TRUE)
+devtools::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes=TRUE)
+```
+- If you cannot install the package through `install_github`, clone the respository manually then install the package.
+```{bash}
+# Run this in bash
+git clone git@github.com:chihs-dtu/geneSetSimplifyR.git
+# Run this in R with the directory where the repository is cloned.
+devtools::install("PATH_TO_DIRECTORY")
 ```
