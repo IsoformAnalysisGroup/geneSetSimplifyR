@@ -8,7 +8,8 @@ geneSetSimplifyR(
   geneSetsList,
   geneSetsDF = NULL,
   resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
-  verbose = TRUE
+  verbose = TRUE,
+  cluster_algo = "louvain"
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ plotting functions. See the vignette for more info.}
 \item{resolution}{Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.}
 
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
+
+\item{cluster_algo}{Algorithm for Clustering. Options: 'leiden', 'louvain'(default)}
 }
 \value{
 'gsList' object with labelled clusters for all clustered resolutions.
