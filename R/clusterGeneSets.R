@@ -2,6 +2,8 @@
 #'
 #' @param geneSetsList 'gsList' object created with the 'initializeList()' function.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
+#' @param algorithm Algorithm for clustering. Options: 'louvain', 'leiden'
+#' @param k determine the K values in KNN graphs.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #'
 #' @return 'gsList' object with clustering stored. The best resolution (highest
@@ -17,6 +19,8 @@ clusterGeneSets <-
   function(
     geneSetsList,
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
+    algorithm = "louvain",
+    K = NA,
     verbose = TRUE
 ) {
 
@@ -27,6 +31,14 @@ clusterGeneSets <-
 
     if (!is.numeric(resolution)) {
       stop("'resolution' should be numeric.")
+    }
+    
+    if (algorithm == "louvain"){
+      algo = 1
+    }else if(algorithm == "leiden"){
+      algo = 4
+    }else{
+      stop("Invalid algorith. Valid options: louvain, leiden.")
     }
 
     if(verbose) {
@@ -62,13 +74,23 @@ clusterGeneSets <-
         verbose = F
       )
     )
-
+    
+    assign_k <- function(N) {
+      if(!is.na(K)){ return(K)}
+      k <- round(sqrt(N))        # Take square root of N
+      if (k > 30) {       # Check if it exceeds 30
+        k <- 30
+      }
+      cat("Selected K:", k, "\n")
+      return(k)
+    }
+    
     seuratObj <- Seurat::FindNeighbors(
       object = seuratObj,
       reduction = 'lsi',
       dims = 2:elbowRes$elbow_cutoff, # verified by new grid search
       annoy.metric = "cosine",        # verified by new grid search
-      k.param = 30,                   # updated by new grid search
+      k.param = assign_k(nrow(seuratObj@meta.data)),                   # updated by new grid search
       compute.SNN = "True",
       verbose = F
     )
@@ -82,7 +104,8 @@ clusterGeneSets <-
           Seurat::FindClusters(
             object = seuratObj,
             resolution = resolution[1:i],
-            verbose = F
+            verbose = T,
+            algorithm = algo
           )
         }, error = {
           function(x) {
@@ -100,6 +123,28 @@ clusterGeneSets <-
     }
     seuratObj <- seuratObj2
 
+    ### Make sure the cluster number starts from 0
+
+    for (localRes in resolution[1:(i+1)]) {
+      clusterResolution <- stringr::str_c('GSEA_snn_res.',localRes)
+      old_clusters <- seuratObj@meta.data[[clusterResolution]]
+      
+      # Create new labels starting from 0
+      if (levels(old_clusters)[[1]] == "0"){
+        next
+      }
+      
+      # Create new labels starting from 0
+      new_levels <- as.character(as.numeric(levels(old_clusters)) - 1)
+      
+      # Apply new levels
+      old_clusters <- factor(old_clusters,
+                             levels = levels(old_clusters),
+                             labels = new_levels)
+      
+      # Save back to metadata
+      seuratObj@meta.data[[clusterResolution]] <- old_clusters
+    }
 
     ### Set optimal clustering as default
     if(TRUE) {

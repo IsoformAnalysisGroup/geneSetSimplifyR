@@ -17,6 +17,7 @@
 #' analysis of multi-condtional data throughput the entire workflow and is also supported by many
 #' plotting functions. See the vignette for more info.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
+#' @param cluster_algo Algorithm for Clustering. Options: 'leiden', 'louvain'(default)
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #' @return 'gsList' object with labelled clusters for all clustered resolutions.
 #' @export
@@ -26,7 +27,8 @@ geneSetSimplifyR <- function(
     geneSetsList,
     geneSetsDF = NULL,
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
-    verbose = TRUE
+    verbose = TRUE,
+    cluster_algo = "louvain"
 ) {
   geneSetsList <- initializeList(
     geneSetsList = geneSetsList,
@@ -37,7 +39,8 @@ geneSetSimplifyR <- function(
   geneSetsList <- clusterGeneSets(
     geneSetsList = geneSetsList,
     resolution = resolution,
-    verbose = verbose
+    verbose = verbose,
+    algorithm = cluster_algo
   )
 
   geneSetsList <- labelClusters(
