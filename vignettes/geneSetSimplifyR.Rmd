@@ -55,7 +55,9 @@ devtools::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes = TRUE)
 The input to `geneSetSimplifyR` is simply:
 
 -   A list of the gene-sets that should be clustered
--   Optionally(!) meta data about the enrichment analysis that can be used for downstream visualization. Specifically `geneSetSimplifyR` supports visualization of
+-   Optionally(!) meta data about the enrichment analysis that can be used for downstream visualization.
+
+Specifically `geneSetSimplifyR` supports visualization of
 -   enrichment scores for each gene-set (e.g. NES, odds ratio, etc)
 -   multi-conditional data (joint comparison of several analyses each finding gene-sets of interest).
 
@@ -131,6 +133,7 @@ The default *resolution* picked from the silhouette score can be inspected with:
 ```{r optimal cluster}
 extractResolution(exampleGsList)
 ```
+
 
 Note that the silhouette-based default is only a starting point — we strongly encourage users to inspect the clustering at multiple resolutions (e.g. with `plotClustree()`, see below) and pick the resolution that best fits their data and biological question.
 
