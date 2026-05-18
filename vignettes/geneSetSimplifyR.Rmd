@@ -113,7 +113,8 @@ exampleGsList <- geneSetSimplifyR(
   geneSetsList = exampleGeneSets,
   geneSetsDF = exampleEnrichment,
   resolution = c(0.1, 0.6, 1.1, 1.6), # for quick run - delete when running on real data
-  verbose = FALSE
+  verbose = FALSE,
+  removeFirstWord = TRUE # Set as TRUE because the gene sets we’re using have the authors’ names as their first word.
 )
 
 exampleGsList
@@ -157,7 +158,7 @@ plotBarchart(
 )
 ```
 
-The bar chart shows the cluster sizes and the proportion of each cluster's gene-sets coming from each source. With multi-source data this immediately highlights clusters dominated by one source versus those shared between sources, which can suggest biology specific to one source (e.g. splicing-driven cell-cycle programs) versus shared programs.
+The bar chart shows the cluster sizes and the proportion of each cluster's gene-sets coming from each source. With multi-source data this immediately highlights clusters dominated by one source versus those shared between sources, which can suggest biology specific to one source (e.g. expression-related cancer cluster) versus shared programs.
 
 Also note that the `highlightClusterNo` argument is available for most plotting functions, making it easy to visually communicate which clusters you think are most interesting.
 
@@ -227,24 +228,24 @@ plotClustree(exampleGsList)
 
 This is a very powerful way to see how the gene-sets are distributed into different clusters and for helping with verifying the clustering "level", as determined by the resolution, is correct.
 
-This can naturally be followed up by e.g. a UMAP at a different resolution — here resolution 1.6:
+This can naturally be followed up by e.g. a UMAP at a different resolution — here resolution 0.6:
 
 ```{r umap new res}
 plotUMAP(
   geneSetsList = exampleGsList,
-  resolution = 1.6,
-  pointAlpha = 1 # because there are relatively few gene-sets here
+  resolution = 0.6,
+  pointAlpha = 1
 )
 ```
 
 Please note the `resolution` parameter is also implemented for all plotting functions.
 
-In this case we might determine that this resolution better fits our data. Let's update the default resolution:
+Let's try to update the default resolution:
 
 ```{r update res}
 exampleGsList <- updateResolution(
   geneSetsList = exampleGsList,
-  resolution = 1.6
+  resolution = 0.6
 )
 
 exampleGsList
@@ -274,18 +275,18 @@ From which a LOT of summary info can be seen for this particular cluster:
 
 We recommend that you always inspect the output from *plotClusterLabels()* for ALL your clusters to ensure the labeling is appropriate.
 
-It is common to find that part of an auto-generated cluster label comes from an author or database prefix in the gene-set names rather than from the underlying biology — in such cases you will want to override the label manually. For example, if you decide cluster 0 is better described as "cancer response" (because those are the most frequent informative words and they summarize the most central gene-sets), the gsList can be updated to reflect this:
+If you think the auto-generated cluster labels could be more precise, you can manually override them. For example, if you determine that cluster 0 is better described as "Serum response downregulation" after checking the [gene-set information](https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/SCHLOSSER_SERUM_RESPONSE_DN.html), the gsList can be updated accordingly:
 
 ```{r update label, warning=FALSE}
 exampleGsList <- updateClusterLabels(
   geneSetsList = exampleGsList,
   clusterNumber = 0,
-  newClusterName = 'cancer response'
+  newClusterName = 'Serum Response Downregulation'
 )
 
 plotUMAP(
   geneSetsList = exampleGsList,
-  pointAlpha = 1 # because there are relatively few gene-sets here
+  pointAlpha = 1
 )
 ```
 
@@ -300,7 +301,7 @@ gsTable <- extractTable(
 head(gsTable)
 ```
 
-We recommend this table to ALWAYS be added to the supplementary material of an article(!) as it is key to both transparency and reproducibility!
+We strongly recommend ALWAYS including this table in the supplementary material of an article, as it is essential for both transparency and reproducibility.
 
 For reporting purposes this table can also be summarized:
 
@@ -415,14 +416,16 @@ nrow(oraSig)
 head(oraSig)
 ```
 
-In this toy data there are only 59 significant gene sets, but that is because it is an artificial dataset only meant to illustrate the workflow. As discussed in the introduction, 1000+ significant gene sets are very common. But even though it is possible to manually consider 59 gene sets, let's use `geneSetSimplifyR` to analyze them anyway. This could be done as follows (not run here since the workflow is already covered above in the [geneSetSimplifyR workflow] section):
+In this toy data there are only 59 significant gene sets, but that is because it is an artificial dataset only meant to illustrate the workflow. As discussed in the introduction, 1000+ significant gene sets are very common. But even though it is possible to manually consider 59 gene sets, let's use `geneSetSimplifyR` to analyze them anyway. This could be done as follows (not run here since the workflow is already covered in the above section):
 
 ```{r fgsea downstream, eval=FALSE}
 exampleGsList <- geneSetSimplifyR(
   geneSetsList = examplePathways,
   geneSetsDF   = oraSig,
-  verbose      = FALSE
+  verbose      = FALSE,
+  removeFirstWord = TRUE
 )
+exampleGsList
 ```
 
 # SessionInfo
