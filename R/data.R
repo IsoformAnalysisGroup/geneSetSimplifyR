@@ -5,13 +5,6 @@
 #' @format A gsList object with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
 "exampleGsList"
 
-#' Example Gene Sets
-#'
-#' A list with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
-#'
-#' @format A list with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
-"exampleGeneSets"
-
 #' Example Enrichment Results
 #'
 #' A subset of the colorectal data where gene-set enrichment was done both for differentially expressed genes ("Expression") and differentially spliced genes ("Splicing").
@@ -27,9 +20,12 @@
 
 #' Example Gene Sets
 #'
-#' A named list of gene sets, where the names represent the gene set names and each list element contains the corresponding genes for that gene set.
+#' A named list of gene sets, where the names represent the gene set names and
+#' each list element contains the corresponding genes for that gene set.
 #'
-#' @format A named list of gene sets, where the names represent the gene set names and each list element contains the corresponding genes for that gene set.
+#' @format A named list of gene sets, where the names represent the gene set
+#'   names and each list element contains the corresponding genes for that
+#'   gene set.
 #' @source A subset of public data.
 "exampleGeneSets"
 

@@ -5,12 +5,12 @@
 #' @param geneSetsList A list containing the gene sets to be analyzed.
 #' The name of each element in the list should be a gene set and each element should contain
 #' the genes belonging to that gene set.
-#' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be usefull
+#' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be useful
 #' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 #' Should have a column named 'pathway' containing the gene sets and a column
 #' named 'enrichment_score' or 'NES' with the enrichment of each gene set.
-#' Optinally have a column named 'source' indicating the source of each gene set. This allows for
-#' analysis of multi-condtional data throughput the entire workflow and is also supported by many
+#' Optionally have a column named 'source' indicating the source of each gene set. This allows for
+#' analysis of multi-conditional data throughout the entire workflow and is also supported by many
 #' plotting functions. If a gene-set was found in multiple conditions there should be multiple rows
 #' for the same 'pathway' indicating its respective source and corresponding enrichment_score.
 #' See the vignette for examples.
@@ -122,6 +122,19 @@ initializeList <- function(
   res@enrichmentScore <- geneSetsDF
 
   numberOfSources <- dplyr::n_distinct(geneSetsDF$source)
+
+  ### Record initialization metadata
+  pkgVersion <- tryCatch(
+    as.character(utils::packageVersion("geneSetSimplifyR")),
+    error = function(e) NA_character_
+  )
+  res@metadata <- list(
+    n_genes = nrow(res@genesetsDataframe),
+    n_pathways = ncol(res@genesetsDataframe),
+    n_sources = numberOfSources,
+    package_version = pkgVersion,
+    initialized_at = Sys.time()
+  )
 
   if(verbose) {
     message(

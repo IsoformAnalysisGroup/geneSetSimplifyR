@@ -25,7 +25,7 @@ plotClustree <- function(
     resolutionsToPlot = NULL
 ) {
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 
@@ -81,6 +81,13 @@ plotClustree <- function(
     levels(geneSetsList@cluster@meta.data[[resolution]]) <-
       labels
   }
+  # clustree builds a plot with ggraph's `edge_colourbar` guide. ggplot2
+  # resolves that guide by name from attached packages, so ggraph must be
+  # on the search path before printing the plot.
+  if (!"package:ggraph" %in% search()) {
+    attachNamespace("ggraph")
+  }
+
   p <- clustree::clustree(
     geneSetsList@cluster,
     prefix = "GSEA_snn_res.",

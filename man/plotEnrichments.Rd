@@ -8,7 +8,7 @@ plotEnrichments(
   geneSetsList,
   resolution = NULL,
   removeClusterId = FALSE,
-  highligthClusterNo = NULL
+  highlightClusterNo = NULL
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ plotEnrichments(
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
-\item{highligthClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap}
+\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
 }
 \value{
 A list of ggplot objects.

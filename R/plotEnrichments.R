@@ -5,7 +5,7 @@
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highligthClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap
+#' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
 #'
 #' @return A list of ggplot objects.
 #' @export
@@ -15,10 +15,10 @@ plotEnrichments <- function(
     geneSetsList,
     resolution = NULL,
     removeClusterId = FALSE,
-    highligthClusterNo = NULL
+    highlightClusterNo = NULL
 ) {
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 
@@ -37,13 +37,13 @@ plotEnrichments <- function(
   }
   if( all(is.na( geneSetsList@enrichmentScore$enrichment_score  ) ) ) {
     stop(paste0(
-      'Cannot plot enrichment when enrichment scores are not annoated.\n',
+      'Cannot plot enrichment when enrichment scores are not annotated.\n',
       '  If you want to plot enrichment you need to redo the entire workflow and add the enrichment score.'
     ))
   }
 
-  ### Extract clusters to highligth
-  if(! is.null(highligthClusterNo)) {
+  ### Extract clusters to highlight
+  if(! is.null(highlightClusterNo)) {
 
     if( ! is.null(resolution)) {
       geneSetsList <- changeUsedResolution(
@@ -53,18 +53,18 @@ plotEnrichments <- function(
       )
     }
 
-    ### Extact cluster to highligth
-    clusterPattern <- stringr::str_c('^',highligthClusterNo, ': ', collapse = '|')
+    ### Extract cluster to highlight
+    clusterPattern <- stringr::str_c('^',highlightClusterNo, ': ', collapse = '|')
 
-    clusterNameToHighligth <-
+    clusterNameToHighlight <-
       stringr::str_subset(
         string = levels(geneSetsList@cluster@active.ident),
         pattern = clusterPattern
       )
 
     if(removeClusterId) {
-      clusterNameToHighligth <-
-        stringr::str_remove(clusterNameToHighligth, "^[0-9]+: ")
+      clusterNameToHighlight <-
+        stringr::str_remove(clusterNameToHighlight, "^[0-9]+: ")
     }
   }
 
@@ -176,14 +176,14 @@ plotEnrichments <- function(
   }
 
   ### Make highlighted clusters bold
-  if(! is.null(highligthClusterNo)) {
+  if(! is.null(highlightClusterNo)) {
     suppressWarnings(
       p1 <-
         p1 +
         theme(axis.text.y=element_text(
           face=boldXaxisLabels(
             src = plotData$cluster,
-            clusterNameToHighligth
+            clusterNameToHighlight
           )
         ))
     )

@@ -9,15 +9,15 @@ plotUMAP(
   resolution = NULL,
   removeClusterId = FALSE,
   interactive = FALSE,
-  highligthClusterNo = NULL,
+  highlightClusterNo = NULL,
   pointSize = 2,
   pointAlpha = 1/3,
   labelSize = 3,
   labelAlpha = 1,
-  highligthPointAlpha = 2/3,
-  highligthPointSize = 4,
-  highligthLabelAlpha = 1,
-  highligthLabelSize = 5
+  highlightPointAlpha = 2/3,
+  highlightPointSize = 4,
+  highlightLabelAlpha = 1,
+  highlightLabelSize = 5
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ plotUMAP(
 \item{interactive}{Logical, indicating whether to plot an interactive UMAP plot. Default: FALSE.
 If TRUE, an interactive plot will be plotted using the 'HoverLocator()' from the Seurat package.}
 
-\item{highligthClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap}
+\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
 
 \item{pointSize}{size of points. Default is 2}
 
@@ -40,13 +40,13 @@ If TRUE, an interactive plot will be plotted using the 'HoverLocator()' from the
 
 \item{labelAlpha}{transparency of label Default is 1.}
 
-\item{highligthPointAlpha}{The transparency of the highligthed clusters. Set different from "alpha" to use transparency for highligting clusters. Default is 2/3}
+\item{highlightPointAlpha}{The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3}
 
-\item{highligthPointSize}{The size of the highligthed clusters. Set different from "size" to use size for highligting clusters. Default is 2}
+\item{highlightPointSize}{The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2}
 
-\item{highligthLabelAlpha}{The transparency of the highligthed clusters. Set different from "alpha" to use transparency for highligting clusters. Default is 2/3}
+\item{highlightLabelAlpha}{The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3}
 
-\item{highligthLabelSize}{The size of the highligthed clusters. Set different from "size" to use size for highligting clusters. Default is 2}
+\item{highlightLabelSize}{The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2}
 }
 \value{
 A list of ggplot objects.

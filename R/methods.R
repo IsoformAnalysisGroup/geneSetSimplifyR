@@ -37,4 +37,24 @@ setMethod("show", "gsList", function(object) {
     )
   }
 
+  meta <- if (.hasSlot(object, "metadata")) object@metadata else list()
+  if (length(meta)) {
+    cat("Metadata:\n")
+    if (!is.null(meta$cluster_algorithm)) {
+      cat("  algorithm: ", meta$cluster_algorithm, "\n", sep = "")
+    }
+    if (!is.null(meta$k)) {
+      cat("  k (KNN): ", meta$k, "\n", sep = "")
+    }
+    if (!is.null(meta$lsi_elbow_cutoff)) {
+      cat("  LSI elbow cutoff: ", meta$lsi_elbow_cutoff, "\n", sep = "")
+    }
+    if (!is.null(meta$selected_resolution)) {
+      cat("  selected resolution: ", meta$selected_resolution, "\n", sep = "")
+    }
+    if (!is.null(meta$n_pathways)) {
+      cat("  n pathways: ", meta$n_pathways, "\n", sep = "")
+    }
+  }
+
 })

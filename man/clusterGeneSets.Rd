@@ -8,6 +8,7 @@ clusterGeneSets(
   geneSetsList,
   resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
   algorithm = "louvain",
+  K = NA,
   verbose = TRUE
 )
 }
@@ -18,11 +19,15 @@ clusterGeneSets(
 
 \item{algorithm}{Algorithm for clustering. Options: 'louvain', 'leiden'}
 
+\item{K}{Integer or NA. Number of nearest neighbours used when building the
+KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
+`N` is the number of gene sets.}
+
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
 }
 \value{
 'gsList' object with clustering stored. The best resolution (highest
- silhouette score) is annoated and used throughout the rest of the workflow (unless
+ silhouette score) is annotated and used throughout the rest of the workflow (unless
  specified in subsequent functions).
 }
 \description{

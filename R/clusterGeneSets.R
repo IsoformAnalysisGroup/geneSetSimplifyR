@@ -3,11 +3,13 @@
 #' @param geneSetsList 'gsList' object created with the 'initializeList()' function.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
 #' @param algorithm Algorithm for clustering. Options: 'louvain', 'leiden'
-#' @param k determine the K values in KNN graphs.
+#' @param K Integer or NA. Number of nearest neighbours used when building the
+#'   KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
+#'   `N` is the number of gene sets.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #'
 #' @return 'gsList' object with clustering stored. The best resolution (highest
-#'  silhouette score) is annoated and used throughout the rest of the workflow (unless
+#'  silhouette score) is annotated and used throughout the rest of the workflow (unless
 #'  specified in subsequent functions).
 #' @export
 #'
@@ -25,7 +27,7 @@ clusterGeneSets <-
 ) {
 
     # Check input
-    if (!class(geneSetsList) == "gsList") {
+    if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
 
@@ -38,7 +40,7 @@ clusterGeneSets <-
     }else if(algorithm == "leiden"){
       algo = 4
     }else{
-      stop("Invalid algorith. Valid options: louvain, leiden.")
+      stop("Invalid algorithm. Valid options: louvain, leiden.")
     }
 
     if(verbose) {
@@ -53,15 +55,15 @@ clusterGeneSets <-
     )
 
     seuratObj <- Signac::RunTFIDF(seuratObj,
-                                  verbose = F,
+                                  verbose = FALSE,
                                   method = 3) # verified by new grid search
 
     seuratObj <- Signac::FindTopFeatures(seuratObj,
                                          min.cutoff = "q0")
 
     seuratObj <- suppressWarnings(Signac::RunSVD(seuratObj,
-                                                 approx = F,
-                                                 verbose = F))
+                                                 approx = FALSE,
+                                                 verbose = FALSE))
 
     # get max dim
     elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
@@ -71,7 +73,7 @@ clusterGeneSets <-
         seuratObj,
         reduction = "lsi",
         dims = 2:elbowRes$elbow_cutoff, # verified by new grid search
-        verbose = F
+        verbose = FALSE
       )
     )
     
@@ -84,15 +86,17 @@ clusterGeneSets <-
       cat("Selected K:", k, "\n")
       return(k)
     }
-    
+
+    selectedK <- assign_k(nrow(seuratObj@meta.data))
+
     seuratObj <- Seurat::FindNeighbors(
       object = seuratObj,
       reduction = 'lsi',
       dims = 2:elbowRes$elbow_cutoff, # verified by new grid search
       annoy.metric = "cosine",        # verified by new grid search
-      k.param = assign_k(nrow(seuratObj@meta.data)),                   # updated by new grid search
-      compute.SNN = "True",
-      verbose = F
+      k.param = selectedK,            # updated by new grid search
+      compute.SNN = TRUE,
+      verbose = FALSE
     )
 
     ### Find clusters
@@ -100,18 +104,15 @@ clusterGeneSets <-
     i <- length(resolution)
     while(is.null(seuratObj2)) {
       suppressWarnings(
-        seuratObj2 <- tryCatch({
+        seuratObj2 <- tryCatch(
           Seurat::FindClusters(
             object = seuratObj,
             resolution = resolution[1:i],
-            verbose = T,
+            verbose = TRUE,
             algorithm = algo
-          )
-        }, error = {
-          function(x) {
-            NULL
-          }
-        })
+          ),
+          error = function(e) NULL
+        )
       )
 
       i <- i -1
@@ -179,6 +180,17 @@ clusterGeneSets <-
 
     # Save seurat object to list
     geneSetsList@cluster <- seuratObj
+
+    ### Record clustering metadata
+    resolutionsTested <- resolution[1:(i+1)]
+    silhouetteScores <- stats::setNames(meanSil, as.character(resolutionsTested))
+    geneSetsList@metadata$k <- selectedK
+    geneSetsList@metadata$lsi_elbow_cutoff <- elbowRes$elbow_cutoff
+    geneSetsList@metadata$cluster_algorithm <- algorithm
+    geneSetsList@metadata$resolutions_tested <- resolutionsTested
+    geneSetsList@metadata$selected_resolution <- bestRes
+    geneSetsList@metadata$silhouette_scores <- silhouetteScores
+    geneSetsList@metadata$clustered_at <- Sys.time()
 
     # Add meta data column with gene set names
     geneSetsList@cluster <-
