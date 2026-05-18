@@ -18,7 +18,7 @@ extractTable <- function(
 ) {
 
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 

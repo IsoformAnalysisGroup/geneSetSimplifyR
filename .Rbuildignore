@@ -1,0 +1,16 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^CLAUDE\.md$
+^HANDOFF\.md$
+^cyh_changed$
+^dev$
+^test$
+^doc$
+^Meta$
+^\.claude$
+^\.github$
+^\.Rhistory$
+^\.RData$
+^.*\.DS_Store$
+^\.gitignore$
+^data/.*\.RData$

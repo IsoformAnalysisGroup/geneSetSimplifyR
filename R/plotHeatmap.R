@@ -1,14 +1,14 @@
 #' Plot enrichment as heatmap
 #'
-#' @description Creates a heatmap of showing mean enrichment each gene-set cluster in each sources (usefull for datasets with many data sources).
+#' @description Creates a heatmap showing the mean enrichment of each gene-set cluster in each source (useful for datasets with many data sources).
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highligthClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap
-#' @param transpose A logic indicating whether to transpose the heatmap (swich rows and cols)
-#' @param cutree_rows pheatmap control paramter. Number of clusters the rows are divided into
-#' @param cutree_cols pheatmap control paramter. Number of clusters the columns are divided into
+#' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
+#' @param transpose A logical indicating whether to transpose the heatmap (switch rows and cols)
+#' @param cutree_rows pheatmap control parameter. Number of clusters the rows are divided into
+#' @param cutree_cols pheatmap control parameter. Number of clusters the columns are divided into
 #' @param drawPlot Whether to show the plot. Default to TRUE.
 #' @return A list of ggplot objects.
 #' @export
@@ -18,7 +18,7 @@ plotHeatmap <- function(
     geneSetsList,
     resolution = NULL,
     removeClusterId = FALSE,
-    highligthClusterNo = NULL,
+    highlightClusterNo = NULL,
     transpose = FALSE,
     cutree_rows = NA,
     cutree_cols = NA,
@@ -26,7 +26,7 @@ plotHeatmap <- function(
 ) {
   scaleCols = FALSE
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 
@@ -45,13 +45,13 @@ plotHeatmap <- function(
   }
   if( all(is.na( geneSetsList@enrichmentScore$enrichment_score  ) ) ) {
     stop(paste0(
-      'Cannot plot enrichment when enrichment scores are not annoated.\n',
+      'Cannot plot enrichment when enrichment scores are not annotated.\n',
       '  If you want to plot enrichment you need to redo the entire workflow and add the enrichment score.'
     ))
   }
 
-  ### Extract clusters to highligth
-  if(! is.null(highligthClusterNo)) {
+  ### Extract clusters to highlight
+  if(! is.null(highlightClusterNo)) {
 
     if( ! is.null(resolution)) {
       geneSetsList <- changeUsedResolution(
@@ -61,21 +61,21 @@ plotHeatmap <- function(
       )
     }
 
-    ### Extact cluster to highligth
-    clusterPattern <- stringr::str_c('^',highligthClusterNo, ': ', collapse = '|')
+    ### Extract cluster to highlight
+    clusterPattern <- stringr::str_c('^',highlightClusterNo, ': ', collapse = '|')
 
-    clusterNameToHighligth <-
+    clusterNameToHighlight <-
       stringr::str_subset(
         string = levels(geneSetsList@cluster@active.ident),
         pattern = clusterPattern
       )
 
     if(removeClusterId) {
-      clusterNameToHighligth <-
-        stringr::str_remove(clusterNameToHighligth, "^[0-9]+: ")
+      clusterNameToHighlight <-
+        stringr::str_remove(clusterNameToHighlight, "^[0-9]+: ")
     }
   } else {
-    clusterNameToHighligth <- NULL
+    clusterNameToHighlight <- NULL
   }
 
 
@@ -106,6 +106,10 @@ plotHeatmap <- function(
     as.data.frame() %>%
     tibble::column_to_rownames('source') %>%
     as.matrix()
+
+  # Clusters absent from a source produce NA after spread, which breaks
+  # hclust downstream. Treat absent as zero enrichment.
+  plotMatrix[is.na(plotMatrix)] <- 0
 
   if(transpose) {
     plotMatrix <- t(plotMatrix)
@@ -176,8 +180,8 @@ plotHeatmap <- function(
     legend_labels = myLegnedLabels,
     cutree_rows = cutree_rows, # set to NA to turn off
     cutree_cols = cutree_cols, # set to NA to turn off
-    labels_row = make_bold_names(plotMatrix, rownames, clusterNameToHighligth),
-    labels_col = make_bold_names(plotMatrix, colnames, clusterNameToHighligth),
+    labels_row = make_bold_names(plotMatrix, rownames, clusterNameToHighlight),
+    labels_col = make_bold_names(plotMatrix, colnames, clusterNameToHighlight),
     angle_col = 315,
     silent = ! drawPlot
   )

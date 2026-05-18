@@ -8,7 +8,7 @@ plotHeatmap(
   geneSetsList,
   resolution = NULL,
   removeClusterId = FALSE,
-  highligthClusterNo = NULL,
+  highlightClusterNo = NULL,
   transpose = FALSE,
   cutree_rows = NA,
   cutree_cols = NA,
@@ -22,13 +22,13 @@ plotHeatmap(
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
-\item{highligthClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap}
+\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
 
-\item{transpose}{A logic indicating whether to transpose the heatmap (swich rows and cols)}
+\item{transpose}{A logical indicating whether to transpose the heatmap (switch rows and cols)}
 
-\item{cutree_rows}{pheatmap control paramter. Number of clusters the rows are divided into}
+\item{cutree_rows}{pheatmap control parameter. Number of clusters the rows are divided into}
 
-\item{cutree_cols}{pheatmap control paramter. Number of clusters the columns are divided into}
+\item{cutree_cols}{pheatmap control parameter. Number of clusters the columns are divided into}
 
 \item{drawPlot}{Whether to show the plot. Default to TRUE.}
 }
@@ -36,7 +36,7 @@ plotHeatmap(
 A list of ggplot objects.
 }
 \description{
-Creates a heatmap of showing mean enrichment each gene-set cluster in each sources (usefull for datasets with many data sources).
+Creates a heatmap showing the mean enrichment of each gene-set cluster in each source (useful for datasets with many data sources).
 }
 \examples{
 plotHeatmap(exampleGsList)

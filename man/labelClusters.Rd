@@ -8,6 +8,7 @@ labelClusters(
   geneSetsList,
   stopWords = geneSetSimplifyR::stopWords,
   nLabels = 10,
+  removeFirstWord = FALSE,
   verbose = TRUE
 )
 }
@@ -18,6 +19,11 @@ labelClusters(
 To add new stop words 'stopWords <- c(geneSetSimplifyR::stopWords, 'new word 1', 'new word 2', ...)}
 
 \item{nLabels}{Number of top labels to keep. Default to 10}
+
+\item{removeFirstWord}{Logical. If TRUE, strip the first word (everything before
+the first underscore) from each gene-set name before generating bigram tokens.
+Useful for MSigDB-style names where the first token is an author or database
+prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
 
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
 }

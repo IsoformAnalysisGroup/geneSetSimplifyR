@@ -62,6 +62,8 @@ updateResolution <- function(
   geneSetsList@cluster$best_cluster_res <-
     stringr::str_c('GSEA_snn_res.',resolution)
 
+  geneSetsList@metadata$selected_resolution <- resolution
+
   return(geneSetsList)
 }
 
@@ -79,7 +81,7 @@ extractResolution <- function(
 ) {
 
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 
@@ -90,10 +92,11 @@ extractResolution <- function(
     )
   }
 
-  geneSetsList@cluster$best_cluster_res[1] %>%
+  res <- geneSetsList@cluster$best_cluster_res[1] %>%
     stringr::str_remove('GSEA_snn_res.') %>%
-    as.numeric() %>%
-    return()
+    as.numeric()
+
+  return(res)
 }
 
 

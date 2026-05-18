@@ -4,6 +4,10 @@
 #' @param stopWords Vector with stop words. Default is provided in 'data(stopWords)'.
 #' @param clusterResolution Resolution to label.
 #' @param nLabels Number of top labels to keep. Default to 10
+#' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
+#'   the first underscore) from each gene-set name before generating bigram tokens.
+#'   Useful for MSigDB-style names where the first token is an author or database
+#'   prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.
 #'
 #' @return 'gsList' object with labels for selected resolution
 #' @keywords internal
@@ -14,7 +18,8 @@
 getLabels <- function(geneSetsList,
                       stopWords,
                       clusterResolution,
-                      nLabels = 10
+                      nLabels = 10,
+                      removeFirstWord = FALSE
                       ) {
   seuratObj <- geneSetsList@cluster
 
@@ -43,11 +48,19 @@ getLabels <- function(geneSetsList,
       # ...
     wordsCluster <- genesetsCluster %>%
       dplyr::mutate(geneset = stringr::str_replace_all(geneset, "_", " ")) %>%
+      dplyr::mutate(
+        tokenSource = if (removeFirstWord) {
+          stringr::str_remove(geneset, "^\\S+\\s*")
+        } else {
+          geneset
+        }
+      ) %>%
       tidytext::unnest_tokens(label,
-                              geneset,
+                              tokenSource,
                               token = "ngrams",
                               n = 2,
-                              drop = F) %>%
+                              drop = TRUE) %>%
+      dplyr::mutate(label = stringr::str_to_title(label)) %>%
       dplyr::mutate(cluster = i - 1)
 
     wordsDataset <- dplyr::bind_rows(wordsDataset, wordsCluster)
@@ -90,7 +103,7 @@ getLabels <- function(geneSetsList,
   wordListRegex = paste0("\\b(?:", paste(stopWords, collapse = "|"), ")\\b")
 
   cleanedWords <- wordsDataset %>%
-    dplyr::filter(!grepl(wordListRegex, label)) %>%
+    dplyr::filter(!grepl(wordListRegex, label, ignore.case = TRUE)) %>%
     dplyr::mutate(cluster = as.character(cluster)) %>%
     dplyr::count(cluster, label, sort = TRUE)
 
@@ -121,8 +134,14 @@ getLabels <- function(geneSetsList,
   centralGenesets <- centralGenesets %>%
     dplyr::mutate(centrality_score_transformed = log10(centrality_score + 1)) %>%
     dplyr::group_by(cluster) %>%
-    dplyr::mutate(centrality_score_scaled = centrality_score_transformed + 1 / max(centrality_score_transformed + 1, na.rm = TRUE)) %>%
+    dplyr::mutate(centrality_score_scaled = (centrality_score_transformed + 1) / max(centrality_score_transformed + 1, na.rm = TRUE)) %>%
     dplyr::mutate(cluster = as.character(cluster)) %>%
+    dplyr::ungroup()
+
+  # SCALE TF-IDF (per cluster, to [0, 1] — matches centrality range)
+  clustersTFIDFGenesets <- clustersTFIDFGenesets %>%
+    dplyr::group_by(cluster) %>%
+    dplyr::mutate(tf_idf_scaled = if (max(tf_idf, na.rm = TRUE) > 0) tf_idf / max(tf_idf, na.rm = TRUE) else 0) %>%
     dplyr::ungroup()
 
   combinedScores <-
@@ -132,7 +151,7 @@ getLabels <- function(geneSetsList,
     dplyr::group_by(cluster, label, tf_idf) %>% # remove duplicate labels within clusters
     dplyr::slice(which.max(centrality_score_scaled)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(weighted_score = tf_idf * centrality_score_scaled)
+    dplyr::mutate(weighted_score = tf_idf_scaled * centrality_score_scaled)
 
   geneSetsList@labels[[clusterResolution]][["labelsDefault"]] <-
     combinedScores %>%

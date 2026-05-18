@@ -5,21 +5,18 @@
 \alias{exampleGeneSets}
 \title{Example Gene Sets}
 \format{
-A list with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
-
-A named list of gene sets, where the names represent the gene set names and each list element contains the corresponding genes for that gene set.
+A named list of gene sets, where the names represent the gene set
+  names and each list element contains the corresponding genes for that
+  gene set.
 }
 \source{
 A subset of public data.
 }
 \usage{
 exampleGeneSets
-
-exampleGeneSets
 }
 \description{
-A list with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
-
-A named list of gene sets, where the names represent the gene set names and each list element contains the corresponding genes for that gene set.
+A named list of gene sets, where the names represent the gene set names and
+each list element contains the corresponding genes for that gene set.
 }
 \keyword{datasets}

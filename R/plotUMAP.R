@@ -12,11 +12,11 @@
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highligthClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highligth in the umap
-#' @param highligthPointAlpha The transparency of the highligthed clusters. Set different from "alpha" to use transparency for highligting clusters. Default is 2/3
-#' @param highligthPointSize The size of the highligthed clusters. Set different from "size" to use size for highligting clusters. Default is 2
-#' @param highligthLabelAlpha The transparency of the highligthed clusters. Set different from "alpha" to use transparency for highligting clusters. Default is 2/3
-#' @param highligthLabelSize The size of the highligthed clusters. Set different from "size" to use size for highligting clusters. Default is 2
+#' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
+#' @param highlightPointAlpha The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3
+#' @param highlightPointSize The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2
+#' @param highlightLabelAlpha The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3
+#' @param highlightLabelSize The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2
 #' @param pointSize size of points. Default is 2
 #' @param pointAlpha transparency of points. Default is 1/3.
 #' @param labelSize size of label Default is 2
@@ -34,19 +34,19 @@ plotUMAP <- function(
     resolution = NULL,
     removeClusterId = FALSE,
     interactive = FALSE,
-    highligthClusterNo = NULL,
+    highlightClusterNo = NULL,
     ### Detailed
     pointSize = 2,
     pointAlpha = 1/3,
     labelSize = 3,
     labelAlpha = 1,
-    highligthPointAlpha = 2/3,
-    highligthPointSize = 4,
-    highligthLabelAlpha = 1,
-    highligthLabelSize = 5
+    highlightPointAlpha = 2/3,
+    highlightPointSize = 4,
+    highlightLabelAlpha = 1,
+    highlightLabelSize = 5
 ) {
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 
@@ -66,8 +66,8 @@ plotUMAP <- function(
 
   hasEnrichmentScore <- ! all(is.na( geneSetsList@enrichmentScore$enrichment_score  ) )
 
-  ### Extract clusters to highligth
-  if(! is.null(highligthClusterNo)) {
+  ### Extract clusters to highlight
+  if(! is.null(highlightClusterNo)) {
 
     if( ! is.null(resolution)) {
       geneSetsList <- changeUsedResolution(
@@ -77,18 +77,18 @@ plotUMAP <- function(
       )
     }
 
-    ### Extact cluster to highligth
-    clusterPattern <- stringr::str_c('^',highligthClusterNo, ': ', collapse = '|')
+    ### Extract cluster to highlight
+    clusterPattern <- stringr::str_c('^',highlightClusterNo, ': ', collapse = '|')
 
-    clusterNameToHighligth <-
+    clusterNameToHighlight <-
       stringr::str_subset(
         string = levels(geneSetsList@cluster@active.ident),
         pattern = clusterPattern
       )
 
     if(removeClusterId) {
-      clusterNameToHighligth <-
-        stringr::str_remove(clusterNameToHighligth, "^[0-9]+: ")
+      clusterNameToHighlight <-
+        stringr::str_remove(clusterNameToHighlight, "^[0-9]+: ")
     }
   }
 
@@ -283,34 +283,34 @@ plotUMAP <- function(
   }
 
   ### Set transparency and size
-  if(! is.null(highligthClusterNo)) {
+  if(! is.null(highlightClusterNo)) {
 
     ### Modify object
     # points
     pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
       ifelse(
-        test = pUMAP[[1]]$data$ident %in% clusterNameToHighligth,
-        yes = highligthPointAlpha,
+        test = pUMAP[[1]]$data$ident %in% clusterNameToHighlight,
+        yes = highlightPointAlpha,
         no = pointAlpha
       )
     pUMAP[[1]]$layers[[1]]$aes_params$size <-
       ifelse(
-        test = pUMAP[[1]]$data$ident %in% clusterNameToHighligth,
-        yes = highligthPointSize,
+        test = pUMAP[[1]]$data$ident %in% clusterNameToHighlight,
+        yes = highlightPointSize,
         no = pointSize
       )
 
     # labels
     pUMAP[[1]]$layers[[2]]$aes_params$alpha <-
       ifelse(
-        test = pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighligth,
-        yes = highligthLabelAlpha,
+        test = pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight,
+        yes = highlightLabelAlpha,
         no = labelAlpha
       )
     pUMAP[[1]]$layers[[2]]$aes_params$size <-
       ifelse(
-        test = pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighligth,
-        yes =  highligthLabelSize,
+        test = pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight,
+        yes =  highlightLabelSize,
         no =  labelSize
       )
 

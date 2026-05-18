@@ -1,0 +1,39 @@
+Changes in version 1.0.0 (2026-05)
+- Update by CYH
+- Update type: Major
+- Breaking changes
+  - Updated the code to adapt to the latest version of Seurat.
+  - Renamed `highligthClusterNo` → `highlightClusterNo` (and its `highligthPoint*` / `highligthLabel*` siblings) in all plotting functions.
+  - Renamed `plotDendogram()` → `plotDendrogram()`. 
+- New features
+  - Added a new parameter, K, to clusterGeneSets() for specifying the number of neighbors in the k-nearest neighbors (KNN) graph.
+  - Added the algorithm parameter to allow users to specify the clustering method.
+- Fixes & improvements
+  - weighted_score in getLabels() now considers TF-IDF and centrality scores equally.
+  - `plotHeatmap()` no longer errors when a cluster is absent from a source.
+  - `plotClustree()` auto-attaches `ggraph` so the edge_colourbar guide resolves.
+  - Added `LazyDataCompression: xz`, reducing package size.
+  - Class checks use `inherits()` instead of `class(x) == "gsList"`.
+  - Many roxygen typo fixes; vignette cleaned up.
+
+Changes in version 0.1.3 (2023-12)
+- Update by KVS
+- Update type: Minor
+- Updateds to fix errors introduced by Matrix update
+
+Changes in version 0.1.2 (2023-06)
+- Update by KVS
+- Update type: Major
+- Updated description
+- clusterGeneSets() was updated with new (slightly changed) default paramters based on new grid search
+- clusterGeneSets() was updated to automatically detect the best clustering resolution (of the once tested) and set that as the default used throughout the pacakge.
+- Plot functions were modified to handle user suppled resolutions. Specifcally plotUMAP, plotProportions, plotViolin, plotClustree
+- Plot functions were modified to automatically handle different humber of conditions. Specifically plotUMAP, plotViolin
+- The plotClusterLabels() and updateClusterLabels() function were introduced. Jointly the enable in depth analysis and finetuning of cluster labels.
+- The following plot functions where updated with a highligth functionality: plotUMAP, plotProportion, plotViolin
+- All functions were updated to use resolution as argument instead of defaultResolution.
+- Added show method for gsList to summarize object instead of printing everything.
+
+Changes in version 0.1.0 (2022-10-10)
+- Created by EH
+- Package Established

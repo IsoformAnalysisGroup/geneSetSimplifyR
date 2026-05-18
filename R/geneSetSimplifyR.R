@@ -9,14 +9,19 @@
 #' @param geneSetsList A list containing the gene sets to be analyzed.
 #' The name of each element in the list should be a gene set and each element should contain
 #' the genes belonging to that gene set.
-#' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be usefull
+#' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be useful
 #' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 #' Should have a column named 'pathway' containing the gene sets and a column
 #' named 'enrichment_score' with the enrichment scores from GSEA analysis for each gene set.
-#' Optinally have a column named 'source' indicating the source of each gene set. This allows for
-#' analysis of multi-condtional data throughput the entire workflow and is also supported by many
+#' Optionally have a column named 'source' indicating the source of each gene set. This allows for
+#' analysis of multi-conditional data throughout the entire workflow and is also supported by many
 #' plotting functions. See the vignette for more info.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
+#' @param cluster_algo Algorithm for Clustering. Options: 'leiden', 'louvain'(default)
+#' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
+#'   the first underscore) from each gene-set name before generating cluster labels.
+#'   Useful for MSigDB-style names where the first token is an author or database
+#'   prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #' @return 'gsList' object with labelled clusters for all clustered resolutions.
 #' @export
@@ -26,7 +31,9 @@ geneSetSimplifyR <- function(
     geneSetsList,
     geneSetsDF = NULL,
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
-    verbose = TRUE
+    verbose = TRUE,
+    cluster_algo = "louvain",
+    removeFirstWord = FALSE
 ) {
   geneSetsList <- initializeList(
     geneSetsList = geneSetsList,
@@ -37,11 +44,13 @@ geneSetSimplifyR <- function(
   geneSetsList <- clusterGeneSets(
     geneSetsList = geneSetsList,
     resolution = resolution,
-    verbose = verbose
+    verbose = verbose,
+    algorithm = cluster_algo
   )
 
   geneSetsList <- labelClusters(
     geneSetsList = geneSetsList,
+    removeFirstWord = removeFirstWord,
     verbose = verbose
   )
 

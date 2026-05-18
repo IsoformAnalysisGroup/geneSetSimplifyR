@@ -1,7 +1,7 @@
-#' Plot dendogram of cluster averages
+#' Plot dendrogram of cluster averages
 #'
 #' @description A plot showing the hierarchical clustering of the cluster averages
-#' (dendogram). A tool made for showing how clusters (not individual gene-sets) relate to each other.
+#' (dendrogram). A tool made for showing how clusters (not individual gene-sets) relate to each other.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
@@ -10,14 +10,14 @@
 #' @return A list of ggplot objects.
 #' @export
 #'
-#' @examples plotProportions(exampleGsList)
-plotDendogram <- function(
+#' @examples plotDendrogram(exampleGsList)
+plotDendrogram <- function(
     geneSetsList,
     resolution = NULL,
     removeClusterId = FALSE
 )  {
   # Check input
-  if (!class(geneSetsList) == "gsList") {
+  if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
 

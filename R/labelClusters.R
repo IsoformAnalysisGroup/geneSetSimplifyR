@@ -4,6 +4,10 @@
 #' @param stopWords Vector with stop words. The default vector can be viewed with data(stopWords).
 #' To add new stop words 'stopWords <- c(geneSetSimplifyR::stopWords, 'new word 1', 'new word 2', ...)
 #' @param nLabels Number of top labels to keep. Default to 10
+#' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
+#'   the first underscore) from each gene-set name before generating bigram tokens.
+#'   Useful for MSigDB-style names where the first token is an author or database
+#'   prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #'
 #' @return 'gsList' object with labelled clusters for all clustered resolutions.
@@ -17,11 +21,12 @@ labelClusters <-
   function(geneSetsList,
            stopWords = geneSetSimplifyR::stopWords,
            nLabels = 10,
+           removeFirstWord = FALSE,
            verbose = TRUE
     ) {
 
     # Check input
-    if (!class(geneSetsList) == "gsList") {
+    if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
 
@@ -62,7 +67,8 @@ labelClusters <-
           geneSetsList = geneSetsList,
           stopWords = stopWords,
           clusterResolution = i,
-          nLabels = nLabels
+          nLabels = nLabels,
+          removeFirstWord = removeFirstWord
         )
 
       if(verbose) {
@@ -97,6 +103,10 @@ labelClusters <-
       plyr::mapvalues(x = currentClusters,
                       from = currentClusterLabels,
                       to = defaultLabels)
+
+    ### Record labeling metadata
+    geneSetsList@metadata$n_labels <- nLabels
+    geneSetsList@metadata$labeled_at <- Sys.time()
 
     if(verbose) {
       message("Labeling of clusters DONE")
