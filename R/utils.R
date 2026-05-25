@@ -173,3 +173,107 @@ boldXaxisLabels <- function(src, levelsToBold) {
     stop("All elements of 'levelsToBold' must be in src")
   }
 }
+
+
+#' Fetch MSigDB gene sets by pathway name
+#'
+#' @description Fetches gene-set memberships from MSigDB via
+#'   [msigdbr::msigdbr()] and returns them in the named-list format expected
+#'   by `geneSetSimplifyR()` (pathway name -> character vector of gene IDs).
+#'
+#'   Useful in two situations:
+#'   \itemize{
+#'     \item Inspecting the gene members of specific pathways (e.g. the top
+#'       pathways from a cluster after running the workflow).
+#'     \item Building a `geneSetsList` from scratch without going through
+#'       `pairedGSEA::prepare_msigdb()`.
+#'   }
+#'
+#' @param pathway_names Character vector of MSigDB pathway names
+#'   (i.e. `gs_name` values). If `NULL` (default), all pathways in the
+#'   requested collection/subcollection are returned.
+#' @param species Species, passed to `msigdbr::msigdbr()`. Default
+#'   `"Homo sapiens"`.
+#' @param collection MSigDB collection (e.g. `"C5"`, `"H"`, `"C2"`). Default
+#'   `"C5"`.
+#' @param subcollection Optional MSigDB sub-collection (e.g. `"GO:BP"`).
+#'   `NULL` (default) returns the full collection.
+#' @param gene_id_type Which gene identifier to use for the returned vectors.
+#'   One of `"ensembl_gene"` (default), `"gene_symbol"`, or `"entrez_gene"`.
+#'
+#' @return A named list where each element is a character vector of gene IDs
+#'   for a pathway. Names are pathway names (`gs_name`).
+#'
+#' @examples
+#' \dontrun{
+#' # All pathways in C5 / GO:BP
+#' allBP <- getGeneSets(collection = "C5", subcollection = "GO:BP")
+#'
+#' # Just the genes for two specific pathways
+#' subset <- getGeneSets(
+#'   pathway_names = c("GOBP_CELL_CYCLE", "GOBP_DNA_REPAIR")
+#' )
+#' }
+#'
+#' @export
+getGeneSets <- function(
+    pathway_names = NULL,
+    species       = "Homo sapiens",
+    collection    = "C5",
+    subcollection = NULL,
+    gene_id_type  = c("ensembl_gene", "gene_symbol", "entrez_gene")
+) {
+  gene_id_type <- match.arg(gene_id_type)
+
+  if (!requireNamespace("msigdbr", quietly = TRUE)) {
+    stop(
+      "Package 'msigdbr' is required for getGeneSets(). Install it with ",
+      "install.packages(\"msigdbr\")."
+    )
+  }
+
+  tib <- msigdbr::msigdbr(
+    species       = species,
+    collection    = collection,
+    subcollection = subcollection
+  )
+
+  if (!nrow(tib)) {
+    stop(sprintf(
+      "No gene sets returned for species='%s', collection='%s', subcollection=%s.",
+      species, collection,
+      if (is.null(subcollection)) "NULL" else sprintf("'%s'", subcollection)
+    ))
+  }
+
+  if (!gene_id_type %in% colnames(tib)) {
+    stop(sprintf(
+      "Column '%s' not found in msigdbr output. Available columns include: %s.",
+      gene_id_type,
+      paste(intersect(colnames(tib),
+                      c("ensembl_gene", "gene_symbol", "entrez_gene")),
+            collapse = ", ")
+    ))
+  }
+
+  if (!is.null(pathway_names)) {
+    keep <- tib$gs_name %in% pathway_names
+    if (!any(keep)) {
+      stop(
+        "None of the requested 'pathway_names' were found in the specified ",
+        "collection/subcollection."
+      )
+    }
+    missing <- setdiff(pathway_names, tib$gs_name[keep])
+    if (length(missing)) {
+      warning(sprintf(
+        "%d pathway name(s) not found and will be skipped (first 5: %s).",
+        length(missing),
+        paste(utils::head(missing, 5), collapse = ", ")
+      ), call. = FALSE)
+    }
+    tib <- tib[keep, , drop = FALSE]
+  }
+
+  split(tib[[gene_id_type]], tib$gs_name)
+}
