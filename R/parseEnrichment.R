@@ -1,35 +1,29 @@
-#' Parse pairedGSEA over-representation results into geneSetSimplifyR input
+#' Parse pairedGSEA results into geneSetSimplifyR input
 #'
-#' @description Converts the output of `pairedGSEA::paired_ora()` into the two
-#'   inputs `geneSetSimplifyR()` expects: a `geneSetsList` (named list of gene
-#'   memberships) and a long-format `geneSetsDF` with `source`, `pathway`,
-#'   `enrichment_score`. Each of the three pairedGSEA result blocks
-#'   (expression, splicing, paired) is filtered independently by its own padj
-#'   cutoff and contributes its surviving pathways to `geneSetsDF` as a
-#'   separate `source`. A pathway that passes multiple cutoffs appears in
-#'   `geneSetsDF` multiple times (once per source) -- the standard long
-#'   format used elsewhere in the package.
+#' @description Converts `pairedGSEA::paired_ora()` output into the two inputs
+#'   `geneSetSimplifyR()` needs: `geneSetsList` and `geneSetsDF` (with `source`,
+#'   `pathway`, `enrichment_score`). Each of the three blocks (expression,
+#'   splicing, paired) is filtered by its own padj cutoff and added as a
+#'   separate `source`. Pathways passing multiple cutoffs appear once per source.
 #'
-#' @param oraResult The data frame (or `DFrame`) returned by
-#'   `pairedGSEA::paired_ora()`. Must contain a `pathway` column and, for each
-#'   enabled block, the `padj_<block>` and `enrichment_score_<block>` columns.
-#' @param geneSets Named list of gene-set memberships -- the same `gene_sets`
-#'   used when running `pairedGSEA::paired_ora()` (e.g. from
-#'   `pairedGSEA::prepare_msigdb()` or [getGeneSets()]).
-#' @param cutoff_exp Numeric in (0, 1] or `NULL`. padj cutoff for the
-#'   `_expression` block. `NULL` disables this block. Default 0.05.
-#' @param cutoff_splicing Numeric in (0, 1] or `NULL`. padj cutoff for the
-#'   `_splicing` block. `NULL` disables this block. Default 0.05.
-#' @param cutoff_paired Numeric in (0, 1] or `NULL`. padj cutoff for the
-#'   `_paired` block. `NULL` disables this block. Default 0.05.
+#' @param oraResult Data frame from `pairedGSEA::paired_ora()`. Needs a
+#'   `pathway` column plus `padj_<block>` and `enrichment_score_<block>`
+#'   columns for each enabled block.
+#' @param geneSets Named list of gene-set memberships (the same one passed to
+#'   `pairedGSEA::paired_ora()`).
+#' @param cutoff_exp padj cutoff for the expression block, or `NULL` to skip
+#'   using expression. Default 0.05.
+#' @param cutoff_splicing padj cutoff for the splicing block, or `NULL` to
+#'   skip using splicing. Default 0.05.
+#' @param cutoff_paired padj cutoff for the paired block, or `NULL` to skip
+#'   it. Default 0.05.
 #'
-#' @return A list with two elements:
+#' @return A list with:
 #'   \describe{
-#'     \item{`geneSetsList`}{Subset of `geneSets` restricted to pathways that
-#'       survived at least one of the enabled cutoffs.}
-#'     \item{`geneSetsDF`}{Long-format data frame with columns `source`
-#'       (\code{"expression"} / \code{"splicing"} / \code{"paired"}),
-#'       `pathway`, `enrichment_score`. One row per (pathway, source) pair.}
+#'     \item{`geneSetsList`}{`geneSets` filtered to pathways passing at least
+#'       one cutoff.}
+#'     \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
+#'       `enrichment_score`. One row per (pathway, source).}
 #'   }
 #'
 #' @examples
@@ -122,6 +116,120 @@ parsePairedGSEA <- function(
   if (length(missingPaths)) {
     warning(sprintf(
       "%d pathway(s) in oraResult are not in 'geneSets' and will be dropped (first 5: %s).",
+      length(missingPaths),
+      paste(utils::head(missingPaths, 5), collapse = ", ")
+    ), call. = FALSE)
+    geneSetsDF  <- geneSetsDF[geneSetsDF$pathway %in% names(geneSets), , drop = FALSE]
+    uniquePaths <- unique(geneSetsDF$pathway)
+  }
+
+  if (!length(uniquePaths)) {
+    stop("After dropping pathways not in 'geneSets', no pathways remain.")
+  }
+
+  list(
+    geneSetsList = geneSets[uniquePaths],
+    geneSetsDF   = geneSetsDF
+  )
+}
+
+
+#' Parse fgsea results into geneSetSimplifyR input
+#'
+#' @description Converts [fgsea::fgsea()] output into the two inputs
+#'   `geneSetSimplifyR()` needs: `geneSetsList` and `geneSetsDF` (with
+#'   `source`, `pathway`, `enrichment_score`). To combine several fgsea runs
+#'   into one multi-source analysis, call this function once per run with a
+#'   distinct `source` label and `rbind()` the resulting `geneSetsDF`s.
+#'
+#' @param fgseaResult Output of `fgsea::fgsea()`. Must contain `pathway`,
+#'   `padj`, and `NES` columns.
+#' @param geneSets Named list of gene-set memberships (the same one passed to
+#'   `fgsea::fgsea()`).
+#' @param cutoff padj threshold for filtering pathways. Default 0.05.
+#' @param source Label written to the `source` column of `geneSetsDF`. Use a
+#'   distinct value per run when combining multiple analyses. Default
+#'   `"fgsea"`.
+#'
+#' @return A list with:
+#'   \describe{
+#'     \item{`geneSetsList`}{`geneSets` filtered to pathways passing the
+#'       cutoff.}
+#'     \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
+#'       `enrichment_score` (fgsea's NES). One row per pathway.}
+#'   }
+#'
+#' @examples
+#' \dontrun{
+#' parsed <- parseFgsea(
+#'   fgseaResult = fgseaRes,
+#'   geneSets    = mSigDB,
+#'   cutoff      = 0.05,
+#'   source      = "treatmentA"
+#' )
+#' gss <- geneSetSimplifyR(
+#'   geneSetsList = parsed$geneSetsList,
+#'   geneSetsDF   = parsed$geneSetsDF
+#' )
+#' }
+#'
+#' @export
+parseFgsea <- function(
+    fgseaResult,
+    geneSets,
+    cutoff = 0.05,
+    source = "fgsea"
+) {
+  if (missing(fgseaResult) || is.null(fgseaResult)) {
+    stop("'fgseaResult' is required.")
+  }
+  if (missing(geneSets) || is.null(geneSets)) {
+    stop("'geneSets' is required -- pass the same pathways list you used when running fgsea::fgsea().")
+  }
+  if (!is.list(geneSets) || is.null(names(geneSets))) {
+    stop("'geneSets' should be a named list (pathway name -> character vector of gene IDs).")
+  }
+  if (!is.numeric(cutoff) || length(cutoff) != 1 || cutoff <= 0 || cutoff > 1) {
+    stop(sprintf("'cutoff' must be a single number in (0, 1] (got: %s).",
+                 paste(cutoff, collapse = ", ")))
+  }
+  if (!is.character(source) || length(source) != 1 || !nzchar(source)) {
+    stop("'source' must be a single non-empty character string.")
+  }
+
+  df <- as.data.frame(fgseaResult, stringsAsFactors = FALSE)
+
+  requiredCols <- c("pathway", "padj", "NES")
+  missingCols  <- setdiff(requiredCols, colnames(df))
+  if (length(missingCols)) {
+    if (length(missingCols) == 1 & 
+          missingCols == "NES" & 
+          "foldEnrichment" %in% colnames(df)){
+      df$NES <- df$foldEnrichment
+    } else {
+      stop(sprintf("'fgseaResult' is missing required column(s): %s.",
+           paste(missingCols, collapse = ", ")))
+    }
+  }
+
+  keep <- !is.na(df$padj) & df$padj < cutoff
+  if (!any(keep)) {
+    stop(sprintf("No pathways passed the cutoff (padj < %s).", cutoff))
+  }
+
+  geneSetsDF <- data.frame(
+    source           = source,
+    pathway          = df$pathway[keep],
+    enrichment_score = df$NES[keep],
+    stringsAsFactors = FALSE
+  )
+
+  # Drop pathways not in geneSets (warn once with a sample)
+  uniquePaths  <- unique(geneSetsDF$pathway)
+  missingPaths <- setdiff(uniquePaths, names(geneSets))
+  if (length(missingPaths)) {
+    warning(sprintf(
+      "%d pathway(s) in fgseaResult are not in 'geneSets' and will be dropped (first 5: %s).",
       length(missingPaths),
       paste(utils::head(missingPaths, 5), collapse = ", ")
     ), call. = FALSE)

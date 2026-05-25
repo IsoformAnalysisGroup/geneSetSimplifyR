@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 
 # Background and Rationale
 
-Gene-set enrichment analysis (GSEA) is one of the most useful types of bioinformatic analysis since it summarizes long lists of genes (e.g. TP53, CD1) into more high-level biological concepts (e.g. "cell cycle", "DNA repair"). While GSEA is potentially extremely powerful for profiling the high-level biological changes in a system, this is often hampered by very long lists of significant gene sets. This point is demonstrated by our [recent article](https://www.biorxiv.org/content/10.1101/2022.08.29.505720v3) where we re-analyze 100 RNA-seq data sets and show the average dataset had 1700+ gene sets significantly enriched among differentially expressed genes.
+Gene-set enrichment analysis (GSEA) is one of the most useful types of bioinformatic analysis since it summarizes long lists of genes (e.g. TP53, CD1) into more high-level biological concepts (e.g. "cell cycle", "DNA repair"). While GSEA is potentially extremely powerful for profiling the high-level biological changes in a system, this is often hampered by very long lists of significant gene sets. This point is demonstrated by our [recent article](https://link.springer.com/article/10.1186/s12915-023-01724-w) where we re-analyze 100 RNA-seq data sets and show the average dataset had 1700+ gene sets significantly enriched among differentially expressed genes.
 
 It is naturally not possible to manually analyze such long lists, so in practice scientists often just show the most significant/enriched gene-sets or cherry-pick gene-sets based on prior biological hypothesis. Neither is naturally desirable (or good scientific practice?), hence approaches to analyzing such long lists of gene sets are needed.
 
@@ -43,7 +43,7 @@ That is why we created `geneSetSimplifyR`. `geneSetSimplifyR` solves this proble
 if (!requireNamespace("devtools", quietly = TRUE)){
   install.packages("devtools")
 }
-devtools::install_github("chihs-dtu/geneSetSimplifyR", build_vignettes = TRUE)
+devtools::install_github("IsoformAnalysisGroup/geneSetSimplifyR", build_vignettes = TRUE)
 ```
 
 # geneSetSimplifyR workflow
@@ -108,7 +108,7 @@ With the data read we are now ready to use `geneSetSimplifyR`. The main function
 
 All functionality is wrapped into the *geneSetSimplifyR()* function:
 
-```{r geneSetSimplifyeR}
+```{r geneSetSimplifyR}
 exampleGsList <- geneSetSimplifyR(
   geneSetsList = exampleGeneSets,
   geneSetsDF = exampleEnrichment,
@@ -314,9 +314,7 @@ gsSummary <- extractTable(
 head(gsSummary)
 ```
 
-## Extra details
-
-### Plot modifications
+## Plot modifications
 
 All visualization functions return a ggplot2 object:
 
@@ -346,19 +344,36 @@ p1 +
   scale_fill_manual(values = c('black','green'))
 ```
 
-### geneSetSimplifyR under the hood
+## Convenience parsers for common GSEA tools
 
-The *geneSetSimplifyR()* function is actually just a high-level function which itself calls 3 sub-functions:
+`geneSetSimplifyR` ships small helpers that convert the output of popular enrichment-analysis tools into the `geneSetsList` + `geneSetsDF` pair `geneSetSimplifyR()` expects, so you don't have to reshape the data by hand:
 
-1.  *initializeList()* which creates the initial gsList object
-2.  *clusterGeneSets()* which performs the clustering
-3.  *labelClusters()* which adds the labels
+-   `parsePairedGSEA()` — parses a `pairedGSEA::paired_ora()` result. Each of the three blocks (`expression`, `splicing`, `paired`) is filtered by its own padj cutoff (`cutoff_exp`, `cutoff_splicing`, `cutoff_paired`) and contributes its surviving pathways as a separate `source`.
+-   `parseFgsea()` — parses a single `fgsea::fgsea()` result; filters by a `padj` cutoff and labels rows with a user-supplied `source` string. Run it once per analysis (with a distinct `source`) and `rbind()` the resulting `geneSetsDF`s to combine several analyses into one multi-source clustering.
+-   `getGeneSets()` — fetches MSigDB gene sets (via [msigdbr](https://cran.r-project.org/package=msigdbr)) by collection / sub-collection or by a vector of pathway names. Handy for building a `geneSetsList` from scratch or for inspecting the members of specific pathways after clustering.
 
-Each of these functions can also be called consecutively, allowing more user control over how each step is done.
+Each function returns a list with two elements, `geneSetsList` and `geneSetsDF`, ready to pass straight into `geneSetSimplifyR()`:
 
-For a detailed description of each step please refer to the paper.
+```{r parsers example, eval=FALSE}
+# pairedGSEA example
+parsed <- parsePairedGSEA(
+  oraResult       = oraResult, # output from pairedGSEA::paired_ora()
+  geneSets        = mSigDB, # mSigDB gene sets
+  cutoff_exp      = 0.05,
+  cutoff_splicing = 0.05,
+  cutoff_paired   = 0.05
+)
+gss <- geneSetSimplifyR(
+  geneSetsList = parsed$geneSetsList,
+  geneSetsDF   = parsed$geneSetsDF
+)
 
-# How to do gene-set enrichment analysis
+# fgsea example is shown in the next section.
+```
+
+See `?parsePairedGSEA`, `?parseFgsea`, and `?getGeneSets` for the full argument list.
+
+# How to do gene-set enrichment analysis/overrepresentation analysis
 
 Let's look at how to produce the input for `geneSetSimplifyR` via the `fgsea` package and its example data:
 
@@ -376,52 +391,32 @@ sigGenes <- tail(names(exampleRanks), 750)
 head(sigGenes)
 ```
 
-Then we can run a simple over-representation analysis (ORA) using the `fgsea` package as follows:
+Then, we can run a simple over-representation analysis (ORA) or gene set enrichment analysis (GSEA) using the `fgsea` package as follows:
 
-```{r fora}
+```{r fora fgsea}
+# ORA example
 oraRes <- fora(
   pathways = examplePathways,
   genes    = sigGenes,
   universe = names(exampleRanks)
 )
-sum(oraRes$padj < 0.05)
+head(oraRes[order(padj), ])
+
+# fgsea example
+fgseaRes <- fgsea(pathways = examplePathways, 
+                  stats    = exampleRanks)
+head(fgseaRes[order(padj), ])
 ```
 
-Note that the universe ONLY consists of genes that actually had a chance to be in the set of interesting genes (e.g. all genes tested), NOT all known genes!
+**Both ORA and GSEA results from fgsea can be used as input to our package in the same way.**
+Below, we use the ORA results to demonstrate this workflow.
 
-Next we subset to significant genesets and calculate the enrichment score as `geneSetSimplifyR` can also use these for visualization.
+```{r fora downstream, eval=FALSE}
+parsed <- parseFgsea(oraRes, examplePathways, cutoff=0.05)
 
-```{r enrichment calculation}
-
-n_genes <- length(sigGenes)
-n_universe <- length(exampleRanks)
-
-
-oraSig <-
-  tibble::as_tibble(oraRes) %>% 
-  dplyr::filter(
-    padj < 0.05
-  ) %>% 
-  dplyr::mutate(
-    enrichment_score = log2(
-      (
-        ( overlap / size       ) /
-        ( n_genes / n_universe )
-      ) + 0.06
-    )
-  )
-
-nrow(oraSig)
-
-head(oraSig)
-```
-
-In this toy data there are only 59 significant gene sets, but that is because it is an artificial dataset only meant to illustrate the workflow. As discussed in the introduction, 1000+ significant gene sets are very common. But even though it is possible to manually consider 59 gene sets, let's use `geneSetSimplifyR` to analyze them anyway. This could be done as follows (not run here since the workflow is already covered in the above section):
-
-```{r fgsea downstream, eval=FALSE}
 exampleGsList <- geneSetSimplifyR(
-  geneSetsList = examplePathways,
-  geneSetsDF   = oraSig,
+  geneSetsList = parsed$geneSetsList,
+  geneSetsDF   = parsed$geneSetsDF,
   verbose      = FALSE,
   removeFirstWord = TRUE
 )
