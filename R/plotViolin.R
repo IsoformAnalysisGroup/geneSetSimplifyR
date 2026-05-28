@@ -160,7 +160,7 @@ plotViolin <- function(
                  position = position_jitterdodge(dodge.width = 0.9)) +
       labs(x = "Gene Set Cluster",
            y = "Enrichment",
-           fill = "Source") +
+           fill = "Median ES") +
       theme_bw() +
       theme(
         legend.position = "bottom"

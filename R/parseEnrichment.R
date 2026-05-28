@@ -205,7 +205,7 @@ parseFgsea <- function(
     if (length(missingCols) == 1 & 
           missingCols == "NES" & 
           "foldEnrichment" %in% colnames(df)){
-      df$NES <- df$foldEnrichment
+      df$NES <- log2(df$foldEnrichment + 1e-6)
     } else {
       stop(sprintf("'fgseaResult' is missing required column(s): %s.",
            paste(missingCols, collapse = ", ")))

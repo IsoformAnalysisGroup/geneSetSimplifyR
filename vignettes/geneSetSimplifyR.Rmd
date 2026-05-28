@@ -4,7 +4,7 @@ author: "Ella Hedeboe, Chiao-Yu Hsieh, and Kristoffer Vitting-Seerup"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
     rmdformats::downcute:
-        default_style: "dark"
+        default_style: "light"
 vignette: >
   %\VignetteIndexEntry{geneSetSimplifyR}
   %\VignetteEngine{knitr::rmarkdown}
