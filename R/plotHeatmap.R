@@ -49,6 +49,11 @@ plotHeatmap <- function(
       '  If you want to plot enrichment you need to redo the entire workflow and add the enrichment score.'
     ))
   }
+  if (geneSetsList@metadata$n_sources == 1) {
+    doHCluster <- FALSE
+  } else{
+    doHCluster <- TRUE
+  }
 
   ### Extract clusters to highlight
   if(! is.null(highlightClusterNo)) {
@@ -166,8 +171,8 @@ plotHeatmap <- function(
   ### Make plot
   tmp <- pheatmap::pheatmap(
     mat = plotMatrix,
-    cluster_rows = T,
-    cluster_cols = T,
+    cluster_rows = doHCluster,
+    cluster_cols = doHCluster,
     clustering_distance_rows = 'euclidean',
     clustering_distance_cols = 'euclidean',
     scale = ifelse(scaleCols, 'column','none'), # alternative 'none','column'

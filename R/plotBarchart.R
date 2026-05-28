@@ -95,7 +95,7 @@ plotBarchart <- function(
       labs(
         x = "Gene Set Cluster",
         y = "Gene Set",
-        fill = "Gene set source",
+        color = "Gene set source",
       ) +
       theme_bw() +
       theme(
@@ -111,8 +111,7 @@ plotBarchart <- function(
       geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
       labs(
         x = "Gene Set Cluster",
-        y = "Gene Set",
-        color = "Gene set source",
+        y = "Gene Set"
       ) +
       theme_bw() +
       theme(
