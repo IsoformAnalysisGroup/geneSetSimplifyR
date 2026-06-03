@@ -39,10 +39,8 @@ kvsElbow <- function(
   if(!any(stepwiseZ > zScoreCutoff)) {
     cutoffIndex <- 13
   } else {
-    ### Extract index of of cutoff
-    cutoffIndex <- max(which(
-      stepwiseZ > zScoreCutoff
-    )) + 1
+    significant <- stepwiseZ > zScoreCutoff
+    cutoffIndex <- max(which(!significant)[1], 2L)
   }
 
   resList <- list(
