@@ -134,7 +134,12 @@ getLabels <- function(geneSetsList,
   centralGenesets <- centralGenesets %>%
     dplyr::mutate(centrality_score_transformed = log10(centrality_score + 1)) %>%
     dplyr::group_by(cluster) %>%
-    dplyr::mutate(centrality_score_scaled = (centrality_score_transformed + 1) / max(centrality_score_transformed + 1, na.rm = TRUE)) %>%
+    dplyr::mutate(
+      centrality_score_scaled = {
+        m <- max(centrality_score_transformed, na.rm = TRUE)
+        if (m > 0) centrality_score_transformed / m else 0
+      }
+    )%>%
     dplyr::mutate(cluster = as.character(cluster)) %>%
     dplyr::ungroup()
 
