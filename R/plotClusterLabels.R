@@ -193,9 +193,11 @@ plotClusterLabels <- function(
   ### Plot
   p1 <-
     jointData %>%
-    ggplot(aes(x=label, y=value)) +
+    dplyr::filter(value != 0) %>%
+    ggplot(aes(x=tidytext::reorder_within(label, value, measure), y=value)) +
     geom_bar(stat="identity", position='dodge') +
     facet_wrap(~measure, ncol=3, scales = 'free') +
+    tidytext::scale_x_reordered() +
     coord_flip() +
     theme_bw() +
     labs(
