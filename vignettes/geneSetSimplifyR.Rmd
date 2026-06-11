@@ -99,7 +99,7 @@ str(head(exampleGeneSets,2))
 head(exampleEnrichment, 2)
 ```
 
-The *enrichment_score* can be used for visualization downstream and the *source* column can be used to compare the results of multiple analyses. In this case the example data is a subset of the colorectal data analyzed in [Vitting-Seerup & Sandelin (2019)](https://academic.oup.com/bioinformatics/article/35/21/4469/5466456) where gene-set enrichment was done both for differentially expressed genes ("Expression") and differentially spliced genes ("Splicing").
+The *enrichment_score* can be used for visualization downstream and the *source* column can be used to compare the results of multiple analyses. In this case the example data is a subset of the colorectal data analyzed in [Vitting-Seerup & Sandelin (2017)](https://aacrjournals.org/mcr/article/15/9/1206/268100/The-Landscape-of-Isoform-Switches-in-Human?guestAccessKey=) where gene-set enrichment was done both for differentially expressed genes ("Expression") and differentially spliced genes ("Splicing").
 
 With the data read we are now ready to use `geneSetSimplifyR`. The main functionalities are:
 
