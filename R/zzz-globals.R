@@ -13,6 +13,6 @@ utils::globalVariables(c(
   "enrichment_score", "frac", "frac_cluster", "gene_ids", "gene_set",
   "geneset", "genesets", "index", "label", "mean_size",
   "median_enrichment_score", "measure", "n", "org_label", "padj",
-  "pathway", "tf_idf", "tf_idf_scaled", "tokenSource", "value",
-  "weighted_score", "words"
+  "pathway", "rank", "second_label", "tf_idf", "tf_idf_scaled",
+  "tokenSource", "value", "weighted_score", "words"
 ))

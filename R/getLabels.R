@@ -158,12 +158,49 @@ getLabels <- function(geneSetsList,
     dplyr::ungroup() %>%
     dplyr::mutate(weighted_score = tf_idf_scaled * centrality_score_scaled)
 
-  geneSetsList@labels[[clusterResolution]][["labelsDefault"]] <-
-    combinedScores %>%
+  labelsDefault <- combinedScores %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%
     dplyr::group_by(cluster) %>%
     dplyr::slice_max(weighted_score, n = nLabels, with_ties = F) %>%
     dplyr::ungroup() %>%
+    dplyr::select(label, cluster, weighted_score)
+
+  # DISAMBIGUATE SHARED TOP LABELS
+  # The top-ranked bigram per cluster is used as the cluster's displayed name.
+  # When several clusters share the same top bigram, append each cluster's
+  # second-ranked bigram so the names become unique, e.g. two clusters both
+  # labelled "Metabolic Process" become "Metabolic Process; Mrna Splicing" and
+  # "Metabolic Process; Catabolic Process".
+  labelsDefault <- labelsDefault %>%
+    dplyr::group_by(cluster) %>%
+    dplyr::arrange(dplyr::desc(weighted_score), .by_group = TRUE) %>%
+    dplyr::mutate(rank = dplyr::row_number()) %>%
+    dplyr::ungroup()
+
+  topRanked <- labelsDefault %>% dplyr::filter(rank == 1)
+  sharedTop <- topRanked$label[
+    duplicated(topRanked$label) | duplicated(topRanked$label, fromLast = TRUE)
+  ]
+
+  if (length(sharedTop)) {
+    secondLabel <- labelsDefault %>%
+      dplyr::filter(rank == 2) %>%
+      dplyr::select(cluster, second_label = label)
+
+    labelsDefault <- labelsDefault %>%
+      dplyr::left_join(secondLabel, by = "cluster") %>%
+      dplyr::mutate(
+        label = ifelse(
+          rank == 1 & label %in% sharedTop & !is.na(second_label),
+          paste0(label, "; ", second_label),
+          label
+        )
+      ) %>%
+      dplyr::select(-second_label)
+  }
+
+  geneSetsList@labels[[clusterResolution]][["labelsDefault"]] <-
+    labelsDefault %>%
     dplyr::select(label, cluster, weighted_score)
 
   return(geneSetsList)
