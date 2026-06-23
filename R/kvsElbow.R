@@ -53,7 +53,7 @@ kvsElbow <- function(
     if(!any(stepwiseZ > zScoreCutoff)) {
       cutoffIndex <- 13
     } else {
-      cutoffIndex <- max(max(which(stepwiseZ > zScoreCutoff)), 2L)
+      cutoffIndex <- max(max(which(stepwiseZ > zScoreCutoff)) + 1L, 2L)
     }
   } else {
     ### Distance-to-chord (Kneedle-style).
