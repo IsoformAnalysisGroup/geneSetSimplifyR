@@ -1,7 +1,18 @@
 #' Determine the elbow cutoff to be used to run UMAP
 #'
 #' @param variance Stored in a Seurat object as 'seuratObj@reductions$lsi@stde'
-#' @param zScoreCutoff Integer indicating the cut off value for the Z-score
+#' @param method Which elbow-detection method to use. One of:
+#'   \describe{
+#'     \item{`"distance"` (default)}{Returns the point of the (smoothed) scree
+#'       curve that lies farthest from the chord connecting its endpoints. Light
+#'       spline smoothing keeps it from being thrown off by jitter in the noisy
+#'       tail, and it needs no threshold.}
+#'     \item{`"zscore"`}{Flags the stepwise drops (1st derivative) that are
+#'       statistical outliers via a robust z-score and returns the last such
+#'       drop. Sensitive to the `zScoreCutoff` threshold.}
+#'   }
+#' @param zScoreCutoff Integer indicating the cut off value for the Z-score.
+#'   Only used when `method = "zscore"`.
 #'
 #' @return Elbow cutoff
 #'
@@ -9,8 +20,10 @@
 #' # elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
 kvsElbow <- function(
     variance,
+    method = c("distance", "zscore"),
     zScoreCutoff=2.5
 ) {
+  method <- match.arg(method)
 
   ### Test input
   if (is.unsorted(-variance)) {
@@ -20,27 +33,55 @@ kvsElbow <- function(
     stop('variance should at least be 50 observations for this method to work')
   }
 
-  ### Scale
-  varianceScaled <- scale(variance, center = T, scale = TRUE)
+  if (method == "zscore") {
+    ### Scale
+    varianceScaled <- scale(variance, center = T, scale = TRUE)
 
 
-  ### Calculate stepwise change (1st order derivative)
-  stepwiseDecrease <-
-    varianceScaled[-length(varianceScaled)] -
-    varianceScaled[-1]
+    ### Calculate stepwise change (1st order derivative)
+    stepwiseDecrease <-
+      varianceScaled[-length(varianceScaled)] -
+      varianceScaled[-1]
 
 
-  ### Calculate z-score from stepwise change
-  stepwiseZ <-
-    (stepwiseDecrease - median(stepwiseDecrease)) /
-    mad(stepwiseDecrease)
+    ### Calculate z-score from stepwise change
+    stepwiseZ <-
+      (stepwiseDecrease - median(stepwiseDecrease)) /
+      mad(stepwiseDecrease)
 
 
-  if(!any(stepwiseZ > zScoreCutoff)) {
-    cutoffIndex <- 13
+    if(!any(stepwiseZ > zScoreCutoff)) {
+      cutoffIndex <- 13
+    } else {
+      cutoffIndex <- max(max(which(stepwiseZ > zScoreCutoff)), 2L)
+    }
   } else {
-    significant <- stepwiseZ > zScoreCutoff
-    cutoffIndex <- max(which(!significant)[1], 2L)
+    ### Distance-to-chord (Kneedle-style).
+    n <- length(variance)
+    x <- seq_len(n)
+
+    ### Light smoothing to suppress point-wise jitter in the tail
+    y <- stats::smooth.spline(x, variance)$y
+
+    ### Normalize both axes to [0, 1] so neither dominates the distance
+    xNorm <- (x - min(x)) / (max(x) - min(x))
+    yNorm <- (y - min(y)) / (max(y) - min(y))
+
+    ### Endpoints of the scree curve
+    p1 <- c(xNorm[1], yNorm[1])
+    pN <- c(xNorm[n], yNorm[n])
+
+    ### Unit direction of the chord from first to last endpoint
+    chord <- pN - p1
+    chord <- chord / sqrt(sum(chord^2))
+
+    ### Perpendicular distance of every point to that chord
+    vecFromP1 <- cbind(xNorm - p1[1], yNorm - p1[2])
+    proj <- as.vector(vecFromP1 %*% chord)
+    perp <- vecFromP1 - outer(proj, chord)
+    dist <- sqrt(rowSums(perp^2))
+
+    cutoffIndex <- max(which.max(dist), 2L)
   }
 
   resList <- list(
