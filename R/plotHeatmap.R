@@ -122,7 +122,7 @@ plotHeatmap <- function(
 
   ### Determine colors
   if(any(!is.na(plotMatrix) & plotMatrix < 0)) {
-    myColors <- colorRampPalette(c('blue','white',"red"))( 100 )
+    myColors <- colorRampPalette(c('royalblue','white',"#e34632"))( 100 )
     myBreaks   <- seq(
       max(abs(plotMatrix), na.rm = T) * -1,
       max(abs(plotMatrix), na.rm = T),
