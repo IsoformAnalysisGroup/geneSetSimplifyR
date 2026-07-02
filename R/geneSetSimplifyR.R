@@ -18,6 +18,8 @@
 #' plotting functions. See the vignette for more info.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
 #' @param cluster_algo Algorithm for Clustering. Options: 'leiden', 'louvain'(default)
+#' @param elbow_method Method passed to \code{clusterGeneSets()} for selecting the
+#'   number of LSI dimensions. Options: 'distance'(default), 'zscore'.
 #' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
 #'   the first underscore) from each gene-set name before generating cluster labels.
 #'   Useful for MSigDB-style names where the first token is an author or database
@@ -33,6 +35,7 @@ geneSetSimplifyR <- function(
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
     verbose = TRUE,
     cluster_algo = "louvain",
+    elbow_method = "distance",
     removeFirstWord = FALSE
 ) {
   geneSetsList <- initializeList(
@@ -45,7 +48,8 @@ geneSetSimplifyR <- function(
     geneSetsList = geneSetsList,
     resolution = resolution,
     verbose = verbose,
-    algorithm = cluster_algo
+    algorithm = cluster_algo,
+    elbow_method = elbow_method
   )
 
   geneSetsList <- labelClusters(
