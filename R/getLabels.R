@@ -79,8 +79,8 @@ getLabels <- function(geneSetsList,
         mode = "undirected"
       )
     
-    E(g)$distance <- 1 / E(g)$weight
-    c <- igraph::betweenness(g, weights=E(g)$distance) %>%
+    igraph::E(g)$distance <- 1 / igraph::E(g)$weight
+    c <- igraph::betweenness(g, weights=igraph::E(g)$distance) %>%
       sort(decreasing = T)
 
     centralGenesetsCluster <-
@@ -158,7 +158,7 @@ getLabels <- function(geneSetsList,
     dplyr::group_by(cluster, label, tf_idf) %>% # remove duplicate labels within clusters
     dplyr::slice(which.max(centrality_score_scaled)) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(weighted_score = tf_idf_scaled + 0.5*centrality_score_scaled)
+    dplyr::mutate(weighted_score = tf_idf_scaled + centrality_score_scaled)
 
   labelsDefault <- combinedScores %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%

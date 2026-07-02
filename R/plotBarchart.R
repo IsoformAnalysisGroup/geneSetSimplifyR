@@ -95,7 +95,7 @@ plotBarchart <- function(
       labs(
         x = "Gene Set Cluster",
         y = "Gene Set",
-        color = "Gene set source",
+        fill = "Gene set source",
       ) +
       theme_bw() +
       theme(
