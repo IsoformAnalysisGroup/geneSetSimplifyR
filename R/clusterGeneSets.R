@@ -6,6 +6,7 @@
 #' @param K Integer or NA. Number of nearest neighbours used when building the
 #'   KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
 #'   `N` is the number of gene sets.
+#' @param elbow_method option: distance, zscore.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #'
 #' @return 'gsList' object with clustering stored. The best resolution (highest
@@ -23,6 +24,7 @@ clusterGeneSets <-
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
     algorithm = "louvain",
     K = NA,
+    elbow_method = "distance",
     verbose = TRUE
 ) {
 
@@ -66,7 +68,8 @@ clusterGeneSets <-
     seuratObj <- runSVDsafe(seuratObj, verbose = verbose)
 
     # get max dim
-    elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
+    elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev,
+                          method = elbow_method)
 
     seuratObj <- suppressWarnings(
       Seurat::RunUMAP(
