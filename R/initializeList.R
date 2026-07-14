@@ -55,16 +55,19 @@ initializeList <- function(
       geneSetsDF$enrichment_score <- NA
     }
   }
+  
+  if(!is.na(geneSetsDF$enrichment_score)){
+    # Make pathway vector
+    pathways <-
+      geneSetsDF %>%
+      dplyr::pull(pathway) %>%
+      unique()
 
-  # Make pathway vector
-  pathways <-
-    geneSetsDF %>%
-    dplyr::pull(pathway) %>%
-    unique()
-
-  if ( ! all(pathways %in% names(geneSetsList) ) ) {
-    stop("not all genesets are in the provided database")
+    if ( ! all(pathways %in% names(geneSetsList) ) ) {
+      stop("not all genesets are in the provided database")
+    }
   }
+  
 
   if(verbose) {
     message("Input is valid. Initializing gsList object...")
