@@ -38,11 +38,13 @@ initializeList <- function(
     stop("each element in the 'geneSetsList' should contain a character vector")
   }
   # Check input
+  no_table <- FALSE
   if (is.null(geneSetsDF)) {
     geneSetsDF <- tibble::tibble(
       pathway = unique(names(geneSetsList)),
       enrichment_score = NA
     )
+    no_table <- TRUE
   }
 
   # make unique
@@ -56,7 +58,7 @@ initializeList <- function(
     }
   }
   
-  if(!is.na(geneSetsDF$enrichment_score)){
+  if(no_table){
     # Make pathway vector
     pathways <-
       geneSetsDF %>%
