@@ -66,6 +66,8 @@ initializeList <- function(
     if ( ! all(pathways %in% names(geneSetsList) ) ) {
       stop("not all genesets are in the provided database")
     }
+  } else{
+    pathways <- names(geneSetsList)
   }
   
 
