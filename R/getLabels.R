@@ -47,21 +47,29 @@ getLabels <- function(geneSetsList,
       #  1, A0 GLIOMA
       # ...
     wordsCluster <- genesetsCluster %>%
-      dplyr::mutate(geneset = stringr::str_replace_all(geneset, "_", " ")) %>%
+      # Keep 'geneset' as the original name (with its underscores) so it still
+      # matches the centrality table; tokenize a space-delimited copy instead.
+      dplyr::mutate(tokenSource = stringr::str_replace_all(geneset, "_", " ")) %>%
       dplyr::mutate(
         tokenSource = if (removeFirstWord) {
-          stringr::str_remove(geneset, "^\\S+\\s*")
+          stringr::str_remove(tokenSource, "^\\S+\\s*")
         } else {
-          geneset
+          tokenSource
         }
       ) %>%
+      dplyr::mutate(tokenSource = stringr::str_squish(tokenSource)) %>%
+      dplyr::filter(tokenSource != "") %>% # drop names left empty after stripping
       tidytext::unnest_tokens(label,
                               tokenSource,
                               token = "ngrams",
                               n = 2,
-                              drop = TRUE) %>%
+                              drop = FALSE) %>%
+      # single-word names can't form a bigram (label is NA); fall back to the
+      # word itself so informative one-word gene sets are still labelled.
+      dplyr::mutate(label = dplyr::coalesce(label, stringr::str_to_lower(tokenSource))) %>%
       dplyr::mutate(label = stringr::str_to_title(label)) %>%
-      dplyr::mutate(cluster = i - 1)
+      dplyr::mutate(cluster = i - 1) %>%
+      dplyr::select(-tokenSource)
 
     wordsDataset <- dplyr::bind_rows(wordsDataset, wordsCluster)
 
@@ -129,7 +137,6 @@ getLabels <- function(geneSetsList,
 
   clustersTFIDFGenesets <- wordsDataset %>%
     dplyr::mutate(cluster = as.character(cluster)) %>%
-    dplyr::mutate(geneset = stringr::str_replace_all(geneset, " ", "_")) %>%
     dplyr::right_join(clustersTFIDF, by = c("label", "cluster"))
 
   # SCALE CENTRALITY

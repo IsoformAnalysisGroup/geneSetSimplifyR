@@ -61,9 +61,9 @@ clusterGeneSets <-
     seuratObj <- Signac::FindTopFeatures(seuratObj,
                                          min.cutoff = "q0")
 
-    seuratObj <- suppressWarnings(Signac::RunSVD(seuratObj,
-                                                 approx = FALSE,
-                                                 verbose = FALSE))
+    # LSI can fail to converge on difficult matrices; runSVDsafe() computes the
+    # SVD via RSpectra::svds() and retries with larger 'ncv'/'maxitr' on failure.
+    seuratObj <- runSVDsafe(seuratObj, verbose = verbose)
 
     # get max dim
     elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
