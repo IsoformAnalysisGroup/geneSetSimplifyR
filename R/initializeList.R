@@ -58,7 +58,7 @@ initializeList <- function(
     }
   }
   
-  if(no_table){
+  if(!no_table){
     # Make pathway vector
     pathways <-
       geneSetsDF %>%
