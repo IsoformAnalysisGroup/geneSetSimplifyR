@@ -57,11 +57,16 @@ kvsElbow <- function(
     }
   } else {
     ### Distance-to-chord (Kneedle-style).
-    n <- length(variance)
+    ### LSI_1 typically captures technical variation (depth) and dominates the
+    ### scree curve, so drop it before locating the knee; its inflated stdev
+    ### would otherwise distort the [0, 1] normalization and the chord.
+    varianceElbow <- variance[-1]
+
+    n <- length(varianceElbow)
     x <- seq_len(n)
 
     ### Light smoothing to suppress point-wise jitter in the tail
-    y <- stats::smooth.spline(x, variance)$y
+    y <- stats::smooth.spline(x, varianceElbow)$y
 
     ### Normalize both axes to [0, 1] so neither dominates the distance
     xNorm <- (x - min(x)) / (max(x) - min(x))
@@ -81,7 +86,9 @@ kvsElbow <- function(
     perp <- vecFromP1 - outer(proj, chord)
     dist <- sqrt(rowSums(perp^2))
 
-    cutoffIndex <- max(which.max(dist), 2L)
+    ### +1 maps the index back to the original numbering (LSI_1 was dropped),
+    ### so the downstream `dims = 2:elbow_cutoff` still lines up.
+    cutoffIndex <- max(which.max(dist) + 1L, 2L)
   }
 
   resList <- list(
