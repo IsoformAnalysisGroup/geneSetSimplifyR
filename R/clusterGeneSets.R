@@ -83,9 +83,9 @@ clusterGeneSets <-
     assign_k <- function(N) {
       if(!is.na(K)){ return(K)}
       k <- round(sqrt(N))        # Take square root of N
-      if (k > 30) {       # Check if it exceeds 30
-        k <- 30
-      }
+      # if (k > 30) {       # Check if it exceeds 30
+      #   k <- 30
+      # }
       cat("Selected K:", k, "\n")
       return(k)
     }
