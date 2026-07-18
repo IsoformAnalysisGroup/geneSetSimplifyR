@@ -69,17 +69,31 @@ plotClustree <- function(
   }
 
   for (resolution in resolutions) {
-    labels <-
+    ### Top label per cluster, keyed by its cluster id
+    labelMap <-
       geneSetsList@labels[[resolution]][["labelsDefault"]] %>%
       dplyr::group_by(cluster) %>%
       dplyr::slice_max(weighted_score, with_ties = FALSE) %>%
       dplyr::ungroup() %>%
-      tidyr::unite("label", cluster:label, sep = ": ") %>%
-      dplyr::select(label) %>%
-      dplyr::pull()
+      dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
+      dplyr::select(cluster, label)
 
-    levels(geneSetsList@cluster@meta.data[[resolution]]) <-
-      labels
+    ### Match labels to the factor's levels BY cluster id, not by position.
+    ### The label vector's order (e.g. numeric group order) need not match the
+    ### factor's level order, so a positional `levels<-` can attach a label to
+    ### the wrong cluster's node. Matching on the id keeps them aligned.
+    clusterFactor <- geneSetsList@cluster@meta.data[[resolution]]
+    matchedLabels <- labelMap$label[
+      match(as.character(levels(clusterFactor)),
+            as.character(labelMap$cluster))
+    ]
+
+    ### Fall back to the raw cluster id for any level without a label
+    missingLabel <- is.na(matchedLabels)
+    matchedLabels[missingLabel] <- levels(clusterFactor)[missingLabel]
+
+    levels(clusterFactor) <- matchedLabels
+    geneSetsList@cluster@meta.data[[resolution]] <- clusterFactor
   }
   # clustree builds a plot with ggraph's `edge_colourbar` guide. ggplot2
   # resolves that guide by name from attached packages, so ggraph must be
