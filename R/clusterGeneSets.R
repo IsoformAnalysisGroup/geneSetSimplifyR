@@ -58,7 +58,7 @@ clusterGeneSets <-
 
     seuratObj <- Signac::RunTFIDF(seuratObj,
                                   verbose = FALSE,
-                                  method = 3) # verified by new grid search
+                                  method = 1) # verified by new grid search
 
     seuratObj <- Signac::FindTopFeatures(seuratObj,
                                          min.cutoff = "q0")
