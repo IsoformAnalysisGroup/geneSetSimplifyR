@@ -59,6 +59,15 @@ updateClusterLabels <- function(
   currentClusterLabels <-
     levels(geneSetsList@cluster@active.ident)
 
+  ### Align the freshly built labels (numeric cluster order) to the current
+  ### active.ident level order BY cluster id, not by position. The level order
+  ### need not be numeric -- Seurat can store it lexicographically (e.g. the
+  ### best resolution) -- so a positional from/to pairing in mapvalues would
+  ### relabel the wrong clusters. The id is the "<id>: " prefix on each label.
+  currentIds <- sub(": .*$", "", currentClusterLabels)
+  defaultIds <- sub(": .*$", "", defaultLabels)
+  defaultLabels <- defaultLabels[match(currentIds, defaultIds)]
+
   geneSetsList@cluster@active.ident <-
     plyr::mapvalues(x = geneSetsList@cluster@active.ident,
                     from = currentClusterLabels,

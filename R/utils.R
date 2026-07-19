@@ -14,22 +14,29 @@ changeUsedResolution <- function(
   Seurat::Idents(geneSetsList@cluster) <-
     geneSetsList@cluster@meta.data[[resolutionColumn]]
 
-  # get default labels
-  defaultLabels <-
+  # get default labels, keyed by cluster id
+  defaultLabelTbl <-
     geneSetsList@labels[[resolutionColumn]][["labelsDefault"]] %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%
     dplyr::group_by(cluster) %>%
     dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
-    dplyr::pull(label)
+    dplyr::select(cluster, label)
+
+  # active.ident was just set to the raw numeric cluster ids (levels are in the
+  # resolution column's stored order, which need not be numeric). Align the
+  # numeric-ordered labels to that level order BY cluster id, not by position,
+  # so a lexicographically-ordered column can't relabel the wrong clusters.
+  currentClusterLabels <-
+    levels(geneSetsList@cluster@active.ident)
+  defaultLabels <- defaultLabelTbl$label[
+    match(currentClusterLabels, as.character(defaultLabelTbl$cluster))
+  ]
 
   if (removeClusterId) {
     defaultLabels <- stringr::str_remove(defaultLabels, "^[0-9]+: ")
   }
-
-  currentClusterLabels <-
-    levels(geneSetsList@cluster@active.ident)
 
   geneSetsList@cluster@active.ident <-
     plyr::mapvalues(x = geneSetsList@cluster@active.ident,
