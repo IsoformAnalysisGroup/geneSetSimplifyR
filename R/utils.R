@@ -1,3 +1,51 @@
+#' Coerce a cluster-id vector/factor to start at 0 with numeric level order
+#'
+#' Internal helper. Seurat may store cluster factor levels in lexicographic
+#' order ("10" before "2"), which breaks code that pairs labels to levels by
+#' position. This renumbers ids to start at 0 and rebuilds the factor with
+#' numeric level order.
+#'
+#' @param x A factor or vector of (coercible-to-numeric) cluster ids.
+#' @return A factor with levels in numeric order, starting at 0.
+#' @keywords internal
+numericClusterFactor <- function(x) {
+  ids <- as.numeric(as.character(x))
+  ids <- ids - min(ids)                       # start from 0 (robust to 0/1-indexing)
+  factor(ids, levels = sort(unique(ids)))     # numeric level order
+}
+
+#' Normalize cluster factor level order in a clustered gsList
+#'
+#' @description Rebuilds every `GSEA_snn_res.<res>` metadata column so its
+#'   factor levels are in numeric order (0, 1, 2, ...), starting at 0. Newer
+#'   objects get this automatically inside `clusterGeneSets()`; use this to
+#'   migrate objects clustered before that fix without re-clustering. Cluster
+#'   assignments are unchanged -- only the level order is corrected.
+#'
+#' @param geneSetsList A clustered 'gsList' object.
+#' @return The 'gsList' with normalized cluster factor level order.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' neftelGss <- normalizeClusterLevels(neftelGss)
+#' }
+normalizeClusterLevels <- function(geneSetsList) {
+  if (!inherits(geneSetsList, "gsList")) {
+    stop("'geneSetsList' should be a gsList object")
+  }
+  resCols <- grep(
+    "GSEA_snn_res.",
+    names(geneSetsList@cluster@meta.data),
+    value = TRUE
+  )
+  for (col in resCols) {
+    geneSetsList@cluster@meta.data[[col]] <-
+      numericClusterFactor(geneSetsList@cluster@meta.data[[col]])
+  }
+  return(geneSetsList)
+}
+
 changeUsedResolution <- function(
     geneSetsList,
     resolution = NULL,
@@ -14,29 +62,24 @@ changeUsedResolution <- function(
   Seurat::Idents(geneSetsList@cluster) <-
     geneSetsList@cluster@meta.data[[resolutionColumn]]
 
-  # get default labels, keyed by cluster id
-  defaultLabelTbl <-
+  # get default labels. Cluster factor levels are numeric-ordered (guaranteed
+  # by clusterGeneSets()/normalizeClusterLevels()), so the numeric-ordered
+  # label vector lines up positionally with the active.ident levels.
+  defaultLabels <-
     geneSetsList@labels[[resolutionColumn]][["labelsDefault"]] %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%
     dplyr::group_by(cluster) %>%
     dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
-    dplyr::select(cluster, label)
-
-  # active.ident was just set to the raw numeric cluster ids (levels are in the
-  # resolution column's stored order, which need not be numeric). Align the
-  # numeric-ordered labels to that level order BY cluster id, not by position,
-  # so a lexicographically-ordered column can't relabel the wrong clusters.
-  currentClusterLabels <-
-    levels(geneSetsList@cluster@active.ident)
-  defaultLabels <- defaultLabelTbl$label[
-    match(currentClusterLabels, as.character(defaultLabelTbl$cluster))
-  ]
+    dplyr::pull(label)
 
   if (removeClusterId) {
     defaultLabels <- stringr::str_remove(defaultLabels, "^[0-9]+: ")
   }
+
+  currentClusterLabels <-
+    levels(geneSetsList@cluster@active.ident)
 
   geneSetsList@cluster@active.ident <-
     plyr::mapvalues(x = geneSetsList@cluster@active.ident,

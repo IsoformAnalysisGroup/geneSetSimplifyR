@@ -129,25 +129,17 @@ clusterGeneSets <-
 
     ### Make sure the cluster number starts from 0
 
+    ### Normalize every resolution's cluster factor once, at the source:
+    ### renumber so ids start at 0 AND force numeric level order (0,1,2,...).
+    ### Seurat sometimes stores the levels lexicographically ("10" sorts before
+    ### "2"), which silently breaks any downstream code that pairs labels to
+    ### factor levels by position. Fixing it here keeps every consumer correct
+    ### without per-function guards. `normalizeClusterLevels()` is the single
+    ### implementation, also exported for migrating objects clustered earlier.
     for (localRes in resolution[1:(i+1)]) {
-      clusterResolution <- stringr::str_c('GSEA_snn_res.',localRes)
-      old_clusters <- seuratObj@meta.data[[clusterResolution]]
-      
-      # Create new labels starting from 0
-      if (levels(old_clusters)[[1]] == "0"){
-        next
-      }
-      
-      # Create new labels starting from 0
-      new_levels <- as.character(as.numeric(levels(old_clusters)) - 1)
-      
-      # Apply new levels
-      old_clusters <- factor(old_clusters,
-                             levels = levels(old_clusters),
-                             labels = new_levels)
-      
-      # Save back to metadata
-      seuratObj@meta.data[[clusterResolution]] <- old_clusters
+      clusterResolution <- stringr::str_c('GSEA_snn_res.', localRes)
+      seuratObj@meta.data[[clusterResolution]] <-
+        numericClusterFactor(seuratObj@meta.data[[clusterResolution]])
     }
 
     ### Set optimal clustering as default
