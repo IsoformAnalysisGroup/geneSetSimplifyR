@@ -32,7 +32,7 @@
 geneSetSimplifyR <- function(
     geneSetsList,
     geneSetsDF = NULL,
-    resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
+    resolution = c(1),
     verbose = TRUE,
     cluster_algo = "louvain",
     elbow_method = "distance",
