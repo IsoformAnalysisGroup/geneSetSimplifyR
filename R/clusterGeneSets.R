@@ -119,7 +119,7 @@ clusterGeneSets <-
       )
 
       i <- i -1
-      if(i < 1) {
+      if(is.null(seuratObj2) && i < 1) {
         message("No valid resolution. Please try with other resolutions.")
         return(NULL)
       }
