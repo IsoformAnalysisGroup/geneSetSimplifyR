@@ -46,6 +46,67 @@ normalizeClusterLevels <- function(geneSetsList) {
   return(geneSetsList)
 }
 
+#' Build display labels aligned to a set of cluster ids
+#'
+#' Internal helper. Takes the `labelsDefault` table for one resolution, keeps
+#' the top-scoring label per cluster, and returns one label per element of
+#' `clusterIds`, in that order.
+#'
+#' Two things this guards against:
+#' \itemize{
+#'   \item **Order.** The label table is in numeric cluster order; a factor's
+#'     levels need not be, so labels are matched by cluster id rather than by
+#'     position.
+#'   \item **Coverage.** A cluster can be missing from the label table (e.g. a
+#'     cluster whose gene-set names yield no usable bigram). Those fall back to
+#'     the bare cluster id, so the returned vector always has the same length as
+#'     `clusterIds` instead of blowing up downstream in `plyr::mapvalues()`.
+#' }
+#'
+#' @param geneSetsList A labelled 'gsList' object.
+#' @param resolutionColumn Name of the resolution, e.g. `"GSEA_snn_res.1"`.
+#' @param clusterIds Character vector of cluster ids to label, in the desired
+#'   output order (typically `levels(active.ident)`).
+#' @param removeClusterId Logical. Drop the `"<id>: "` prefix from the labels.
+#' @return Character vector of labels, one per element of `clusterIds`.
+#' @keywords internal
+alignedClusterLabels <- function(
+    geneSetsList,
+    resolutionColumn,
+    clusterIds,
+    removeClusterId = FALSE
+) {
+  labelTable <- geneSetsList@labels[[resolutionColumn]][["labelsDefault"]]
+
+  if (is.null(labelTable)) {
+    stop(
+      "No labels found for '", resolutionColumn,
+      "'. Please run 'labelClusters()' before plotting."
+    )
+  }
+
+  topLabels <- labelTable %>%
+    dplyr::mutate(cluster = as.numeric(as.character(cluster))) %>%
+    dplyr::group_by(cluster) %>%
+    dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
+    dplyr::ungroup()
+
+  clusterIds <- as.character(clusterIds)
+  idx <- match(clusterIds, as.character(topLabels$cluster))
+
+  if (removeClusterId) {
+    out <- ifelse(is.na(idx), clusterIds, topLabels$label[idx])
+  } else {
+    out <- ifelse(
+      is.na(idx),
+      clusterIds,
+      paste0(clusterIds, ": ", topLabels$label[idx])
+    )
+  }
+
+  return(out)
+}
+
 changeUsedResolution <- function(
     geneSetsList,
     resolution = NULL,
@@ -62,24 +123,18 @@ changeUsedResolution <- function(
   Seurat::Idents(geneSetsList@cluster) <-
     geneSetsList@cluster@meta.data[[resolutionColumn]]
 
-  # get default labels. Cluster factor levels are numeric-ordered (guaranteed
-  # by clusterGeneSets()/normalizeClusterLevels()), so the numeric-ordered
-  # label vector lines up positionally with the active.ident levels.
-  defaultLabels <-
-    geneSetsList@labels[[resolutionColumn]][["labelsDefault"]] %>%
-    dplyr::mutate(cluster = as.numeric(cluster)) %>%
-    dplyr::group_by(cluster) %>%
-    dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
-    dplyr::pull(label)
-
-  if (removeClusterId) {
-    defaultLabels <- stringr::str_remove(defaultLabels, "^[0-9]+: ")
-  }
-
   currentClusterLabels <-
     levels(geneSetsList@cluster@active.ident)
+
+  # Match labels to the active.ident levels by cluster id (see
+  # alignedClusterLabels()) -- a positional pairing breaks whenever a cluster
+  # has no label or the level order is not numeric.
+  defaultLabels <- alignedClusterLabels(
+    geneSetsList = geneSetsList,
+    resolutionColumn = resolutionColumn,
+    clusterIds = currentClusterLabels,
+    removeClusterId = removeClusterId
+  )
 
   geneSetsList@cluster@active.ident <-
     plyr::mapvalues(x = geneSetsList@cluster@active.ident,

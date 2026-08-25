@@ -76,7 +76,11 @@ getLabels <- function(geneSetsList,
     # GET GENESETS
     clusterGenesets <-
       Seurat::WhichCells(object = seuratObj, ident = i - 1)
-    clusterMatrix <- matrix[clusterGenesets, clusterGenesets]
+    # drop = FALSE is essential: a singleton cluster would otherwise collapse to
+    # a bare scalar, losing the dimnames, and the resulting one-vertex graph has
+    # no vertex name -- so betweenness() returns an unnamed value, the gene set
+    # is recorded as NA, and the cluster silently disappears in the join below.
+    clusterMatrix <- matrix[clusterGenesets, clusterGenesets, drop = FALSE]
 
     # central gene set
     g <-
@@ -86,10 +90,17 @@ getLabels <- function(geneSetsList,
         weighted = T,
         mode = "undirected"
       )
-    
+
     igraph::E(g)$distance <- 1 / igraph::E(g)$weight
-    c <- igraph::betweenness(g, weights=igraph::E(g)$distance) %>%
-      sort(decreasing = T)
+    c <- igraph::betweenness(g, weights=igraph::E(g)$distance)
+
+    # Belt and braces: keep the gene set names attached even if the graph came
+    # back without vertex names.
+    if (is.null(names(c))) {
+      names(c) <- clusterGenesets
+    }
+
+    c <- sort(c, decreasing = T)
 
     centralGenesetsCluster <-
       tibble::tibble(

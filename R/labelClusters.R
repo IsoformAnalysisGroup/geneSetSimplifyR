@@ -51,11 +51,6 @@ labelClusters <-
            names(geneSetsList@cluster@meta.data),
            value = TRUE)
 
-    ### Extract current values
-    currentClusters <-  geneSetsList@cluster@active.ident
-    currentClusterLabels <-
-      levels(geneSetsList@cluster@active.ident)
-
     ### For each resolution extract label info
     for (i in resolutions) {
       geneSetsList@labels[[i]] <- list()
@@ -78,26 +73,41 @@ labelClusters <-
 
     ### Extract default labels
     defaultResolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
-    defaultLabels <-
-      geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]] %>%
-      dplyr::mutate(cluster = as.numeric(cluster)) %>%
-      dplyr::group_by(cluster) %>%
-      dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
-      dplyr::pull(label)
 
-    ### Sanity check
-    labelStrip <- sapply(
-      stringr::str_split(defaultLabels, pattern = ': '),
-      function(x) x[1]
-    )
-    if( ! all(labelStrip %in% currentClusterLabels) ){
+    ### Reset the identities to the raw cluster ids of the default resolution.
+    ### Reading them back from meta.data instead of trusting whatever
+    ### active.ident happens to hold keeps labelClusters() re-runnable on an
+    ### object that was already labelled.
+    Seurat::Idents(geneSetsList@cluster) <-
+      geneSetsList@cluster@meta.data[[defaultResolutionColumn]]
+    currentClusters <- geneSetsList@cluster@active.ident
+    currentClusterLabels <- levels(currentClusters)
+
+    ### Sanity check: every labelled cluster must exist in the active identity
+    labelledClusters <- as.character(unique(
+      geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]]$cluster
+    ))
+    if( ! all(labelledClusters %in% currentClusterLabels) ){
       stop('something went wrong with the label transfer. Contact developer')
     }
-    defaultLabels <- defaultLabels[match(
-      currentClusterLabels, labelStrip
-    )]
+
+    ### Aligned by cluster id; clusters without a label keep their bare id
+    ### rather than becoming NA (see alignedClusterLabels()).
+    defaultLabels <- alignedClusterLabels(
+      geneSetsList = geneSetsList,
+      resolutionColumn = defaultResolutionColumn,
+      clusterIds = currentClusterLabels,
+      removeClusterId = FALSE
+    )
+
+    unlabelled <- setdiff(currentClusterLabels, labelledClusters)
+    if( length(unlabelled) & verbose ) {
+      message(
+        "No label could be generated for cluster(s) ",
+        paste(unlabelled, collapse = ", "),
+        "; they keep their cluster id as label."
+      )
+    }
 
     geneSetsList@cluster@active.ident <-
       plyr::mapvalues(x = currentClusters,

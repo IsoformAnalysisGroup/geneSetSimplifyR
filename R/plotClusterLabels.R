@@ -93,10 +93,15 @@ plotClusterLabels <- function(
       ) %>%
       dplyr::pull(gene_set)
 
+    # drop = FALSE keeps this a data.frame for a single-gene-set cluster, which
+    # would otherwise collapse to a plain vector and break colSums()/apply().
+    clusterMembership <-
+      geneSetsList@genesetsDataframe[, gsInCluster, drop = FALSE]
+
     localGsSize <-
       tibble::tibble(
         label = gsInCluster,
-        value = colSums(  geneSetsList@genesetsDataframe[,gsInCluster]),
+        value = colSums(clusterMembership),
         measure = 'Gene Set Size'
       ) %>%
       dplyr::slice_max(order_by = value, n=nLabels) %>%
@@ -106,7 +111,7 @@ plotClusterLabels <- function(
 
     localGeneFreq <-
       apply(
-        X = geneSetsList@genesetsDataframe[,gsInCluster],
+        X = clusterMembership,
         MARGIN = 2,
         function(x) {
           rownames(geneSetsList@genesetsDataframe)[which(
