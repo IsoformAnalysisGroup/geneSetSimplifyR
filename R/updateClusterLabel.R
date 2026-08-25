@@ -47,26 +47,20 @@ updateClusterLabels <- function(
   geneSetsList@labels[[resolutionColumn]]$labelsDefault$label[toModify] <- newClusterName
 
   ### Update stored labes
-  defaultLabels <-
-    geneSetsList@labels[[resolutionColumn]][["labelsDefault"]] %>%
-    dplyr::mutate(cluster = as.numeric(cluster)) %>%
-    dplyr::group_by(cluster) %>%
-    dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
-    dplyr::pull(label)
-
   currentClusterLabels <-
     levels(geneSetsList@cluster@active.ident)
 
-  ### Align the freshly built labels (numeric cluster order) to the current
-  ### active.ident level order BY cluster id, not by position. The level order
-  ### need not be numeric -- Seurat can store it lexicographically (e.g. the
-  ### best resolution) -- so a positional from/to pairing in mapvalues would
-  ### relabel the wrong clusters. The id is the "<id>: " prefix on each label.
-  currentIds <- sub(": .*$", "", currentClusterLabels)
-  defaultIds <- sub(": .*$", "", defaultLabels)
-  defaultLabels <- defaultLabels[match(currentIds, defaultIds)]
+  ### Align the freshly built labels to the current active.ident level order BY
+  ### cluster id, not by position. The level order need not be numeric -- Seurat
+  ### can store it lexicographically (e.g. the best resolution) -- so a
+  ### positional from/to pairing in mapvalues would relabel the wrong clusters.
+  ### The id is the "<id>: " prefix on each existing level.
+  defaultLabels <- alignedClusterLabels(
+    geneSetsList = geneSetsList,
+    resolutionColumn = resolutionColumn,
+    clusterIds = sub(": .*$", "", currentClusterLabels),
+    removeClusterId = FALSE
+  )
 
   geneSetsList@cluster@active.ident <-
     plyr::mapvalues(x = geneSetsList@cluster@active.ident,
