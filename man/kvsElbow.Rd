@@ -4,12 +4,24 @@
 \alias{kvsElbow}
 \title{Determine the elbow cutoff to be used to run UMAP}
 \usage{
-kvsElbow(variance, zScoreCutoff = 2.5)
+kvsElbow(variance, method = c("distance", "zscore"), zScoreCutoff = 2.5)
 }
 \arguments{
 \item{variance}{Stored in a Seurat object as 'seuratObj@reductions$lsi@stde'}
 
-\item{zScoreCutoff}{Integer indicating the cut off value for the Z-score}
+\item{method}{Which elbow-detection method to use. One of:
+\describe{
+  \item{`"distance"` (default)}{Returns the point of the (smoothed) scree
+    curve that lies farthest from the chord connecting its endpoints. Light
+    spline smoothing keeps it from being thrown off by jitter in the noisy
+    tail, and it needs no threshold.}
+  \item{`"zscore"`}{Flags the stepwise drops (1st derivative) that are
+    statistical outliers via a robust z-score and returns the last such
+    drop. Sensitive to the `zScoreCutoff` threshold.}
+}}
+
+\item{zScoreCutoff}{Integer indicating the cut off value for the Z-score.
+Only used when `method = "zscore"`.}
 }
 \value{
 Elbow cutoff

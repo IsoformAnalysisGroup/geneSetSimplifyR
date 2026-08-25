@@ -2,7 +2,20 @@
 #'
 #' @param geneSetsList 'gsList' object created with the 'initializeList()' function.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
-#' @param algorithm Algorithm for clustering. Options: 'louvain', 'leiden'
+#' @param algorithm Clustering method applied to the SNN graph. Either the name
+#'   of a registered method (see [listClusterMethods()]; e.g. 'louvain',
+#'   'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
+#'   'binary_cut'), a `gsClusterMethod` built with [clusterMethod()], or a
+#'   function following the same contract. Only this step is swappable -- the
+#'   SNN graph itself is always built the same way.
+#'
+#'   Methods that determine the number of clusters themselves ('kmeans',
+#'   'apcluster', 'binary_cut') ignore `resolution` and are run once; the result
+#'   is stored under the first requested resolution.
+#' @param clusterArgs Named list of extra arguments passed on to the clustering
+#'   method, for example `list(n.start = 20)` for the Seurat backends,
+#'   `list(maxK = 50)` for 'kmeans', `list(p = -1)` for 'apcluster', or
+#'   `list(cutoff = 0.9)` for 'binary_cut'.
 #' @param K Integer or NA. Number of nearest neighbours used when building the
 #'   KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
 #'   `N` is the number of gene sets.
@@ -14,15 +27,23 @@
 #'  specified in subsequent functions).
 #' @export
 #'
+#' @seealso [clusterMethod()], [registerClusterMethod()], [listClusterMethods()]
+#'
 #' @examples
 #' # Create gsListObject
 #' geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 #' gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
+#'
+#' # Swap in a different community-detection implementation
+#' \dontrun{
+#' gsListObject <- clusterGeneSets(geneSetsList, algorithm = "igraph_leiden")
+#' }
 clusterGeneSets <-
   function(
     geneSetsList,
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
     algorithm = "louvain",
+    clusterArgs = list(),
     K = NA,
     elbow_method = "distance",
     verbose = TRUE
@@ -36,13 +57,26 @@ clusterGeneSets <-
     if (!is.numeric(resolution)) {
       stop("'resolution' should be numeric.")
     }
-    
-    if (algorithm == "louvain"){
-      algo = 1
-    }else if(algorithm == "leiden"){
-      algo = 4
-    }else{
-      stop("Invalid algorithm. Valid options: louvain, leiden.")
+
+    if (!is.list(clusterArgs)) {
+      stop("'clusterArgs' should be a named list.")
+    }
+
+    # Resolve the clustering backend up front so a bad spec fails before the
+    # expensive LSI/UMAP steps run.
+    clusterMethodObj <- getClusterMethod(algorithm)
+
+    # Some backends (kmeans, apcluster, binary_cut) pick the number of clusters
+    # themselves. Sweeping resolutions there would just repeat identical work,
+    # so collapse to a single run.
+    if (!isTRUE(clusterMethodObj$usesResolution) && length(resolution) > 1) {
+      if (verbose) {
+        message(
+          "'", clusterMethodObj$name, "' determines the number of clusters ",
+          "itself; ignoring all but the first resolution (", resolution[1], ")."
+        )
+      }
+      resolution <- resolution[1]
     }
 
     if(verbose) {
@@ -103,49 +137,66 @@ clusterGeneSets <-
     )
 
     ### Find clusters
-    seuratObj2 <- NULL
-    i <- length(resolution)
-    while(is.null(seuratObj2)) {
-      suppressWarnings(
-        seuratObj2 <- tryCatch(
-          Seurat::FindClusters(
-            object = seuratObj,
-            resolution = resolution[1:i],
-            verbose = TRUE,
-            algorithm = algo
+    ### The SNN graph is the hand-off point to the clustering backend: every
+    ### method sees the same graph and returns one cluster id per gene set.
+    ### Resolutions are run one at a time so a single failing resolution is
+    ### dropped instead of taking the whole run with it.
+    snnGraph <- seuratObj@graphs$GSEA_snn
+
+    resolutionsTested <- c()
+    for (localRes in resolution) {
+      localIds <- suppressWarnings(
+        tryCatch(
+          runClusterMethod(
+            method = clusterMethodObj,
+            snn = snnGraph,
+            resolution = localRes,
+            verbose = verbose,
+            clusterArgs = clusterArgs
           ),
-          error = function(e) NULL
+          error = function(e) {
+            if (verbose) {
+              message(
+                "Resolution ", localRes, " failed (", conditionMessage(e),
+                ") - skipping."
+              )
+            }
+            NULL
+          }
         )
       )
 
-      i <- i -1
-      if(is.null(seuratObj2) && i < 1) {
-        message("No valid resolution. Please try with other resolutions.")
-        return(NULL)
+      if (is.null(localIds)) {
+        next
       }
 
-    }
-    seuratObj <- seuratObj2
+      ### Make sure the cluster number starts from 0
 
-    ### Make sure the cluster number starts from 0
-
-    ### Normalize every resolution's cluster factor once, at the source:
-    ### renumber so ids start at 0 AND force numeric level order (0,1,2,...).
-    ### Seurat sometimes stores the levels lexicographically ("10" sorts before
-    ### "2"), which silently breaks any downstream code that pairs labels to
-    ### factor levels by position. Fixing it here keeps every consumer correct
-    ### without per-function guards. `normalizeClusterLevels()` is the single
-    ### implementation, also exported for migrating objects clustered earlier.
-    for (localRes in resolution[1:(i+1)]) {
+      ### Normalize every resolution's cluster factor once, at the source:
+      ### renumber so ids start at 0 AND force numeric level order (0,1,2,...).
+      ### Backends differ here -- Seurat is 0-based, igraph is 1-based, and
+      ### Seurat sometimes stores the levels lexicographically ("10" sorts
+      ### before "2"), which silently breaks any downstream code that pairs
+      ### labels to factor levels by position. Fixing it here keeps every
+      ### consumer correct without per-function guards.
+      ### `normalizeClusterLevels()` is the same implementation, exported for
+      ### migrating objects clustered earlier.
       clusterResolution <- stringr::str_c('GSEA_snn_res.', localRes)
       seuratObj@meta.data[[clusterResolution]] <-
-        numericClusterFactor(seuratObj@meta.data[[clusterResolution]])
+        numericClusterFactor(localIds)
+
+      resolutionsTested <- c(resolutionsTested, localRes)
+    }
+
+    if (!length(resolutionsTested)) {
+      message("No valid resolution. Please try with other resolutions.")
+      return(NULL)
     }
 
     ### Set optimal clustering as default
     if(TRUE) {
       # Extract silluette scores
-      meanSil <- sapply(resolution[1:(i+1)], function(localRes) {
+      meanSil <- sapply(resolutionsTested, function(localRes) {
 
         localClust <- as.integer(as.character(seuratObj@meta.data[,stringr::str_c('GSEA_snn_res.',localRes)]))
 
@@ -165,7 +216,7 @@ clusterGeneSets <-
       })
 
       ### Extract best resolution
-      bestRes <- resolution[which(meanSil == max(meanSil))[1] ]
+      bestRes <- resolutionsTested[which(meanSil == max(meanSil))[1] ]
 
       ### Set as default
       Seurat::Idents(seuratObj) <- seuratObj@meta.data[,stringr::str_c('GSEA_snn_res.',bestRes)]
@@ -177,11 +228,10 @@ clusterGeneSets <-
     geneSetsList@cluster <- seuratObj
 
     ### Record clustering metadata
-    resolutionsTested <- resolution[1:(i+1)]
     silhouetteScores <- stats::setNames(meanSil, as.character(resolutionsTested))
     geneSetsList@metadata$k <- selectedK
     geneSetsList@metadata$lsi_elbow_cutoff <- elbowRes$elbow_cutoff
-    geneSetsList@metadata$cluster_algorithm <- algorithm
+    geneSetsList@metadata$cluster_algorithm <- clusterMethodObj$name
     geneSetsList@metadata$resolutions_tested <- resolutionsTested
     geneSetsList@metadata$selected_resolution <- bestRes
     geneSetsList@metadata$silhouette_scores <- silhouetteScores
@@ -194,12 +244,12 @@ clusterGeneSets <-
                           col.name = "gene_set")
 
     if(verbose) {
-      for (i in resolution) {
-        resolutionColumn <- paste0("GSEA_snn_res.", i)
+      for (localRes in resolutionsTested) {
+        resolutionColumn <- paste0("GSEA_snn_res.", localRes)
         clusterNumber <-
           length(levels(geneSetsList@cluster@meta.data[[resolutionColumn]]))
 
-        message(paste0(clusterNumber, " clusters found for resolution ", i))
+        message(paste0(clusterNumber, " clusters found for resolution ", localRes))
       }
     }
 
