@@ -58,7 +58,10 @@ Imports:
     pheatmap,
     knitr
 Suggests:
-    msigdbr
+    msigdbr,
+    leiden,
+    apcluster,
+    simplifyEnrichment
 RoxygenNote: 7.3.2
 Depends:
     R (>= 4.4)

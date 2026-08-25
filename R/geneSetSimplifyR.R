@@ -17,7 +17,12 @@
 #' analysis of multi-conditional data throughout the entire workflow and is also supported by many
 #' plotting functions. See the vignette for more info.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
-#' @param cluster_algo Algorithm for Clustering. Options: 'leiden', 'louvain'(default)
+#' @param cluster_algo Clustering method applied to the SNN graph, passed to
+#'   \code{clusterGeneSets()}. Either the name of a registered method (see
+#'   \code{\link{listClusterMethods}}; 'louvain' by default), a
+#'   \code{gsClusterMethod} from \code{\link{clusterMethod}}, or a function.
+#' @param clusterArgs Named list of extra arguments passed on to the clustering
+#'   method.
 #' @param elbow_method Method passed to \code{clusterGeneSets()} for selecting the
 #'   number of LSI dimensions. Options: 'distance'(default), 'zscore'.
 #' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
@@ -35,6 +40,7 @@ geneSetSimplifyR <- function(
     resolution = c(1),
     verbose = TRUE,
     cluster_algo = "louvain",
+    clusterArgs = list(),
     elbow_method = "distance",
     removeFirstWord = FALSE
 ) {
@@ -49,6 +55,7 @@ geneSetSimplifyR <- function(
     resolution = resolution,
     verbose = verbose,
     algorithm = cluster_algo,
+    clusterArgs = clusterArgs,
     elbow_method = elbow_method
   )
 

@@ -8,7 +8,9 @@ clusterGeneSets(
   geneSetsList,
   resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
   algorithm = "louvain",
+  clusterArgs = list(),
   K = NA,
+  elbow_method = "distance",
   verbose = TRUE
 )
 }
@@ -17,11 +19,27 @@ clusterGeneSets(
 
 \item{resolution}{Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.}
 
-\item{algorithm}{Algorithm for clustering. Options: 'louvain', 'leiden'}
+\item{algorithm}{Clustering method applied to the SNN graph. Either the name
+  of a registered method (see [listClusterMethods()]; e.g. 'louvain',
+  'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
+  'binary_cut'), a `gsClusterMethod` built with [clusterMethod()], or a
+  function following the same contract. Only this step is swappable -- the
+  SNN graph itself is always built the same way.
+
+  Methods that determine the number of clusters themselves ('kmeans',
+  'apcluster', 'binary_cut') ignore `resolution` and are run once; the result
+  is stored under the first requested resolution.}
+
+\item{clusterArgs}{Named list of extra arguments passed on to the clustering
+method, for example `list(n.start = 20)` for the Seurat backends,
+`list(maxK = 50)` for 'kmeans', `list(p = -1)` for 'apcluster', or
+`list(cutoff = 0.9)` for 'binary_cut'.}
 
 \item{K}{Integer or NA. Number of nearest neighbours used when building the
 KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
 `N` is the number of gene sets.}
+
+\item{elbow_method}{option: distance, zscore.}
 
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
 }
@@ -37,4 +55,12 @@ Cluster gene sets
 # Create gsListObject
 geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
+
+# Swap in a different community-detection implementation
+\dontrun{
+gsListObject <- clusterGeneSets(geneSetsList, algorithm = "igraph_leiden")
+}
+}
+\seealso{
+[clusterMethod()], [registerClusterMethod()], [listClusterMethods()]
 }
