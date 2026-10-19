@@ -28,6 +28,10 @@ BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 
 `BiocManager` installs the dependencies from both CRAN and Bioconductor.
 
+On macOS, if installation stops with `ERROR: sub-architecture '...' is not
+installed`, add `INSTALL_opts = "--no-multiarch"` to the
+`BiocManager::install()` call.
+
 ## Quick start
 
 ```r
