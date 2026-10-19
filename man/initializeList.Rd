@@ -17,11 +17,16 @@ Should have a column named 'pathway' containing the gene sets and a column
 named 'enrichment_score' or 'NES' with the enrichment of each gene set.
 Optionally have a column named 'pval' or 'pvalue' with the p-value of each gene set; a
 'nlog10pval' column with the -log10 transformed p-values is added automatically and is
-required by some plotting functions (e.g. 'plotHeatmap()').
+used by default by the plotting functions that summarize scores (e.g. 'plotHeatmap()').
+p-values must lie between 0 and 1. A p-value of 0 is transformed as the
+smallest positive double (giving about 307.7) rather than infinity.
 Optionally have a column named 'source' indicating the source of each gene set. This allows for
 analysis of multi-conditional data throughout the entire workflow and is also supported by many
 plotting functions. If a gene-set was found in multiple conditions there should be multiple rows
 for the same 'pathway' indicating its respective source and corresponding enrichment_score.
+Each combination of 'pathway' and 'source' may appear only once.
+Any other numeric column is kept and can be plotted via the 'plotFrom' argument of the
+plotting functions. List columns (e.g. 'leadingEdge' from fgsea) are dropped.
 See the vignette for examples.}
 
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
@@ -32,6 +37,11 @@ See the vignette for examples.}
 \description{
 Initialize a 'gsList' object from a dataframe with gene sets and enrichment scores and a gene sets database.
 }
+\details{
+Gene sets without any gene are removed with a warning. Missing gene
+  ids (`NA` or empty strings) are ignored.
+}
 \examples{
 gsListObject <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+gsListObject
 }

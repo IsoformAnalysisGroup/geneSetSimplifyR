@@ -2,7 +2,7 @@
 % Please edit documentation in R/updateClusterLabel.R
 \name{updateClusterLabels}
 \alias{updateClusterLabels}
-\title{Plot label information for a particular cluster}
+\title{Rename a cluster}
 \usage{
 updateClusterLabels(
   geneSetsList,
@@ -12,24 +12,32 @@ updateClusterLabels(
 )
 }
 \arguments{
-\item{geneSetsList}{'gsList' object that has been clustered with the 'clusterGeneSets()' function.}
+\item{geneSetsList}{'gsList' object that has been clustered and labeled.}
 
-\item{resolution}{Float. The clustering resolution to use as the default.
-The labels of this resolution will be set as the 'active.idents' in the Seurat object containing the clustering,
-and thus this is the resolution used for the different plotting functions.
-The 'resolution' must have been used as a resolution in the 'clusterGeneSets()' function.}
+\item{resolution}{Numeric. The clustering resolution of the cluster to
+rename. It must have been used as a resolution in `clusterGeneSets()`.
+When given, this resolution also becomes the active resolution: plotting
+and table functions called with `resolution = NULL` afterwards use it.
+Default `NULL` renames a cluster of the active resolution.}
 
-\item{clusterNumber}{Which cluster to plot. Here the cluster number is used}
+\item{clusterNumber}{The number of the cluster to rename, as shown in front
+of its label (e.g. `0` for "0: Immune Response").}
 
-\item{newClusterName}{The new name of the cluster}
+\item{newClusterName}{The new name of the cluster.}
 }
 \value{
-'gsList' object with a single cluster label updated. The original names are also stored.
+'gsList' object with the cluster label updated.
 }
 \description{
-Plot label information for a particular cluster
+Replaces the label of one cluster with a name of your choice.
+  The original label is kept and reported as `initial_cluster_label` by
+  `extractTable(summarize = FALSE)`, also after several renames.
 }
 \examples{
-exampleGsList <- updateClusterLabels(geneSetsList = exampleGsList, 
-clusterNumber = 0, newClusterName = 'cancer response')
+gsListObject <- updateClusterLabels(
+  geneSetsList = exampleGsList,
+  clusterNumber = 0,
+  newClusterName = 'cancer response'
+)
+head(extractTable(gsListObject, summarize = FALSE))
 }

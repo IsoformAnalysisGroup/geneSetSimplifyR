@@ -1,7 +1,7 @@
 Package: geneSetSimplifyR
 Type: Package
 Title: Simplify Gene-Set Enrichment Analysis
-Version: 1.0.0
+Version: 0.99.0
 Authors@R: c(
   person(given = "Ella",
     family = "Hedeboe",
@@ -19,50 +19,60 @@ Authors@R: c(
     role = c("cre", "aut"),
     comment = c(ORCID = "0000-0002-6450-0608"))
     )
-Description: geneSetSimplifyR seeks to simplify gene-set enrichment analysis
-  (GSEA) via clustering of gene sets.
-  Given a list of gene sets of interest the package clusters these using LSI
-  and SNN and subsequently the clusters are labelled using TF-IDF to find the
-  best suitable two-word label for each cluster. The package contains several
-  plotting functions so the user can quickly visualize the clustering output and
-  draw biological meaningful insights.
+Description: Simplifies the results of gene-set enrichment analysis (GSEA) by
+  clustering the enriched gene sets on the genes they share. Gene sets are
+  embedded with latent semantic indexing (LSI) of their gene membership, and
+  clustered by community detection on a shared nearest neighbor (SNN) graph.
+  Each cluster is labeled with the two-word phrase that best describes its
+  gene-set names, found by term frequency-inverse document frequency (TF-IDF)
+  and gene-set centrality. Results from several conditions or analyses can be
+  combined. The package contains several plotting functions so the user can
+  quickly visualize the clustering output and draw biologically meaningful
+  insights.
 License: GPL-3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
 LazyDataCompression: xz
-URL: https://github.com/chihs-dtu/geneSetSimplifyR
-BugReports: https://github.com/chihs-dtu/geneSetSimplifyR/issues
+URL: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR
+BugReports: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues
+biocViews: Software, GeneSetEnrichment, Pathways, Clustering,
+    DimensionReduction, Visualization
+Depends:
+    R (>= 4.4.0)
 Imports:
     cluster,
     clustree,
-    purrr,
-    stringr,
-    dplyr,
-    forcats,
+    dplyr (>= 1.1.0),
     ggplot2,
-    igraph,
     ggraph,
+    grDevices,
+    igraph,
+    irlba,
     magrittr,
+    Matrix,
     methods,
-    plyr,
-    Seurat,
-    SeuratObject,
-    Signac,
+    pheatmap,
+    Seurat (>= 5.0.0),
+    SeuratObject (>= 5.0.0),
+    stats,
+    stringr (>= 1.5.0),
     tibble,
     tidyr,
-    tidyseurat,
     tidytext,
-    rmdformats,
-    fgsea,
-    pheatmap,
-    knitr
+    utils,
+    withr
 Suggests:
-    msigdbr,
-    leiden,
     apcluster,
-    simplifyEnrichment
-RoxygenNote: 7.3.2
-Depends:
-    R (>= 4.4)
+    BiocStyle,
+    fgsea,
+    knitr,
+    leiden,
+    msigdbr,
+    rmarkdown,
+    RSpectra,
+    simplifyEnrichment,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 VignetteBuilder: knitr
+RoxygenNote: 7.3.2

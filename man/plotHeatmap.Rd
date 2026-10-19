@@ -15,13 +15,15 @@ plotHeatmap(
   cutree_rows = NA,
   cutree_cols = NA,
   drawPlot = TRUE,
-  scaleCols = TRUE
+  scaleCols = "auto"
 )
 }
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().}
+\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
+active resolution: the optimal resolution found by `clusterGeneSets()`, or
+the one last set with `updateResolution()` or `updateClusterLabels()`.}
 
 \item{plotFrom}{Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used (the default therefore falls back to 'enrichment_score' when no p-values were supplied).}
 
@@ -29,7 +31,7 @@ plotHeatmap(
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
-\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
+\item{highlightClusterNo}{A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.}
 
 \item{transpose}{A logical indicating whether to transpose the heatmap (switch rows and cols)}
 
@@ -37,16 +39,29 @@ plotHeatmap(
 
 \item{cutree_cols}{pheatmap control parameter. Number of clusters the columns are divided into}
 
-\item{drawPlot}{Whether to show the plot. Default to TRUE.}
+\item{drawPlot}{Whether to draw the plot. Default to TRUE.}
 
-\item{scaleCols}{Whether to perform standardization.}
+\item{scaleCols}{Whether to z-score each cluster across the sources before
+plotting. One of `"auto"` (default), `TRUE` or `FALSE`. `"auto"` scales
+only when there are at least three sources: with one source there is
+nothing to compare, and with two sources the z-scores can only be
+-0.71, 0 or 0.71. Scaling is always across sources, also when
+`transpose = TRUE`.}
 }
 \value{
-The pheatmap object if 'drawPlot' is FALSE, else NULL (the heatmap is drawn).
+The pheatmap object, invisibly. Use `drawPlot = FALSE` to get it
+  without drawing, e.g. to arrange it with other plots.
 }
 \description{
-Creates a heatmap summarizing the enrichment of each gene-set cluster in each source (useful for datasets with many data sources).
+Creates a heatmap summarizing the enrichment of each gene-set
+  cluster in each source (useful for datasets with many data sources).
+}
+\details{
+Cells of clusters that have no gene set from a source are shown in
+  gray. Rows and columns are ordered by hierarchical clustering when there
+  are at least two sources (absent cells count as 0 for the clustering).
 }
 \examples{
 plotHeatmap(exampleGsList)
+plotHeatmap(exampleGsList, plotFrom = 'enrichment_score', summaryStat = 'mean')
 }

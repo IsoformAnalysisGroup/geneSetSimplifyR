@@ -14,19 +14,22 @@ plotProportions(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().}
+\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
+active resolution: the optimal resolution found by `clusterGeneSets()`, or
+the one last set with `updateResolution()` or `updateClusterLabels()`.}
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
-\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
+\item{highlightClusterNo}{A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.}
 }
 \value{
-A list of ggplot objects.
+A ggplot object.
 }
 \description{
 Graphs a bar plot showing the proportion of gene sets within
-each cluster that comes from each of the two sources in the analyzed data.
-Gene-sets found in both sources contribute to the fraction of both sources.
+each cluster that come from each source in the analyzed data. A gene set
+found in several sources is counted once, as 'Both' (two sources) or
+'Multiple' (three or more). Needs at least two sources.
 }
 \examples{
 plotProportions(exampleGsList)

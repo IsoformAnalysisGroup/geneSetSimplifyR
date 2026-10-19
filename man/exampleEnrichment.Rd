@@ -9,7 +9,7 @@ A data frame with 3 columns, source, pathway, and enrichment_score.
 \describe{
   \item{source}{The source/group used when applying GSEA.}
   \item{pathway}{The pathway name when applying GSEA.}
-  \item{enrichment_score}{Enrichment scores form GSEA results.}
+  \item{enrichment_score}{Enrichment scores from GSEA results.}
 }
 }
 \source{

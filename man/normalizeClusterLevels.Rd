@@ -20,7 +20,6 @@ Rebuilds every `GSEA_snn_res.<res>` metadata column so its
   assignments are unchanged -- only the level order is corrected.
 }
 \examples{
-\dontrun{
-neftelGss <- normalizeClusterLevels(neftelGss)
-}
+gsListObject <- normalizeClusterLevels(exampleGsList)
+levels(gsListObject@cluster$GSEA_snn_res.1.1)
 }

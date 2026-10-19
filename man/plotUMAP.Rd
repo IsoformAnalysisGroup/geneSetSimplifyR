@@ -23,44 +23,50 @@ plotUMAP(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().}
+\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
+active resolution: the optimal resolution found by `clusterGeneSets()`, or
+the one last set with `updateResolution()` or `updateClusterLabels()`.}
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
 \item{interactive}{Logical, indicating whether to plot an interactive UMAP plot. Default: FALSE.
-If TRUE, an interactive plot will be plotted using the 'HoverLocator()' from the Seurat package.}
+If TRUE, an interactive plot is made with 'HoverLocator()' from the Seurat
+package; hovering over a point shows its gene set and cluster.}
 
-\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
+\item{highlightClusterNo}{A vector with the cluster numbers of the clusters (at the resolution) to highlight in the plot.}
 
-\item{pointSize}{size of points. Default is 2}
+\item{pointSize}{Size of points. Default is 2.}
 
-\item{pointAlpha}{transparency of points. Default is 1/3.}
+\item{pointAlpha}{Transparency of points. Default is 1/3.}
 
-\item{labelSize}{size of label Default is 2}
+\item{labelSize}{Size of the cluster labels. Default is 3.}
 
-\item{labelAlpha}{transparency of label Default is 1.}
+\item{labelAlpha}{Transparency of the cluster labels. Default is 1.}
 
-\item{highlightPointAlpha}{The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3}
+\item{highlightPointAlpha}{Transparency of the points of highlighted clusters. Default is 2/3.}
 
-\item{highlightPointSize}{The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2}
+\item{highlightPointSize}{Size of the points of highlighted clusters. Default is 4.}
 
-\item{highlightLabelAlpha}{The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3}
+\item{highlightLabelAlpha}{Transparency of the labels of highlighted clusters. Default is 1.}
 
-\item{highlightLabelSize}{The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2}
+\item{highlightLabelSize}{Size of the labels of highlighted clusters. Default is 5.}
 }
 \value{
-A list of ggplot objects.
+A ggplot object (a patchwork from 'Seurat::DimPlot()'), or a
+  plotly object when `interactive = TRUE`.
 }
 \description{
 Graphs the output of the UMAP dimensionality reduction as a scatterplot
 using the 'DimPlot()' function from the Seurat package.
-Gene sets are colored and labelled by their cluster.
+Gene sets are colored and labeled by their cluster.
 When there is only one source in the data (default),
 each point will be shaped by the direction of the enrichment score of the gene set.
 When there are two sources in the data,
 each point will be shaped by the source indicating whether the gene set was found
-significant in either or both sources.
+significant in either or both sources. With three or more sources, points
+are not shaped.
 }
 \examples{
 plotUMAP(exampleGsList)
+plotUMAP(exampleGsList, highlightClusterNo = 0, removeClusterId = TRUE)
 }

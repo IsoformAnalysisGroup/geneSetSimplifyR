@@ -7,17 +7,20 @@
 updateResolution(geneSetsList, resolution)
 }
 \arguments{
-\item{geneSetsList}{'gsList' object that has been clustered with the 'clusterGeneSets()' function.}
+\item{geneSetsList}{'gsList' object that has been clustered and labeled.}
 
-\item{resolution}{Float. The clustering resolution to use as the new default.
-The new 'resolution' must have been used as a resolution in the 'clusterGeneSets()' function.}
+\item{resolution}{Numeric. The clustering resolution to use as the new
+default. It must have been used as a resolution in `clusterGeneSets()`.}
 }
 \value{
-'gsList' object updated with new default resolution
+'gsList' object updated with the new default resolution.
 }
 \description{
-Update default resolution of gsList
+Sets the resolution used by all plotting and table functions
+  when their `resolution` argument is `NULL`. It replaces the optimal
+  resolution found by `clusterGeneSets()` as the default.
 }
 \examples{
-gsListObject <- updateResolution(exampleGsList, 1.1)
+gsListObject <- updateResolution(exampleGsList, 0.6)
+extractResolution(gsListObject)
 }

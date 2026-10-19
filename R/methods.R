@@ -1,41 +1,24 @@
+#' @describeIn gsList-class Print a short summary of the object.
+#' @param object A 'gsList' object.
 setMethod("show", "gsList", function(object) {
-  if( length( object@labels ) ) {
-    print(
-      stringr::str_c(
-        'A gsList object with ',
-        dplyr::n_distinct(object@enrichmentScore$pathway),
-        ' gene sets from ',
-        dplyr::n_distinct(object@enrichmentScore$source),
-        ' source(s)',
-        ' clustered into ',
-        length(levels( object@cluster@active.ident )),
-        ' labeled clusters.'
-      )
-    )
-  } else if( !is.null(object@cluster) ) {
-    print(
-      stringr::str_c(
-        'A gsList object with ',
-        dplyr::n_distinct(object@enrichmentScore$pathway),
-        ' gene sets from ',
-        dplyr::n_distinct(object@enrichmentScore$source),
-        ' source(s)',
-        ' clustered into ',
-        length(levels( object@cluster@active.ident )),
-        ' clusters.'
-      )
+  nGeneSets <- dplyr::n_distinct(object@enrichmentScore$pathway)
+  nSources <- dplyr::n_distinct(object@enrichmentScore$source)
+  isClustered <- length(object@cluster) > 0
+
+  summaryLine <- paste0(
+    'A gsList object with ', nGeneSets, ' gene sets from ',
+    nSources, ' source(s)'
+  )
+  if (isClustered) {
+    nClusters <- length(levels(object@cluster@active.ident))
+    summaryLine <- paste0(
+      summaryLine, ' clustered into ', nClusters,
+      if (length(object@labels)) ' labeled clusters.' else ' clusters.'
     )
   } else {
-    print(
-      stringr::str_c(
-        'A gsList object with ',
-        dplyr::n_distinct(object@enrichmentScore$pathway),
-        ' gene sets from ',
-        dplyr::n_distinct(object@enrichmentScore$source),
-        ' source(s)'
-      )
-    )
+    summaryLine <- paste0(summaryLine, '.')
   }
+  cat(summaryLine, "\n", sep = "")
 
   meta <- if (.hasSlot(object, "metadata")) object@metadata else list()
   if (length(meta)) {
@@ -52,9 +35,17 @@ setMethod("show", "gsList", function(object) {
     if (!is.null(meta$selected_resolution)) {
       cat("  selected resolution: ", meta$selected_resolution, "\n", sep = "")
     }
+    if (isClustered && !is.null(meta$active_resolution)) {
+      activeResolution <- sub("^GSEA_snn_res\\.", "", meta$active_resolution)
+      if (!identical(as.numeric(activeResolution),
+                     as.numeric(meta$selected_resolution))) {
+        cat("  active resolution: ", activeResolution, "\n", sep = "")
+      }
+    }
     if (!is.null(meta$n_pathways)) {
       cat("  n pathways: ", meta$n_pathways, "\n", sep = "")
     }
   }
 
+  invisible(object)
 })

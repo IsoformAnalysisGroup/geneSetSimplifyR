@@ -2,32 +2,39 @@
 #'
 #' @description Graphs the output of the UMAP dimensionality reduction as a scatterplot
 #' using the 'DimPlot()' function from the Seurat package.
-#' Gene sets are colored and labelled by their cluster.
+#' Gene sets are colored and labeled by their cluster.
 #' When there is only one source in the data (default),
 #' each point will be shaped by the direction of the enrichment score of the gene set.
 #' When there are two sources in the data,
 #' each point will be shaped by the source indicating whether the gene set was found
-#' significant in either or both sources.
+#' significant in either or both sources. With three or more sources, points
+#' are not shaped.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
-#' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
+#' @param resolution The cluster resolution to plot. Default `NULL` uses the
+#'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
+#'   the one last set with `updateResolution()` or `updateClusterLabels()`.
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
-#' @param highlightPointAlpha The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3
-#' @param highlightPointSize The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2
-#' @param highlightLabelAlpha The transparency of the highlighted clusters. Set different from "alpha" to use transparency for highlighting clusters. Default is 2/3
-#' @param highlightLabelSize The size of the highlighted clusters. Set different from "size" to use size for highlighting clusters. Default is 2
-#' @param pointSize size of points. Default is 2
-#' @param pointAlpha transparency of points. Default is 1/3.
-#' @param labelSize size of label Default is 2
-#' @param labelAlpha transparency of label Default is 1.
 #' @param interactive Logical, indicating whether to plot an interactive UMAP plot. Default: FALSE.
-#' If TRUE, an interactive plot will be plotted using the 'HoverLocator()' from the Seurat package.
+#' If TRUE, an interactive plot is made with 'HoverLocator()' from the Seurat
+#' package; hovering over a point shows its gene set and cluster.
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight in the plot.
+#' @param pointSize Size of points. Default is 2.
+#' @param pointAlpha Transparency of points. Default is 1/3.
+#' @param labelSize Size of the cluster labels. Default is 3.
+#' @param labelAlpha Transparency of the cluster labels. Default is 1.
+#' @param highlightPointAlpha Transparency of the points of highlighted clusters. Default is 2/3.
+#' @param highlightPointSize Size of the points of highlighted clusters. Default is 4.
+#' @param highlightLabelAlpha Transparency of the labels of highlighted clusters. Default is 1.
+#' @param highlightLabelSize Size of the labels of highlighted clusters. Default is 5.
 #'
-#' @return A list of ggplot objects.
+#' @return A ggplot object (a patchwork from 'Seurat::DimPlot()'), or a
+#'   plotly object when `interactive = TRUE`.
 #' @export
 #'
-#' @examples plotUMAP(exampleGsList)
+#' @examples
+#' plotUMAP(exampleGsList)
+#' plotUMAP(exampleGsList, highlightClusterNo = 0, removeClusterId = TRUE)
 plotUMAP <- function(
     ### High level
     geneSetsList,
@@ -46,288 +53,127 @@ plotUMAP <- function(
     highlightLabelSize = 5
 ) {
   # Check input
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object")
-  }
+  checkGsList(geneSetsList)
 
-  if (length(geneSetsList@cluster) == 0) {
-    stop(
-      "No clustering performed for 'geneSetsList'.
-         Please run 'clusterGeneSets()' and 'labelClusters()' before plotting."
-    )
-  }
+  clusterNameToHighlight <- highlightedClusterNames(
+    geneSetsList = geneSetsList,
+    resolution = resolution,
+    highlightClusterNo = highlightClusterNo,
+    removeClusterId = removeClusterId
+  )
 
-  if (length(geneSetsList@labels) == 0) {
-    stop(
-      "No labels created for 'geneSetsList'.
-         Please run 'labelClusters()' before plotting."
-    )
-  }
+  ### Set the cluster resolution and labels to plot
+  geneSetsList <- changeUsedResolution(
+    geneSetsList = geneSetsList,
+    resolution = resolution,
+    removeClusterId = removeClusterId
+  )
 
-  hasEnrichmentScore <- ! all(is.na( geneSetsList@enrichmentScore$enrichment_score  ) )
-
-  ### Extract clusters to highlight
-  if(! is.null(highlightClusterNo)) {
-
-    if( ! is.null(resolution)) {
-      geneSetsList <- changeUsedResolution(
-        geneSetsList = geneSetsList,
-        resolution = resolution,
-        removeClusterId = FALSE
-      )
-    }
-
-    ### Extract cluster to highlight
-    clusterPattern <- stringr::str_c('^',highlightClusterNo, ': ', collapse = '|')
-
-    clusterNameToHighlight <-
-      stringr::str_subset(
-        string = levels(geneSetsList@cluster@active.ident),
-        pattern = clusterPattern
-      )
-
-    if(removeClusterId) {
-      clusterNameToHighlight <-
-        stringr::str_remove(clusterNameToHighlight, "^[0-9]+: ")
-    }
-  }
-
-  ### Update cluster resulution and remove ids
-  if( ! is.null(resolution) | removeClusterId ) {
-    geneSetsList <- changeUsedResolution(
-      geneSetsList = geneSetsList,
-      resolution = resolution,
-      removeClusterId = removeClusterId
-    )
-  }
-
-  ### Assign conditions
+  ### Shape the points by source or by direction of enrichment
   nCond <- countConditions(geneSetsList)
+  geneSetIds <- geneSetsList@cluster@meta.data$gene_set
+  shapeBy <- NULL
+  shapeTitle <- NULL
+  hoverVars <- c("ident", "nCount_GSEA")
 
-  ### Many conditions
-  if( nCond == '3+' ) {
-
-    if (   interactive ) {
-      pUMAP <- Seurat::HoverLocator(
-        plot = pUMAP,
-        information = Seurat::FetchData(
-          geneSetsList@cluster,
-          vars = c("ident",
-                   "nCount_GSEA")
-        )
-      )
-    }
-    if ( ! interactive ) {
-      pUMAP <- Seurat::DimPlot(
-        geneSetsList@cluster,
-        label = TRUE,
-        label.box = TRUE,
-        repel = TRUE,
-        label.size = labelSize,
-        pt.size = pointSize,
-        group.by = 'ident'
-      ) +
-        theme_bw() +
-        guides(colour = "none") +
-        labs(title = NULL,x='UMAP1',y='UMAP2')
-    }
-
-
-  }
-
-  ### Two conditions
   if( nCond == '2' ) {
+    sourcesPerGeneSet <- table(geneSetsList@enrichmentScore$pathway)
+    firstSource <- geneSetsList@enrichmentScore$source[match(
+      geneSetIds, geneSetsList@enrichmentScore$pathway
+    )]
+    geneSetSource <- ifelse(
+      as.vector(sourcesPerGeneSet[geneSetIds]) > 1,
+      'Both',
+      firstSource
+    )
 
-    geneSetsDFFiltered <-
-      geneSetsList@enrichmentScore %>%
-      dplyr::count(pathway) %>%
-      dplyr::right_join(
-        x = .,
-        y = geneSetsList@enrichmentScore[,c('source','pathway')],
-        by = "pathway",
-        multiple = "all"
-      ) %>%
-      dplyr::mutate(
-        source = dplyr::case_when(
-          n == 2 ~ "both",
-          n == 1  ~ source
-        )
-      ) %>%
-      dplyr::select(pathway, source) %>%
-      dplyr::distinct()
-
-    geneSetsList@cluster <-
-      SeuratObject::AddMetaData(
-        object = geneSetsList@cluster,
-        metadata = geneSetsDFFiltered$source[match(
-          geneSetsList@cluster@meta.data$gene_set, geneSetsDFFiltered$pathway
-        )],
-        col.name = 'source'
-      )
-
-    if (   interactive ) {
-      pUMAP <- Seurat::HoverLocator(
-        plot = pUMAP,
-        information = Seurat::FetchData(
-          geneSetsList@cluster,
-          vars = c("ident",
-                   "source",
-                   "nCount_GSEA")
-        )
-      )
-    }
-    if ( ! interactive ) {
-      pUMAP <- Seurat::DimPlot(
-        geneSetsList@cluster,
-        label = TRUE,
-        label.box = TRUE,
-        repel = TRUE,
-        label.size = labelSize,
-        pt.size = pointSize,
-        shape.by = 'source',
-        group.by = 'ident'
-      ) +
-        theme_bw() +
-        theme(legend.position = "bottom") +
-        guides(colour = "none") +
-        labs(shape = "Gene set source", x='UMAP1',y='UMAP2') +
-        labs(title = NULL)
-
-
-    }
-
-
-
+    geneSetsList@cluster <- SeuratObject::AddMetaData(
+      object = geneSetsList@cluster,
+      metadata = stats::setNames(geneSetSource, colnames(geneSetsList@cluster)),
+      col.name = 'source'
+    )
+    shapeBy <- 'source'
+    shapeTitle <- 'Gene set source'
+    hoverVars <- c("ident", "source", "nCount_GSEA")
   }
 
-  ### One condition
-  if( nCond == '1' ) {
+  hasEnrichmentScore <-
+    ! all(is.na( geneSetsList@enrichmentScore$enrichment_score ))
 
-    # With enrichment scores
-    if(   hasEnrichmentScore ) {
-      enrichment_score_sign <-
-        ifelse(geneSetsList@enrichmentScore$enrichment_score > 0, "Positive", "Negative")
+  if( nCond == '1' && hasEnrichmentScore ) {
+    # Matched by gene-set name; the rows of 'enrichmentScore' need not be in
+    # the same order as the gene sets in the Seurat object.
+    enrichmentScore <- geneSetsList@enrichmentScore$enrichment_score[match(
+      geneSetIds, geneSetsList@enrichmentScore$pathway
+    )]
+    enrichmentScoreSign <- dplyr::case_when(
+      enrichmentScore > 0 ~ 'Positive',
+      enrichmentScore < 0 ~ 'Negative',
+      enrichmentScore == 0 ~ 'Zero',
+      TRUE ~ 'Missing'
+    )
 
-      geneSetsList@cluster <-
-        Seurat::AddMetaData(
-          object = geneSetsList@cluster,
-          metadata = enrichment_score_sign,
-          col.name = 'enrichment_score_sign'
-        )
+    geneSetsList@cluster <- Seurat::AddMetaData(
+      object = geneSetsList@cluster,
+      metadata = data.frame(
+        enrichment_score_sign = enrichmentScoreSign,
+        enrichment_score = enrichmentScore,
+        row.names = colnames(geneSetsList@cluster)
+      )
+    )
+    shapeBy <- 'enrichment_score_sign'
+    shapeTitle <- 'Enrichment score'
+    hoverVars <- c("ident", "enrichment_score", "nCount_GSEA")
+  }
 
-      geneSetsList@cluster <-
-        Seurat::AddMetaData(
-          object = geneSetsList@cluster,
-          metadata = geneSetsList@enrichmentScore$enrichment_score,
-          col.name = 'enrichment_score'
-        )
+  ### Make plot
+  pUMAP <- Seurat::DimPlot(
+    geneSetsList@cluster,
+    label = TRUE,
+    label.box = TRUE,
+    repel = TRUE,
+    label.size = labelSize,
+    pt.size = pointSize,
+    shape.by = shapeBy,
+    group.by = 'ident'
+  ) +
+    theme_bw() +
+    guides(colour = "none") +
+    labs(title = NULL, x = 'UMAP1', y = 'UMAP2')
 
-      if(   interactive ) {
-        pUMAP <- Seurat::HoverLocator(
-          plot = pUMAP,
-          information = Seurat::FetchData(
-            geneSetsList@cluster,
-            vars = c("ident",
-                     "enrichment_score",
-                     "nCount_GSEA")
-          )
-        )
-      }
-      if( ! interactive ) {
-        pUMAP <- Seurat::DimPlot(
-          geneSetsList@cluster,
-          label = TRUE,
-          label.box = TRUE,
-          repel = TRUE,
-          label.size = labelSize,
-          pt.size = pointSize,
-          shape.by = 'enrichment_score_sign',
-          group.by = 'ident'
-        ) +
-          theme_bw() +
-          theme(legend.position = "bottom") +
-          guides(colour = "none") +
-          labs(shape = "Enrichment score") + #+ Seurat::NoLegend()
-          labs(title = NULL, x='UMAP1',y='UMAP2')
-
-      }
-    }
-    if( ! hasEnrichmentScore ) {
-      if(   interactive ) {
-        pUMAP <- Seurat::HoverLocator(
-          plot = pUMAP,
-          information = Seurat::FetchData(
-            geneSetsList@cluster,
-            vars = c("ident",
-                     "nCount_GSEA")
-          )
-        )
-      }
-      if( ! interactive ) {
-        pUMAP <- Seurat::DimPlot(
-          geneSetsList@cluster,
-          label = TRUE,
-          label.box = TRUE,
-          repel = TRUE,
-          label.size = labelSize,
-          pt.size = pointSize,
-          group.by = 'ident'
-        ) +
-          theme_bw() +
-          guides(colour = "none") +
-          labs(title = NULL, x='UMAP1',y='UMAP2')
-
-      }
-    }
-
+  if (!is.null(shapeBy)) {
+    pUMAP <- pUMAP +
+      theme(legend.position = "bottom") +
+      labs(shape = shapeTitle)
   }
 
   ### Set transparency and size
-  if(! is.null(highlightClusterNo)) {
+  pointIsHighlighted <- pUMAP[[1]]$data$ident %in% clusterNameToHighlight
+  labelIsHighlighted <- pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight
 
-    ### Modify object
-    # points
-    pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
-      ifelse(
-        test = pUMAP[[1]]$data$ident %in% clusterNameToHighlight,
-        yes = highlightPointAlpha,
-        no = pointAlpha
-      )
-    pUMAP[[1]]$layers[[1]]$aes_params$size <-
-      ifelse(
-        test = pUMAP[[1]]$data$ident %in% clusterNameToHighlight,
-        yes = highlightPointSize,
-        no = pointSize
-      )
+  # points
+  pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
+    ifelse(pointIsHighlighted, highlightPointAlpha, pointAlpha)
+  pUMAP[[1]]$layers[[1]]$aes_params$size <-
+    ifelse(pointIsHighlighted, highlightPointSize, pointSize)
 
-    # labels
-    pUMAP[[1]]$layers[[2]]$aes_params$alpha <-
-      ifelse(
-        test = pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight,
-        yes = highlightLabelAlpha,
-        no = labelAlpha
-      )
-    pUMAP[[1]]$layers[[2]]$aes_params$size <-
-      ifelse(
-        test = pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight,
-        yes =  highlightLabelSize,
-        no =  labelSize
-      )
-
-  } else {
-    pUMAP[[1]]$layers[[1]]$aes_params$alpha <- pointAlpha
-    pUMAP[[1]]$layers[[1]]$aes_params$size <- pointSize
-
-    # labels
-    pUMAP[[1]]$layers[[2]]$aes_params$alpha <- labelAlpha
-    pUMAP[[1]]$layers[[2]]$aes_params$size <- labelSize
-  }
+  # labels
+  pUMAP[[1]]$layers[[2]]$aes_params$alpha <-
+    ifelse(labelIsHighlighted, highlightLabelAlpha, labelAlpha)
+  pUMAP[[1]]$layers[[2]]$aes_params$size <-
+    ifelse(labelIsHighlighted, highlightLabelSize, labelSize)
 
   ### Add title
   pUMAP <-
     pUMAP +
     labs(title = 'Gene Set Clustering')
 
+  if (interactive) {
+    hoverInfo <- Seurat::FetchData(geneSetsList@cluster, vars = hoverVars)
+    colnames(hoverInfo)[colnames(hoverInfo) == 'ident'] <- 'cluster'
+    colnames(hoverInfo)[colnames(hoverInfo) == 'nCount_GSEA'] <- 'genes'
+    return(Seurat::HoverLocator(plot = pUMAP[[1]], information = hoverInfo))
+  }
 
   return(pUMAP)
 }

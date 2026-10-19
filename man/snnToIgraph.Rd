@@ -19,9 +19,8 @@ Helper for writing igraph-based clustering methods. Turns the
   undirected `igraph` graph whose vertex names are the gene sets.
 }
 \examples{
-\dontrun{
-g <- snnToIgraph(gsListObject@cluster@graphs$GSEA_snn)
-}
+g <- snnToIgraph(exampleGsList@cluster@graphs$GSEA_snn)
+g
 }
 \seealso{
 [clusterMethod()]

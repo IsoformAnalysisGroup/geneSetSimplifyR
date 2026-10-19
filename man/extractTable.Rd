@@ -14,18 +14,30 @@ extractTable(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{Numeric. Resolution to plot the table for.}
+\item{resolution}{Numeric. Resolution to extract the table for. Default
+`NULL` uses the active resolution: the optimal resolution found by
+`clusterGeneSets()`, or the one last set with `updateResolution()` or
+`updateClusterLabels()`.}
 
-\item{summarize}{Logic indicating whether to summarize table by cluster (and source). Default is TRUE.}
+\item{summarize}{Logical indicating whether to summarize the table by
+cluster (and source). Default is TRUE.}
 
-\item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
+\item{removeClusterId}{Logical, if TRUE the cluster number will be removed
+from each cluster label. Default: TRUE.}
 }
 \value{
-Table with clustering summary
+A data.frame. With `summarize = TRUE`, one row per cluster and
+  source with the mean and standard deviation of the enrichment score
+  (ignoring missing values) and the number of gene sets. With
+  `summarize = FALSE`, one row per gene set and source with all columns of
+  the 'enrichmentScore' slot plus its `cluster`; if a cluster label was
+  changed with `updateClusterLabels()`, the original label is given in
+  `initial_cluster_label`.
 }
 \description{
 Extract summary table of clustering
 }
 \examples{
-extractTable(exampleGsList, 1.1)
+extractTable(exampleGsList)
+head(extractTable(exampleGsList, resolution = 0.6, summarize = FALSE))
 }

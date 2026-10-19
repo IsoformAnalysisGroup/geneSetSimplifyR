@@ -35,7 +35,8 @@ A list with:
     \item{`geneSetsList`}{`geneSets` filtered to pathways passing at least
       one cutoff.}
     \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
-      `enrichment_score`. One row per (pathway, source).}
+      `enrichment_score`, `padj` and `pval` (when `oraResult` has
+      `pval_<block>` columns). One row per (pathway, source).}
   }
 }
 \description{
@@ -46,18 +47,30 @@ Converts `pairedGSEA::paired_ora()` output into the two inputs
   separate `source`. Pathways passing multiple cutoffs appear once per source.
 }
 \examples{
-\dontrun{
+# A small table in the format of pairedGSEA::paired_ora() output
+pathways <- names(exampleGeneSets)[1:60]
+oraResult <- data.frame(
+  pathway = pathways,
+  padj_expression = rep(c(0.01, 0.2), 30),
+  enrichment_score_expression = seq(-2, 2, length.out = 60),
+  padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
+  enrichment_score_splicing = seq(2, -2, length.out = 60),
+  padj_paired = 1,
+  enrichment_score_paired = 0
+)
 parsed <- parsePairedGSEA(
   oraResult       = oraResult,
-  geneSets        = mSigDB,
+  geneSets        = exampleGeneSets,
   cutoff_exp      = 0.05,
   cutoff_splicing = 0.05,
-  cutoff_paired   = 0.05
+  cutoff_paired   = NULL
 )
+table(parsed$geneSetsDF$source)
 gss <- geneSetSimplifyR(
   geneSetsList = parsed$geneSetsList,
-  geneSetsDF   = parsed$geneSetsDF
+  geneSetsDF   = parsed$geneSetsDF,
+  resolution   = 1.1,
+  verbose      = FALSE
 )
-}
 
 }

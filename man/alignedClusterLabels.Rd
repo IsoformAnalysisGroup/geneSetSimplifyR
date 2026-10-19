@@ -12,7 +12,7 @@ alignedClusterLabels(
 )
 }
 \arguments{
-\item{geneSetsList}{A labelled 'gsList' object.}
+\item{geneSetsList}{A labeled 'gsList' object.}
 
 \item{resolutionColumn}{Name of the resolution, e.g. `"GSEA_snn_res.1"`.}
 
@@ -30,7 +30,7 @@ the top-scoring label per cluster, and returns one label per element of
 `clusterIds`, in that order.
 }
 \details{
-Two things this guards against:
+Three things this guards against:
 \itemize{
   \item **Order.** The label table is in numeric cluster order; a factor's
     levels need not be, so labels are matched by cluster id rather than by
@@ -38,7 +38,10 @@ Two things this guards against:
   \item **Coverage.** A cluster can be missing from the label table (e.g. a
     cluster whose gene-set names yield no usable bigram). Those fall back to
     the bare cluster id, so the returned vector always has the same length as
-    `clusterIds` instead of blowing up downstream in `plyr::mapvalues()`.
+    `clusterIds`.
+  \item **Uniqueness.** When `removeClusterId = TRUE`, two clusters with the
+    same label (e.g. after a manual rename) would otherwise be merged into a
+    single factor level. Those clusters keep their id prefix instead.
 }
 }
 \keyword{internal}

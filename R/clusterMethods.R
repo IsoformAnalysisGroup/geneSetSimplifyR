@@ -2,7 +2,7 @@
 ### Pluggable clustering backends
 ###
 ### `clusterGeneSets()` always builds the same SNN graph (LSI -> cosine KNN ->
-### shared-nearest-neighbour). Everything after that point -- turning the graph
+### shared-nearest-neighbor). Everything after that point -- turning the graph
 ### into cluster assignments -- is delegated to a *cluster method*, so the
 ### community-detection step can be swapped for another implementation (another
 ### package, a tuned variant, an in-house algorithm) without touching the rest
@@ -70,7 +70,7 @@
 #'   [clusterGeneSets()]
 #'
 #' @examples
-#' # A backend built on igraph's fast-greedy modularity optimisation
+#' # A backend built on igraph's fast-greedy modularity optimization
 #' fastGreedy <- clusterMethod(
 #'   fn = function(snn, resolution, verbose = FALSE, ...) {
 #'     g <- snnToIgraph(snn)
@@ -80,12 +80,20 @@
 #'   },
 #'   name = "fast_greedy",
 #'   description = "igraph fast-greedy modularity (ignores resolution)",
-#'   packages = "igraph"
+#'   packages = "igraph",
+#'   usesResolution = FALSE
 #' )
+#' fastGreedy
 #'
-#' \dontrun{
-#' gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy)
-#' }
+#' # Try it on the SNN graph of the example data
+#' ids <- fastGreedy$fn(exampleGsList@cluster@graphs$GSEA_snn, resolution = 1)
+#' table(ids)
+#'
+#' # Use it in the workflow
+#' geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
+#'                                verbose = FALSE)
+#' gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy,
+#'                                 verbose = FALSE)
 clusterMethod <- function(
     fn,
     name,
@@ -159,7 +167,6 @@ print.gsClusterMethod <- function(x, ...) {
 #' @seealso [clusterMethod()], [listClusterMethods()]
 #'
 #' @examples
-#' \dontrun{
 #' registerClusterMethod(
 #'   "leiden_cpm",
 #'   function(snn, resolution, verbose = FALSE, ...) {
@@ -172,11 +179,15 @@ print.gsClusterMethod <- function(x, ...) {
 #'     ))
 #'   },
 #'   description = "igraph Leiden with the CPM objective",
-#'   packages = "igraph"
+#'   packages = "igraph",
+#'   overwrite = TRUE
 #' )
+#' listClusterMethods()
 #'
-#' gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm")
-#' }
+#' geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
+#'                                verbose = FALSE)
+#' gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm",
+#'                                 resolution = 0.05, verbose = FALSE)
 registerClusterMethod <- function(
     name,
     fn,
@@ -321,13 +332,15 @@ runClusterMethod <- function(
     )
   }
 
-  ids <- do.call(
-    method$fn,
-    c(
-      list(snn = snn, resolution = resolution, verbose = verbose),
-      clusterArgs
-    )
-  )
+  # 'verbose' is only passed to methods that can take it, so a method with
+  # the minimal signature function(snn, resolution) also works.
+  fnArgs <- names(formals(method$fn))
+  callArgs <- list(snn = snn, resolution = resolution)
+  if (any(c("verbose", "...") %in% fnArgs)) {
+    callArgs$verbose <- verbose
+  }
+
+  ids <- do.call(method$fn, c(callArgs, clusterArgs))
 
   # Accept the shapes community-detection functions commonly return.
   if (is.data.frame(ids) || is.matrix(ids)) {
@@ -338,7 +351,7 @@ runClusterMethod <- function(
       )
     }
     rn <- rownames(ids)
-    ids <- ids[[1]]
+    ids <- if (is.data.frame(ids)) ids[[1]] else ids[, 1]
     if (!is.null(rn)) names(ids) <- rn
   }
   if (inherits(ids, "communities")) {
@@ -353,12 +366,27 @@ runClusterMethod <- function(
     )
   }
 
-  # Reorder by name when the backend supplies names, otherwise trust the order.
-  if (!is.null(names(ids)) && all(colnames(snn) %in% names(ids))) {
+  # Reorder by name when the backend names its output after the gene sets.
+  # Names that only partly match the gene sets point to a bug in the backend,
+  # so they are rejected rather than silently assigned by position.
+  idNames <- names(ids)
+  if (!is.null(idNames) && any(idNames %in% colnames(snn))) {
+    if (anyDuplicated(idNames) || !setequal(idNames, colnames(snn))) {
+      stop(
+        "Clustering method '", method$name, "' returned names that do not ",
+        "match the gene sets one-to-one."
+      )
+    }
     ids <- ids[colnames(snn)]
   }
 
   ids <- as.vector(ids)
+  if (is.list(ids)) {
+    stop(
+      "Clustering method '", method$name, "' returned a list; expected one ",
+      "cluster id per gene set."
+    )
+  }
   if (anyNA(ids)) {
     stop("Clustering method '", method$name, "' returned NA cluster ids.")
   }
@@ -382,9 +410,8 @@ runClusterMethod <- function(
 #' @seealso [clusterMethod()]
 #'
 #' @examples
-#' \dontrun{
-#' g <- snnToIgraph(gsListObject@cluster@graphs$GSEA_snn)
-#' }
+#' g <- snnToIgraph(exampleGsList@cluster@graphs$GSEA_snn)
+#' g
 snnToIgraph <- function(snn) {
   adjacency <- methods::as(snn, "dgCMatrix")
 
@@ -422,9 +449,8 @@ snnToIgraph <- function(snn) {
 #' @seealso [clusterMethod()], [snnToIgraph()]
 #'
 #' @examples
-#' \dontrun{
-#' simMat <- snnToMatrix(gsListObject@cluster@graphs$GSEA_snn)
-#' }
+#' simMat <- snnToMatrix(exampleGsList@cluster@graphs$GSEA_snn)
+#' simMat[1:3, 1:3]
 snnToMatrix <- function(snn, warnAbove = 5000) {
   n <- ncol(snn)
   if (n > warnAbove) {
@@ -448,19 +474,34 @@ snnToMatrix <- function(snn, warnAbove = 5000) {
 # SNN matrix directly rather than the whole Seurat object.
 seuratBackend <- function(algo) {
   function(snn, resolution, verbose = FALSE, ...) {
-    res <- Seurat::FindClusters(
-      object = snn,
-      resolution = resolution,
-      algorithm = algo,
-      verbose = verbose,
-      ...
+    res <- tryCatch(
+      Seurat::FindClusters(
+        object = snn,
+        resolution = resolution,
+        algorithm = algo,
+        verbose = verbose,
+        ...
+      ),
+      error = function(e) {
+        if (algo == 4) {
+          stop(
+            conditionMessage(e), " Seurat's Leiden algorithm may need extra ",
+            "software (the Python package 'leidenalg' for older Seurat ",
+            "versions). The 'igraph_leiden' method needs no extra software.",
+            call. = FALSE
+          )
+        }
+        stop(e)
+      }
     )
     return(res)
   }
 }
 
+# igraph's community detection is randomized; 'seed' (default 42, NA for no
+# seeding) makes it reproducible without changing the user's RNG stream.
 igraphBackend <- function(fun, defaults = list()) {
-  function(snn, resolution, verbose = FALSE, ...) {
+  function(snn, resolution, verbose = FALSE, seed = 42, ...) {
     g <- snnToIgraph(snn)
 
     args <- utils::modifyList(
@@ -479,29 +520,18 @@ igraphBackend <- function(fun, defaults = list()) {
       stop("The igraph clustering function has no resolution argument.")
     }
 
-    igraph::membership(do.call(fun, c(list(g), args)))
+    withSeed(seed, igraph::membership(do.call(fun, c(list(g), args))))
   }
 }
 
 # Evaluate an expression under a fixed RNG seed without leaving the user's
-# random stream perturbed. k-means initialisation is random, so a seed is the
+# random stream perturbed. k-means initialization is random, so a seed is the
 # difference between reproducible and non-reproducible cluster assignments.
 withSeed <- function(seed, expr) {
   if (is.null(seed) || is.na(seed)) {
     return(force(expr))
   }
-  hadSeed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-  if (hadSeed) {
-    oldSeed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
-    on.exit(assign(".Random.seed", oldSeed, envir = .GlobalEnv), add = TRUE)
-  } else {
-    on.exit(
-      suppressWarnings(rm(".Random.seed", envir = .GlobalEnv)),
-      add = TRUE
-    )
-  }
-  set.seed(seed)
-  force(expr)
+  withr::with_seed(seed, expr)
 }
 
 # Kneedle-style knee detection on the within-cluster-sum-of-squares curve,

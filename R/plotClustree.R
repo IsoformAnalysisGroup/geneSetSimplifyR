@@ -1,6 +1,9 @@
 #' Plot cluster tree
 #'
-#' @description Graphs a clustering tree plot showing t
+#' @description Graphs a clustering tree showing how the clusters of
+#'   consecutive resolutions relate to each other: each node is a cluster
+#'   (labeled with its top label), and edges show how many gene sets move
+#'   from a cluster at one resolution to a cluster at the next.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param node_alpha Numeric value indicating the alpha of nodes
@@ -9,12 +12,13 @@
 #' minimum and maximum point size of nodes, respectively
 #' @param edge_width Numeric value indicating the width of plotted edges
 #' @param node_text_angle Numeric value indicating the rotation of node labels
-#' @param resolutionsToPlot Resolutions to include in plot. Use Null to plot all. Default is NULL
+#' @param resolutionsToPlot Resolutions to include in plot. Use NULL to plot all. Default is NULL
 #'
 #' @return A ggplot2 object
 #' @export
 #'
-#' @examples plotClustree(exampleGsList)
+#' @examples
+#' plotClustree(exampleGsList)
 plotClustree <- function(
     geneSetsList,
     node_alpha = 1,
@@ -25,38 +29,19 @@ plotClustree <- function(
     resolutionsToPlot = NULL
 ) {
   # Check input
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object")
-  }
+  checkGsList(geneSetsList)
 
-  if (length(geneSetsList@cluster) == 0) {
-    stop(
-      "No clustering performed for 'geneSetsList'.
-         Please run 'clusterGeneSets()' and 'labelClusters()' before plotting."
-    )
-  }
-
-  if (length(geneSetsList@labels) == 0) {
-    stop(
-      "No labels created for 'geneSetsList'.
-         Please run 'labelClusters()' before plotting."
-    )
-  }
-
-  resolutions <-
-    grep("GSEA_snn_res.",
-         names(geneSetsList@cluster@meta.data),
-         value = TRUE)
+  resolutions <- availableResolutionColumns(geneSetsList)
 
   ### Subset to resolutions
   if(!is.null(resolutionsToPlot)) {
-    resolutionsToUse <- paste0(
-      "GSEA_snn_res.",
-      resolutionsToPlot
-    )
+    resolutionsToUse <- resolutionColumnName(resolutionsToPlot)
 
     if(! all(resolutionsToUse %in% resolutions)) {
-      stop('All \'resolutionsToUse\' must be among the resolutions analyzed')
+      stop(
+        "All 'resolutionsToPlot' must be among the resolutions analyzed: ",
+        paste(sub("^GSEA_snn_res\\.", "", resolutions), collapse = ", "), "."
+      )
     }
 
     notToAnalyze <- setdiff(resolutions, resolutionsToUse)
@@ -95,13 +80,6 @@ plotClustree <- function(
     levels(clusterFactor) <- matchedLabels
     geneSetsList@cluster@meta.data[[resolution]] <- clusterFactor
   }
-  # clustree builds a plot with ggraph's `edge_colourbar` guide. ggplot2
-  # resolves that guide by name from attached packages, so ggraph must be
-  # on the search path before printing the plot.
-  if (!"package:ggraph" %in% search()) {
-    attachNamespace("ggraph")
-  }
-
   p <- clustree::clustree(
     geneSetsList@cluster,
     prefix = "GSEA_snn_res.",
@@ -112,6 +90,16 @@ plotClustree <- function(
     edge_width = edge_width,
     node_text_angle = node_text_angle
   )
+
+  # clustree's edge color scale names its guide ("edge_colourbar"), which
+  # ggplot2 can only find when ggraph is attached. Use the guide object itself
+  # so the plot prints without changing the user's search path.
+  for (scale in p$scales$scales) {
+    if (any(grepl("^edge_colour", scale$aesthetics)) &&
+        is.character(scale$guide) && scale$guide == "edge_colourbar") {
+      scale$guide <- ggraph::guide_edge_colourbar()
+    }
+  }
 
   return(p)
 }

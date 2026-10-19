@@ -23,23 +23,36 @@
 #'     \item{`geneSetsList`}{`geneSets` filtered to pathways passing at least
 #'       one cutoff.}
 #'     \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
-#'       `enrichment_score`. One row per (pathway, source).}
+#'       `enrichment_score`, `padj` and `pval` (when `oraResult` has
+#'       `pval_<block>` columns). One row per (pathway, source).}
 #'   }
 #'
 #' @examples
-#' \dontrun{
+#' # A small table in the format of pairedGSEA::paired_ora() output
+#' pathways <- names(exampleGeneSets)[1:60]
+#' oraResult <- data.frame(
+#'   pathway = pathways,
+#'   padj_expression = rep(c(0.01, 0.2), 30),
+#'   enrichment_score_expression = seq(-2, 2, length.out = 60),
+#'   padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
+#'   enrichment_score_splicing = seq(2, -2, length.out = 60),
+#'   padj_paired = 1,
+#'   enrichment_score_paired = 0
+#' )
 #' parsed <- parsePairedGSEA(
 #'   oraResult       = oraResult,
-#'   geneSets        = mSigDB,
+#'   geneSets        = exampleGeneSets,
 #'   cutoff_exp      = 0.05,
 #'   cutoff_splicing = 0.05,
-#'   cutoff_paired   = 0.05
+#'   cutoff_paired   = NULL
 #' )
+#' table(parsed$geneSetsDF$source)
 #' gss <- geneSetSimplifyR(
 #'   geneSetsList = parsed$geneSetsList,
-#'   geneSetsDF   = parsed$geneSetsDF
+#'   geneSetsDF   = parsed$geneSetsDF,
+#'   resolution   = 1.1,
+#'   verbose      = FALSE
 #' )
-#' }
 #'
 #' @export
 parsePairedGSEA <- function(
@@ -94,12 +107,20 @@ parsePairedGSEA <- function(
 
     keep <- !is.na(oraDF[[padj_col]]) & oraDF[[padj_col]] < b$cutoff
     if (any(keep)) {
-      long_rows[[b$source]] <- data.frame(
+      blockRows <- data.frame(
         source           = b$source,
         pathway          = oraDF$pathway[keep],
         enrichment_score = oraDF[[es_col]][keep],
+        padj             = oraDF[[padj_col]][keep],
         stringsAsFactors = FALSE
       )
+      pval_col <- paste0("pval_", b$tag)
+      blockRows$pval <- if (pval_col %in% colnames(oraDF)) {
+        oraDF[[pval_col]][keep]
+      } else {
+        NA_real_
+      }
+      long_rows[[b$source]] <- blockRows
     }
   }
 
@@ -142,8 +163,10 @@ parsePairedGSEA <- function(
 #'   into one multi-source analysis, call this function once per run with a
 #'   distinct `source` label and `rbind()` the resulting `geneSetsDF`s.
 #'
-#' @param fgseaResult Output of `fgsea::fgsea()`. Must contain `pathway`,
-#'   `padj`, and `NES` columns.
+#' @param fgseaResult Output of `fgsea::fgsea()` or `fgsea::fora()`. Must
+#'   contain `pathway` and `padj` columns, and either `NES` (GSEA) or
+#'   `foldEnrichment` (over-representation analysis, used as
+#'   `log2(foldEnrichment)`).
 #' @param geneSets Named list of gene-set memberships (the same one passed to
 #'   `fgsea::fgsea()`).
 #' @param cutoff padj threshold for filtering pathways. Default 0.05.
@@ -156,22 +179,32 @@ parsePairedGSEA <- function(
 #'     \item{`geneSetsList`}{`geneSets` filtered to pathways passing the
 #'       cutoff.}
 #'     \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
-#'       `enrichment_score` (fgsea's NES). One row per pathway.}
+#'       `enrichment_score` (fgsea's NES), `pval` (when present) and `padj`.
+#'       One row per pathway.}
 #'   }
 #'
 #' @examples
-#' \dontrun{
+#' # A small table in the format of fgsea::fgsea() output
+#' pathways <- names(exampleGeneSets)[1:60]
+#' fgseaRes <- data.frame(
+#'   pathway = pathways,
+#'   pval = rep(c(0.001, 0.01, 0.3), 20),
+#'   padj = rep(c(0.004, 0.03, 0.5), 20),
+#'   NES = seq(-2.5, 2.5, length.out = 60)
+#' )
 #' parsed <- parseFgsea(
 #'   fgseaResult = fgseaRes,
-#'   geneSets    = mSigDB,
+#'   geneSets    = exampleGeneSets,
 #'   cutoff      = 0.05,
 #'   source      = "treatmentA"
 #' )
+#' head(parsed$geneSetsDF)
 #' gss <- geneSetSimplifyR(
 #'   geneSetsList = parsed$geneSetsList,
-#'   geneSetsDF   = parsed$geneSetsDF
+#'   geneSetsDF   = parsed$geneSetsDF,
+#'   resolution   = 1.1,
+#'   verbose      = FALSE
 #' )
-#' }
 #'
 #' @export
 parseFgsea <- function(
@@ -202,8 +235,8 @@ parseFgsea <- function(
   requiredCols <- c("pathway", "padj", "NES")
   missingCols  <- setdiff(requiredCols, colnames(df))
   if (length(missingCols)) {
-    if (length(missingCols) == 1 & 
-          missingCols == "NES" & 
+    if (length(missingCols) == 1 &&
+          missingCols == "NES" &&
           "foldEnrichment" %in% colnames(df)){
       df$NES <- log2(df$foldEnrichment + 1e-6)
     } else {
@@ -223,6 +256,10 @@ parseFgsea <- function(
     enrichment_score = df$NES[keep],
     stringsAsFactors = FALSE
   )
+  if ("pval" %in% colnames(df)) {
+    geneSetsDF$pval <- df$pval[keep]
+  }
+  geneSetsDF$padj <- df$padj[keep]
 
   # Drop pathways not in geneSets (warn once with a sample)
   uniquePaths  <- unique(geneSetsDF$pathway)
