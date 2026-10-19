@@ -14,3 +14,11 @@
 ^.*\.DS_Store$
 ^\.gitignore$
 ^data/.*\.RData$
+^PACKAGE_FINAL_CHECK\.md$
+^Rplots\.pdf$
+^geneSetSimplifyR_handoff\.md$
+^manuscript_.*\.docx$
+^vignettes/.*\.html$
+^.*\.Rcheck$
+^geneSetSimplifyR_.*\.tar\.gz$
+^geneSetSimplifyR\.BiocCheck$

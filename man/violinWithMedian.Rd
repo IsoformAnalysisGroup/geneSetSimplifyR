@@ -4,7 +4,10 @@
 \alias{violinWithMedian}
 \title{Violin layer with a line at the median}
 \usage{
-violinWithMedian()
+violinWithMedian(data)
+}
+\arguments{
+\item{data}{Data for the layer.}
 }
 \value{
 A ggplot2 layer.

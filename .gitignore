@@ -17,3 +17,13 @@ test/
 doc/
 Meta/
 inst/doc/
+
+# Local review notes, manuscript drafts and build output
+PACKAGE_FINAL_CHECK.md
+geneSetSimplifyR_handoff.md
+manuscript_*.docx
+Rplots.pdf
+*.Rcheck/
+geneSetSimplifyR_*.tar.gz
+geneSetSimplifyR.BiocCheck/
+vignettes/*.html
