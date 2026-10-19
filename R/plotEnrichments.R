@@ -1,19 +1,23 @@
 #' Plot enrichment as lollipop plot
 #'
-#' @description Creates a lollipop plot of showing mean enrichment and size of each gene-set cluster.
+#' @description Creates a lollipop plot showing the summarized enrichment and size of each gene-set cluster.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
+#' @param plotFrom Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'enrichment_score' or 'nlog10pval'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used.
+#' @param summaryStat How the values of the gene sets within a cluster are summarized into the value shown for each cluster. One of 'mean' (default), 'median' or 'max'. Note that 'max' is the largest signed value, so for signed scores (e.g. NES) a strongly negative cluster will be summarized by its least negative gene set.
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
 #' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
 #'
-#' @return A list of ggplot objects.
+#' @return A ggplot object.
 #' @export
 #'
 #' @examples plotEnrichments(exampleGsList)
 plotEnrichments <- function(
     geneSetsList,
     resolution = NULL,
+    plotFrom = c('enrichment_score', 'nlog10pval'),
+    summaryStat = c('mean', 'median', 'max'),
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 ) {
@@ -21,6 +25,8 @@ plotEnrichments <- function(
   if (!inherits(geneSetsList, "gsList")) {
     stop("'geneSetsList' should be a gsList object")
   }
+
+  summaryStat <- match.arg(summaryStat)
 
   if (length(geneSetsList@cluster) == 0) {
     stop(
@@ -35,12 +41,10 @@ plotEnrichments <- function(
          Please run 'labelClusters()' before plotting."
     )
   }
-  if( all(is.na( geneSetsList@enrichmentScore$enrichment_score  ) ) ) {
-    stop(paste0(
-      'Cannot plot enrichment when enrichment scores are not annotated.\n',
-      '  If you want to plot enrichment you need to redo the entire workflow and add the enrichment score.'
-    ))
-  }
+  plotFrom <- validatePlotFrom(
+    geneSetsList = geneSetsList,
+    plotFrom = plotFrom
+  )
 
   ### Extract clusters to highlight
   if(! is.null(highlightClusterNo)) {
@@ -80,10 +84,14 @@ plotEnrichments <- function(
 
   ### Extract plot data
   plotData <-
-    extractTable(geneSetsList, removeClusterId = removeClusterId) %>%
-    dplyr::rename(
-      mean = `enrichment mean`
+    summarizeEnrichment(
+      geneSetsList = geneSetsList,
+      scoreColumn = plotFrom,
+      summaryStat = summaryStat,
+      removeClusterId = removeClusterId
     )
+
+  yAxisLabel <- enrichmentSummaryLabel(summaryStat, plotFrom)
 
   plotData$cluster <- factor(
     plotData$cluster,
@@ -96,22 +104,23 @@ plotEnrichments <- function(
   if ( nCond != '1' ) {
     p1 <-
       plotData %>%
-      ggplot(aes(x=cluster, y=mean, group=source)) +
+      ggplot(aes(x=cluster, y=enrichmentSummary, group=source)) +
       geom_linerange(
         mapping = aes(
           x=cluster,
           ymin=0,
-          ymax=mean
+          ymax=enrichmentSummary,
+          color=source
         ),
-        color="#595959",
-        position=position_dodge(width = 0.9)
+        position=position_dodge(width = 0.6),
+        show.legend = FALSE # the dots already carry the color legend
       ) +
       geom_point(
         mapping = aes(
           color=source,
           size = genesets,
         ),
-        position=position_dodge(width = 0.9)
+        position=position_dodge(width = 0.6)
       ) +
       scale_radius(
         limits = range(plotData$genesets),
@@ -123,7 +132,7 @@ plotEnrichments <- function(
       ) +
       labs(
         x = "Gene Set Cluster",
-        y = "Mean Enrichment",
+        y = yAxisLabel,
         color = "Gene set source",
         size = "Gene Sets"
       ) +
@@ -138,22 +147,22 @@ plotEnrichments <- function(
   if ( nCond == '1' ) {
     p1 <-
       plotData %>%
-      ggplot(aes(x=cluster, y=mean, group=source)) +
+      ggplot(aes(x=cluster, y=enrichmentSummary, group=source)) +
       geom_linerange(
         mapping = aes(
           x=cluster,
           ymin=0,
-          ymax=mean
+          ymax=enrichmentSummary
         ),
         color="#595959",
-        position=position_dodge(width = 0.9)
+        position=position_dodge(width = 0.6)
       ) +
       geom_point(
         mapping = aes(
           size = genesets
         ),
         color="#595959",
-        position=position_dodge(width = 0.9)
+        position=position_dodge(width = 0.6)
       ) +
       scale_radius(
         limits = range(plotData$genesets),
@@ -165,7 +174,7 @@ plotEnrichments <- function(
       ) +
       labs(
         x = "Gene Set Cluster",
-        y = "Mean Enrichment",
+        y = yAxisLabel,
         size = "Gene Sets"
       ) +
       theme_bw() +

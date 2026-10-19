@@ -37,7 +37,7 @@
 geneSetSimplifyR <- function(
     geneSetsList,
     geneSetsDF = NULL,
-    resolution = c(1),
+    resolution = c(0.1,0.3,0.6,1.1,1.6,2.1,2.6,3.1,4.1,5.1),
     verbose = TRUE,
     cluster_algo = "louvain",
     clusterArgs = list(),

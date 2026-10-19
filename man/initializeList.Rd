@@ -15,6 +15,9 @@ the genes belonging to that gene set.}
 for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 Should have a column named 'pathway' containing the gene sets and a column
 named 'enrichment_score' or 'NES' with the enrichment of each gene set.
+Optionally have a column named 'pval' or 'pvalue' with the p-value of each gene set; a
+'nlog10pval' column with the -log10 transformed p-values is added automatically and is
+required by some plotting functions (e.g. 'plotHeatmap()').
 Optionally have a column named 'source' indicating the source of each gene set. This allows for
 analysis of multi-conditional data throughout the entire workflow and is also supported by many
 plotting functions. If a gene-set was found in multiple conditions there should be multiple rows
