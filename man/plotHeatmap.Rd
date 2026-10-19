@@ -7,18 +7,25 @@
 plotHeatmap(
   geneSetsList,
   resolution = NULL,
+  plotFrom = c("nlog10pval", "enrichment_score"),
+  summaryStat = c("median", "max", "mean"),
   removeClusterId = FALSE,
   highlightClusterNo = NULL,
   transpose = FALSE,
   cutree_rows = NA,
   cutree_cols = NA,
-  drawPlot = TRUE
+  drawPlot = TRUE,
+  scaleCols = TRUE
 )
 }
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
 \item{resolution}{The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().}
+
+\item{plotFrom}{Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used (the default therefore falls back to 'enrichment_score' when no p-values were supplied).}
+
+\item{summaryStat}{How the values of the gene sets within a cluster are summarized into the value shown in each heatmap cell. One of 'median' (default), 'max' or 'mean'. Note that 'max' is the largest signed value, so for signed scores (e.g. NES) a strongly negative cluster will be summarized by its least negative gene set.}
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
@@ -31,12 +38,14 @@ plotHeatmap(
 \item{cutree_cols}{pheatmap control parameter. Number of clusters the columns are divided into}
 
 \item{drawPlot}{Whether to show the plot. Default to TRUE.}
+
+\item{scaleCols}{Whether to perform standardization.}
 }
 \value{
-A list of ggplot objects.
+The pheatmap object if 'drawPlot' is FALSE, else NULL (the heatmap is drawn).
 }
 \description{
-Creates a heatmap showing the mean enrichment of each gene-set cluster in each source (useful for datasets with many data sources).
+Creates a heatmap summarizing the enrichment of each gene-set cluster in each source (useful for datasets with many data sources).
 }
 \examples{
 plotHeatmap(exampleGsList)

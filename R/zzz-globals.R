@@ -10,9 +10,9 @@ NULL
 utils::globalVariables(c(
   ".", "NES", "centrality_score", "centrality_score_scaled",
   "centrality_score_transformed", "cluster", "count", "enrichment mean",
-  "enrichment_score", "frac", "frac_cluster", "gene_ids", "gene_set",
-  "geneset", "genesets", "index", "label", "mean_size",
+  "enrichmentSummary", "enrichment_score", "frac", "frac_cluster",
+  "gene_ids", "gene_set", "geneset", "genesets", "index", "label", "mean_size",
   "median_enrichment_score", "measure", "n", "org_label", "padj",
-  "pathway", "rank", "second_label", "tf_idf", "tf_idf_scaled",
-  "tokenSource", "value", "weighted_score", "words"
+  "pathway", "rank", "scoreToSummarize", "second_label", "tf_idf",
+  "tf_idf_scaled", "tokenSource", "value", "weighted_score", "words"
 ))

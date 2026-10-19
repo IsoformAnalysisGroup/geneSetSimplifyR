@@ -205,6 +205,219 @@ extractResolution <- function(
 }
 
 
+#' Validate the columns requested for plotting
+#'
+#' Internal helper. Used by the plotting functions to check the `plotFrom`
+#' argument before anything is summarized or drawn. A column is only usable if
+#' it is present in the `enrichmentScore` slot, holds at least one non-NA value,
+#' and is numeric.
+#'
+#' Only one column is plotted. Several can be supplied - the plot functions
+#' declare their candidates as a default vector, the same way `summaryStat`
+#' does - in which case the first usable one is returned. That way a default of
+#' `c('nlog10pval', 'enrichment_score')` still works on a `gsList` built without
+#' p-values, while a single explicitly named column that cannot be plotted
+#' errors rather than silently showing something else.
+#'
+#' @param geneSetsList A 'gsList' object.
+#' @param plotFrom Name(s) of the column(s) in the `enrichmentScore` slot to
+#'   plot, e.g. `'enrichment_score'`.
+#' @return A single column name.
+#' @keywords internal
+validatePlotFrom <- function(geneSetsList, plotFrom) {
+  if (!is.character(plotFrom) || !length(plotFrom) || anyNA(plotFrom)) {
+    stop(
+      "'plotFrom' should be a character vector with the name of a column in ",
+      "the 'enrichmentScore' slot."
+    )
+  }
+
+  plotFrom <- unique(plotFrom)
+
+  enrichmentDF <- geneSetsList@enrichmentScore
+
+  problems <- vapply(
+    plotFrom,
+    function(column) plotFromProblem(enrichmentDF, column),
+    character(1)
+  )
+
+  ### Use the first column that can actually be plotted
+  isUsable <- is.na(problems)
+  if (any(isUsable)) {
+    return(plotFrom[which(isUsable)[1]])
+  }
+
+  ### Nothing left - report why each candidate was rejected
+  availableColumns <- setdiff(colnames(enrichmentDF), c('source', 'pathway'))
+
+  stop(paste0(
+    'Cannot plot ', quoteAndCollapse(plotFrom), ':\n',
+    paste0("  '", plotFrom, "' - ", problems, collapse = '\n'), '\n',
+    '  Available column(s): ', quoteAndCollapse(availableColumns), '.\n',
+    "  Other scores need to be added via the 'geneSetsDF' argument of ",
+    "'initializeList()' (which means redoing the workflow)."
+  ))
+}
+
+#' Why a column cannot be plotted
+#'
+#' Internal helper for `validatePlotFrom()`.
+#'
+#' The three checks are done in this order on purpose: a score that was never
+#' supplied to `initializeList()` is stored as a logical `NA` column, so
+#' checking for "all NA" before "is numeric" gives the informative reason rather
+#' than a confusing complaint about the column type.
+#'
+#' @param enrichmentDF The `enrichmentScore` slot of a 'gsList' object.
+#' @param column Name of a single column.
+#' @return `NA_character_` if the column can be plotted, otherwise a one-line
+#'   description of the problem.
+#' @keywords internal
+plotFromProblem <- function(enrichmentDF, column) {
+  if (! column %in% colnames(enrichmentDF)) {
+    return("not found in the 'enrichmentScore' slot.")
+  }
+
+  if (all(is.na(enrichmentDF[[column]]))) {
+    return('all values are NA.')
+  }
+
+  if (! is.numeric(enrichmentDF[[column]])) {
+    return('only numeric columns can be plotted.')
+  }
+
+  return(NA_character_)
+}
+
+#' Quote and comma-collapse a character vector for use in messages
+#'
+#' Internal helper.
+#'
+#' @param x A character vector.
+#' @return A single string, e.g. `"'pval', 'padj'"`. Returns `"none"` for an
+#'   empty vector so error messages stay readable.
+#' @keywords internal
+quoteAndCollapse <- function(x) {
+  if (!length(x)) {
+    return('none')
+  }
+  paste0("'", x, "'", collapse = ", ")
+}
+
+#' Summarize enrichment per cluster and source
+#'
+#' Internal helper. Summarizes the per-gene-set enrichment scores of
+#' `extractTable()` into one value per cluster and source, using the statistic
+#' requested by the plot function. Done here rather than reusing the
+#' `enrichment mean` column of `extractTable()` so the summary can follow
+#' `summaryStat`.
+#'
+#' @param geneSetsList A labelled 'gsList' object, with the resolution to plot
+#'   already applied (see `changeUsedResolution()`).
+#' @param scoreColumn Name of the column in the `enrichmentScore` slot to
+#'   summarize, e.g. `'enrichment_score'` or `'nlog10pval'`. Should already have
+#'   been checked with `validatePlotFrom()` in the caller.
+#' @param summaryStat One of 'mean', 'median' or 'max'. Must already be resolved
+#'   to a single value (i.e. via `match.arg()` in the caller).
+#' @param removeClusterId Logical. Drop the `"<id>: "` prefix from the labels.
+#' @return A data.frame with columns `source`, `cluster`, `enrichmentSummary`
+#'   and `genesets`, arranged by cluster.
+#' @keywords internal
+summarizeEnrichment <- function(
+    geneSetsList,
+    scoreColumn = 'enrichment_score',
+    summaryStat = 'median',
+    removeClusterId = FALSE
+) {
+  summaryFun <- switch(
+    summaryStat,
+    mean   = mean,
+    median = median,
+    max    = max,
+    stop("Unknown 'summaryStat': ", summaryStat)
+  )
+
+  enrichmentTable <- extractTable(
+    geneSetsList = geneSetsList,
+    summarize = FALSE,
+    removeClusterId = removeClusterId
+  )
+
+  if (! scoreColumn %in% colnames(enrichmentTable)) {
+    stop("Column '", scoreColumn, "' was not found in the 'enrichmentScore' slot.")
+  }
+
+  # Copied to a fixed name so the summary below works for any requested column
+  enrichmentTable$scoreToSummarize <- enrichmentTable[[scoreColumn]]
+
+  enrichmentTable %>%
+    dplyr::group_by(source, cluster) %>%
+    dplyr::summarise(
+      enrichmentSummary = round(
+        summarizeScores(scoreToSummarize, summaryFun),
+        digits = 2
+      ),
+      genesets = dplyr::n(),
+      .groups = 'drop'
+    ) %>%
+    dplyr::arrange(cluster)
+}
+
+#' Apply a summary statistic while tolerating missing values
+#'
+#' Internal helper. A column only has to be *partly* annotated to pass
+#' `validatePlotFrom()`, so NAs are dropped before summarizing rather than
+#' propagating to the whole cluster. A cluster/source with no annotated gene set
+#' at all gives `NA` instead of the `-Inf`/warning `max(numeric(0))` would give.
+#'
+#' @param x Numeric vector.
+#' @param summaryFun Function to apply, e.g. `mean`.
+#' @return A single number, or `NA_real_` if `x` holds no non-NA value.
+#' @keywords internal
+summarizeScores <- function(x, summaryFun) {
+  x <- x[!is.na(x)]
+
+  if (!length(x)) {
+    return(NA_real_)
+  }
+
+  summaryFun(x)
+}
+
+#' Axis/legend text describing an enrichment summary
+#'
+#' Internal helper.
+#'
+#' @param summaryStat One of 'mean', 'median' or 'max'.
+#' @param scoreColumn Name of the summarized column. `'enrichment_score'` is
+#'   spelled out as "Enrichment"; any other column is named as-is so the axis
+#'   says what is actually plotted.
+#' @return A single string.
+#' @keywords internal
+enrichmentSummaryLabel <- function(
+    summaryStat = 'mean',
+    scoreColumn = 'enrichment_score'
+) {
+  statLabel <- switch(
+    summaryStat,
+    mean   = 'Mean',
+    median = 'Median',
+    max    = 'Max',
+    ''
+  )
+
+  scoreLabel <- switch(
+    scoreColumn,
+    enrichment_score = 'Enrichment',
+    nlog10pval       = '-log10(p-value)',
+    scoreColumn
+  )
+
+  trimws(paste(statLabel, scoreLabel))
+}
+
+
 countConditions <- function(
     geneSetsList
 ) {

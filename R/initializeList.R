@@ -9,6 +9,9 @@
 #' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 #' Should have a column named 'pathway' containing the gene sets and a column
 #' named 'enrichment_score' or 'NES' with the enrichment of each gene set.
+#' Optionally have a column named 'pval' or 'pvalue' with the p-value of each gene set; a
+#' 'nlog10pval' column with the -log10 transformed p-values is added automatically and is
+#' required by some plotting functions (e.g. 'plotHeatmap()').
 #' Optionally have a column named 'source' indicating the source of each gene set. This allows for
 #' analysis of multi-conditional data throughout the entire workflow and is also supported by many
 #' plotting functions. If a gene-set was found in multiple conditions there should be multiple rows
@@ -49,15 +52,48 @@ initializeList <- function(
 
   # make unique
   geneSetsDF <- unique(geneSetsDF)
+
+  # Check pathway
+  if(! 'pathway' %in% colnames(geneSetsDF)) {
+    stop("Column 'pathway' was not found in geneSetsDF.")
+  }
+  # Check enrichment_score
   if(! 'enrichment_score' %in% colnames(geneSetsDF)) {
     if( 'NES' %in% colnames(geneSetsDF) ) {
+      message("enrichment_score was not found in the dataframe. Use NES instead.")
       geneSetsDF$enrichment_score <- geneSetsDF$NES
       geneSetsDF$NES <- NULL
     } else {
       geneSetsDF$enrichment_score <- NA
     }
   }
-  
+
+  # Check pvalues
+  if(! 'pval' %in% colnames(geneSetsDF)) {
+    if( 'pvalue' %in% colnames(geneSetsDF) ) {
+      message("pval was not found in the dataframe. Use pvalue instead.")
+      geneSetsDF$pval <- geneSetsDF$pvalue
+      geneSetsDF$pvalue <- NULL
+    } else {
+      geneSetsDF$pval <- NA
+    }
+  }
+
+  # Add the -log10 transformed p-values used by the plotting functions.
+  # Done outside the block above so it also covers the (common) case where
+  # 'pval' was supplied directly. p-values of 0 are floored at the smallest
+  # representable double instead of becoming Inf; an absent p-value column
+  # gives an all-NA column, which the plotting functions reject with an
+  # informative error.
+  if(! 'nlog10pval' %in% colnames(geneSetsDF)) {
+    geneSetsDF$nlog10pval <- -log10(
+      pmax(
+        suppressWarnings(as.numeric(geneSetsDF$pval)),
+        .Machine$double.xmin
+      )
+    )
+  }
+
   if(!no_table){
     # Make pathway vector
     pathways <-
@@ -123,8 +159,24 @@ initializeList <- function(
     }
   }
 
-  ### Subset (to ensure no confounding columns downstream)
-  geneSetsDF <- geneSetsDF[,c('source','pathway','enrichment_score')]
+  ### Drop the columns that would collide with those added downstream
+  # Any other column is kept so it can be plotted via the 'plotFrom' argument
+  # of e.g. 'plotEnrichments()' and 'plotHeatmap()'
+  reservedColumns <- intersect(
+    colnames(geneSetsDF),
+    c('cluster', 'initial_cluster_label')
+  )
+  if( length(reservedColumns) ) {
+    warning(paste0(
+      "The following column(s) of 'geneSetsDF' are reserved for internal use ",
+      'and were removed: ',
+      paste0("'", reservedColumns, "'", collapse = ', '), '.'
+    ))
+
+    geneSetsDF <- geneSetsDF[
+      , setdiff(colnames(geneSetsDF), reservedColumns), drop = FALSE
+    ]
+  }
 
   res@enrichmentScore <- geneSetsDF
 
