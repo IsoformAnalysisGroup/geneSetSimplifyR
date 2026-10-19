@@ -44,6 +44,7 @@ Imports:
     cluster,
     clustree,
     dplyr (>= 1.1.0),
+    fgsea,
     ggplot2,
     ggraph,
     grDevices,
@@ -65,7 +66,6 @@ Imports:
 Suggests:
     apcluster,
     BiocStyle,
-    fgsea,
     knitr,
     leiden,
     msigdbr,

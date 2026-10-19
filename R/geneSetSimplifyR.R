@@ -8,7 +8,8 @@
 #'
 #' @param geneSetsList A list containing the gene sets to be analyzed.
 #' The name of each element in the list should be a gene set and each element should contain
-#' the genes belonging to that gene set.
+#' the genes belonging to that gene set. Alternatively, the path to a GMT file
+#' with the gene sets.
 #' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be useful
 #' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 #' Should have a column named 'pathway' containing the gene sets and a column

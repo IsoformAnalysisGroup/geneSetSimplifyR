@@ -16,6 +16,8 @@ First version submitted to Bioconductor.
   `parsePairedGSEA()`. `getGeneSets()` fetches MSigDB gene sets.
 * `initializeList()` accepts a `pval` (or `pvalue`) column and adds
   `nlog10pval`. Other numeric columns are kept.
+* `initializeList()` and `geneSetSimplifyR()` accept the path to a GMT file
+  as `geneSetsList`.
 * `plotEnrichments()`, `plotHeatmap()` and `plotViolin()` gain `plotFrom` (the
   column to plot; by default -log10 p-values when available, else enrichment
   scores). `plotEnrichments()` and `plotHeatmap()` gain `summaryStat`.
