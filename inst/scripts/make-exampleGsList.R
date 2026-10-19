@@ -16,7 +16,10 @@ set.seed(42)
 exampleGsList <- geneSetSimplifyR(
   geneSetsList = exampleGeneSets,
   geneSetsDF = exampleEnrichment,
-  verbose = FALSE
+  verbose = FALSE,
+  # The gene-set names start with the name of their author, e.g.
+  # SCHLOSSER_SERUM_RESPONSE_DN; leave it out of the labels
+  removeFirstWord = TRUE
 )
 
 ## Keep the shipped object small: the LSI feature loadings and the raw SVD
