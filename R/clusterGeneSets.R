@@ -303,21 +303,19 @@ clusterGeneSets <-
 
     if(verbose) {
       for (localRes in resolutionsTested) {
-        resolutionColumn <- paste0("GSEA_snn_res.", localRes)
+        resolutionColumn <- resolutionColumnName(localRes)
         clusterNumber <-
           length(levels(geneSetsList@cluster@meta.data[[resolutionColumn]]))
 
-        message(paste0(clusterNumber, " clusters found for resolution ", localRes))
+        message(clusterNumber, " clusters found for resolution ", localRes)
       }
     }
 
     if(verbose) {
-      message(paste(
-        'Determined',
-        bestRes,
-        "as the optimal clustering resolution. This is set as default.",
-        sep = ' '
-      ))
+      message(
+        "Determined ", bestRes,
+        " as the optimal clustering resolution. This is set as default."
+      )
     }
 
     if(verbose) {

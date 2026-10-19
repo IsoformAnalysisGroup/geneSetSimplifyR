@@ -75,7 +75,7 @@ labelClusters <-
         )
 
       if(verbose) {
-        message(paste0("Labels created for ", i))
+        message("Labels created for ", i)
       }
     }
 

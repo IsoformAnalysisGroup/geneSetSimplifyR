@@ -196,6 +196,6 @@ svdsWithRetries <- function(A, n, verbose = TRUE) {
 
   stop(
     "The SVD failed to converge after ", length(ncvSteps), " attempts with ",
-    "increasing 'ncv' and 'maxitr'. Last error: ", conditionMessage(lastError)
+    "increasing 'ncv' and 'maxitr': ", conditionMessage(lastError)
   )
 }

@@ -93,3 +93,19 @@ test_that("reserved columns are removed with a warning", {
   )
   expect_false("cluster" %in% names(g@enrichmentScore))
 })
+
+test_that("gene sets can be read from a GMT file", {
+  sets <- exampleGeneSets[1:15]
+  gmtFile <- tempfile(fileext = ".gmt")
+  writeLines(
+    vapply(names(sets), function(name) {
+      paste(c(name, "", sets[[name]]), collapse = "\t")
+    }, character(1)),
+    gmtFile
+  )
+  fromFile <- initializeList(gmtFile, verbose = FALSE)
+  fromList <- initializeList(sets, verbose = FALSE)
+  expect_equal(fromFile@genesetsDataframe, fromList@genesetsDataframe)
+  expect_error(initializeList("no_such_file.gmt", verbose = FALSE),
+               "File not found")
+})

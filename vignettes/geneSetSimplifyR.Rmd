@@ -21,7 +21,6 @@ knitr::opts_chunk$set(
   out.width = "75%",
   fig.align = "center"
 )
-hasFgsea <- requireNamespace("fgsea", quietly = TRUE)
 ```
 
 # Background and Rationale
@@ -85,7 +84,8 @@ library(ggplot2) # for modifying the plots
 data("exampleGeneSets")
 data("exampleEnrichment")
 
-### Or use fgsea to load your own gmt file:
+### Or load your own gmt file (you can also pass the file path directly
+### as 'geneSetsList' to geneSetSimplifyR()):
 # exampleGeneSets <- fgsea::gmtPathways(path_to_your_gmt_file)
 ```
 
@@ -399,9 +399,9 @@ See `?parsePairedGSEA`, `?parseFgsea`, and `?getGeneSets` for the full argument 
 
 # How to do gene-set enrichment analysis/overrepresentation analysis
 
-Let's look at how to produce the input for `geneSetSimplifyR` via the `fgsea` package and its example data (the code below runs when `fgsea` is installed):
+Let's look at how to produce the input for `geneSetSimplifyR` via the `fgsea` package and its example data:
 
-```{r fgsea data, eval=hasFgsea, message=FALSE}
+```{r fgsea data, message=FALSE}
 library(fgsea)
 
 data(examplePathways)
@@ -410,14 +410,14 @@ data(exampleRanks)
 
 And here are the genes of interest (e.g. significant genes) from the `fgsea` package:
 
-```{r example gene-sets, eval=hasFgsea}
+```{r example gene-sets}
 sigGenes <- tail(names(exampleRanks), 750)
 head(sigGenes)
 ```
 
 Then, we can run a simple over-representation analysis (ORA) or gene set enrichment analysis (GSEA) using the `fgsea` package as follows:
 
-```{r fora fgsea, eval=hasFgsea}
+```{r fora fgsea}
 # ORA example
 oraRes <- fora(
   pathways = examplePathways,
@@ -435,7 +435,7 @@ head(fgseaRes[order(padj), ])
 **Both ORA and GSEA results from fgsea can be used as input to our package in the same way.**
 Below, we use the ORA results to demonstrate this workflow.
 
-```{r fora downstream, eval=hasFgsea}
+```{r fora downstream}
 parsed <- parseFgsea(oraRes, examplePathways, cutoff=0.05)
 
 oraGsList <- geneSetSimplifyR(

@@ -4,7 +4,8 @@
 #'
 #' @param geneSetsList A list containing the gene sets to be analyzed.
 #' The name of each element in the list should be a gene set and each element should contain
-#' the genes belonging to that gene set.
+#' the genes belonging to that gene set. Alternatively, the path to a GMT file
+#' with the gene sets (read with [fgsea::gmtPathways()]).
 #' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be useful
 #' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 #' Should have a column named 'pathway' containing the gene sets and a column
@@ -33,6 +34,16 @@
 #' @examples
 #' gsListObject <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
 #' gsListObject
+#'
+#' # Gene sets can also be read from a GMT file
+#' gmtFile <- tempfile(fileext = ".gmt")
+#' writeLines(
+#'   vapply(names(exampleGeneSets), function(name) {
+#'     paste(c(name, "", exampleGeneSets[[name]]), collapse = "\t")
+#'   }, character(1)),
+#'   gmtFile
+#' )
+#' gsListObject <- initializeList(gmtFile, exampleEnrichment, verbose = FALSE)
 initializeList <- function(
     geneSetsList,
     geneSetsDF = NULL,
@@ -43,7 +54,17 @@ initializeList <- function(
     message("Checking input...")
   }
 
-  ### Gene sets
+  ### Gene sets, possibly from a GMT file
+  if (is.character(geneSetsList) && length(geneSetsList) == 1L) {
+    if (!file.exists(geneSetsList)) {
+      stop(
+        "'geneSetsList' should be a named list of gene sets or the path to a ",
+        "GMT file. File not found: ", geneSetsList
+      )
+    }
+    geneSetsList <- fgsea::gmtPathways(geneSetsList)
+  }
+
   if (!is.list(geneSetsList) || is.data.frame(geneSetsList) ||
       !length(geneSetsList)) {
     stop("'geneSetsList' should be a non-empty named list of gene sets.")
