@@ -82,7 +82,8 @@ kvsElbow <- function(
     ### Normalize both axes to [0, 1] so neither dominates the distance
     xNorm <- (x - min(x)) / (max(x) - min(x))
     yRange <- max(y) - min(y)
-    if (yRange == 0) {
+    # A flat curve has no elbow (smoothing can leave numerical noise)
+    if (yRange <= sqrt(.Machine$double.eps) * max(abs(y), 1)) {
       return(list(elbow_cutoff = length(variance)))
     }
     yNorm <- (y - min(y)) / yRange
