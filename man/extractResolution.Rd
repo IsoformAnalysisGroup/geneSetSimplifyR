@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{extractResolution}
 \alias{extractResolution}
-\title{Extract default resolution}
+\title{Extract the resolution currently used by default}
 \usage{
 extractResolution(geneSetsList)
 }
@@ -10,11 +10,14 @@ extractResolution(geneSetsList)
 \item{geneSetsList}{'gsList' object that has been clustered with the 'clusterGeneSets()' function.}
 }
 \value{
-default resolution
+The default resolution, as a number.
 }
 \description{
-Extract default resolution
+Returns the resolution that the plotting and table functions
+  use when their `resolution` argument is `NULL`. This is the optimal
+  resolution found by `clusterGeneSets()`, unless it was changed with
+  `updateResolution()` or `updateClusterLabels(resolution = ...)`.
 }
 \examples{
-gsListObject <- updateResolution(exampleGsList, 1.1)
+extractResolution(exampleGsList)
 }

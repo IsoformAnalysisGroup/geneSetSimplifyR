@@ -10,13 +10,16 @@
 #'   prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #'
-#' @return 'gsList' object with labelled clusters for all clustered resolutions.
+#' @return 'gsList' object with labeled clusters for all clustered resolutions.
 #' @export
 #'
 #' @examples
-#' geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
-#' gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
-#' gsListObject <- labelClusters(geneSetsList = gsListObject)
+#' # Relabel the shipped example, e.g. with extra stop words
+#' gsListObject <- labelClusters(
+#'   geneSetsList = exampleGsList,
+#'   stopWords = c(stopWords, "regulation"),
+#'   verbose = FALSE
+#' )
 labelClusters <-
   function(geneSetsList,
            stopWords = geneSetSimplifyR::stopWords,
@@ -29,14 +32,22 @@ labelClusters <-
     if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
+    geneSetsList <- upgradeGsList(geneSetsList)
 
     if (length(geneSetsList@cluster) == 0) {
-      stop("No clustering performed for 'geneSetsList'.
-         Please run 'clusterGeneSets()' and 'labelClusters()' before plotting.")
+      stop("No clustering performed for 'geneSetsList'. ",
+           "Please run 'clusterGeneSets()' first.")
     }
 
-    if (!is.vector(stopWords)) {
-      stop("'stopWords' should be a vector.")
+    if (is.null(stopWords)) {
+      stopWords <- character(0)
+    }
+    if (!is.character(stopWords)) {
+      stop("'stopWords' should be a character vector.")
+    }
+
+    if (!is.numeric(nLabels) || length(nLabels) != 1L || nLabels < 1) {
+      stop("'nLabels' should be a single positive number.")
     }
 
     if(verbose) {
@@ -46,10 +57,7 @@ labelClusters <-
     # Initialize list
     geneSetsList@labels <- list()
 
-    resolutions <-
-      grep("GSEA_snn_res.",
-           names(geneSetsList@cluster@meta.data),
-           value = TRUE)
+    resolutions <- availableResolutionColumns(geneSetsList)
 
     ### For each resolution extract label info
     for (i in resolutions) {
@@ -84,10 +92,10 @@ labelClusters <-
     currentClusterLabels <- levels(currentClusters)
 
     ### Sanity check: every labelled cluster must exist in the active identity
-    labelledClusters <- as.character(unique(
+    labeledClusters <- as.character(unique(
       geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]]$cluster
     ))
-    if( ! all(labelledClusters %in% currentClusterLabels) ){
+    if( ! all(labeledClusters %in% currentClusterLabels) ){
       stop('something went wrong with the label transfer. Contact developer')
     }
 
@@ -100,21 +108,23 @@ labelClusters <-
       removeClusterId = FALSE
     )
 
-    unlabelled <- setdiff(currentClusterLabels, labelledClusters)
-    if( length(unlabelled) & verbose ) {
+    unlabeled <- setdiff(currentClusterLabels, labeledClusters)
+    if( length(unlabeled) && verbose ) {
       message(
         "No label could be generated for cluster(s) ",
-        paste(unlabelled, collapse = ", "),
+        paste(unlabeled, collapse = ", "),
         "; they keep their cluster id as label."
       )
     }
 
-    geneSetsList@cluster@active.ident <-
-      plyr::mapvalues(x = currentClusters,
-                      from = currentClusterLabels,
-                      to = defaultLabels)
+    geneSetsList@cluster@active.ident <- relabelFactor(
+      x = currentClusters,
+      from = currentClusterLabels,
+      to = defaultLabels
+    )
 
     ### Record labeling metadata
+    geneSetsList@metadata$active_resolution <- defaultResolutionColumn
     geneSetsList@metadata$n_labels <- nLabels
     geneSetsList@metadata$labeled_at <- Sys.time()
 

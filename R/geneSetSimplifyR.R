@@ -12,11 +12,13 @@
 #' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be useful
 #' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 #' Should have a column named 'pathway' containing the gene sets and a column
-#' named 'enrichment_score' with the enrichment scores from GSEA analysis for each gene set.
-#' Optionally have a column named 'source' indicating the source of each gene set. This allows for
+#' named 'enrichment_score' (or 'NES') with the enrichment scores from GSEA analysis for each gene set.
+#' Optionally have a column named 'pval' (or 'pvalue') with the p-value of each gene set, and
+#' a column named 'source' indicating the source of each gene set. This allows for
 #' analysis of multi-conditional data throughout the entire workflow and is also supported by many
-#' plotting functions. See the vignette for more info.
+#' plotting functions. See \code{\link{initializeList}} and the vignette for more info.
 #' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
+#' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #' @param cluster_algo Clustering method applied to the SNN graph, passed to
 #'   \code{clusterGeneSets()}. Either the name of a registered method (see
 #'   \code{\link{listClusterMethods}}; 'louvain' by default), a
@@ -25,24 +27,39 @@
 #'   method.
 #' @param elbow_method Method passed to \code{clusterGeneSets()} for selecting the
 #'   number of LSI dimensions. Options: 'distance'(default), 'zscore'.
+#' @param K Number of nearest neighbors for the KNN graph, passed to
+#'   \code{clusterGeneSets()}. `NA` (default) uses `round(sqrt(N))` for `N`
+#'   gene sets.
 #' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
 #'   the first underscore) from each gene-set name before generating cluster labels.
 #'   Useful for MSigDB-style names where the first token is an author or database
 #'   prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.
-#' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
-#' @return 'gsList' object with labelled clusters for all clustered resolutions.
+#' @param stopWords Words ignored when labeling clusters, passed to
+#'   \code{labelClusters()}. Defaults to the shipped \code{\link{stopWords}}.
+#' @param nLabels Number of top labels to keep per cluster, passed to
+#'   \code{labelClusters()}. Default 10.
+#' @return 'gsList' object with labeled clusters for all clustered resolutions.
 #' @export
 #'
-#' @examples gsListObject <- geneSetSimplifyR(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+#' @examples
+#' gsListObject <- geneSetSimplifyR(
+#'   geneSetsList = exampleGeneSets,
+#'   geneSetsDF = exampleEnrichment,
+#'   verbose = FALSE
+#' )
+#' gsListObject
 geneSetSimplifyR <- function(
     geneSetsList,
     geneSetsDF = NULL,
-    resolution = c(0.1,0.3,0.6,1.1,1.6,2.1,2.6,3.1,4.1,5.1),
+    resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 2.6, 3.1, 4.1, 5.1),
     verbose = TRUE,
     cluster_algo = "louvain",
     clusterArgs = list(),
     elbow_method = "distance",
-    removeFirstWord = FALSE
+    K = NA,
+    removeFirstWord = FALSE,
+    stopWords = geneSetSimplifyR::stopWords,
+    nLabels = 10
 ) {
   geneSetsList <- initializeList(
     geneSetsList = geneSetsList,
@@ -56,11 +73,14 @@ geneSetSimplifyR <- function(
     verbose = verbose,
     algorithm = cluster_algo,
     clusterArgs = clusterArgs,
+    K = K,
     elbow_method = elbow_method
   )
 
   geneSetsList <- labelClusters(
     geneSetsList = geneSetsList,
+    stopWords = stopWords,
+    nLabels = nLabels,
     removeFirstWord = removeFirstWord,
     verbose = verbose
   )

@@ -5,12 +5,19 @@
 \alias{stopWords}
 \title{Stop Words}
 \format{
-A list of character strings.
+A character vector.
 }
 \usage{
 stopWords
 }
 \description{
-A list of character strings used for annotating the cluster.
+Words ignored when labeling clusters, e.g. "of", "and", "process". Bigrams
+(two-word label candidates) containing one of these words are not used as
+labels.
+}
+\examples{
+head(stopWords)
+# Add your own stop words
+myStopWords <- c(stopWords, "regulation", "response")
 }
 \keyword{datasets}

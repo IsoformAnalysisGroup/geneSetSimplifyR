@@ -1,124 +1,96 @@
 #' Violin plot of clustering
 #'
-#' @description Creates a violin plot of the enrichment scores for each cluster.
+#' @description Creates a violin plot of the values of the gene sets in each
+#'   cluster, by default their -log10 p-values (or enrichment scores when no
+#'   p-values were supplied). Clusters are ordered by their median value.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
-#' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
+#' @param resolution The cluster resolution to plot. Default `NULL` uses the
+#'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
+#'   the one last set with `updateResolution()` or `updateClusterLabels()`.
+#' @param plotFrom Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used (the default therefore falls back to 'enrichment_score' when no p-values were supplied).
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.
 #'
-#' @return A list of ggplot objects.
-#' @import tidyseurat
-#' @importFrom dplyr mutate
+#' @return A ggplot object.
 #' @export
 #'
-#' @examples plotViolin(geneSetsList = exampleGsList, highlightClusterNo = c(0,1), removeClusterId = FALSE)
+#' @examples
+#' plotViolin(exampleGsList, highlightClusterNo = c(0, 1))
+#' plotViolin(exampleGsList, plotFrom = 'enrichment_score', removeClusterId = TRUE)
 plotViolin <- function(
     geneSetsList,
     resolution = NULL,
+    plotFrom = c('nlog10pval', 'enrichment_score'),
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 ) {
   # Check input
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object")
-  }
+  checkGsList(geneSetsList)
 
-  if (length(geneSetsList@cluster) == 0) {
-    stop(
-      "No clustering performed for 'geneSetsList'.
-         Please run 'clusterGeneSets()' and 'labelClusters()' before plotting."
-    )
-  }
+  plotFrom <- validatePlotFrom(
+    geneSetsList = geneSetsList,
+    plotFrom = plotFrom
+  )
 
-  if (length(geneSetsList@labels) == 0) {
-    stop(
-      "No labels created for 'geneSetsList'.
-         Please run 'labelClusters()' before plotting."
-    )
-  }
-  if( all(is.na( geneSetsList@enrichmentScore$enrichment_score  ) ) ) {
-    stop(paste0(
-      'Cannot plot enrichment when enrichment scores are not annotated.\n',
-      '  If you want to plot enrichment you need to redo the entire workflow and add the enrichment score.'
-    ))
-  }
+  clusterNameToHighlight <- highlightedClusterNames(
+    geneSetsList = geneSetsList,
+    resolution = resolution,
+    highlightClusterNo = highlightClusterNo,
+    removeClusterId = removeClusterId
+  )
 
-  ### Extract clusters to highlight
-  if(! is.null(highlightClusterNo)) {
+  ### Set the cluster resolution and labels to plot
+  geneSetsList <- changeUsedResolution(
+    geneSetsList = geneSetsList,
+    resolution = resolution,
+    removeClusterId = removeClusterId
+  )
 
-    if( ! is.null(resolution)) {
-      geneSetsList <- changeUsedResolution(
-        geneSetsList = geneSetsList,
-        resolution = resolution,
-        removeClusterId = FALSE
-      )
-    }
+  ### One row per gene set and source, with its cluster label
+  clusterIdents <- geneSetsList@cluster@active.ident
+  df <- geneSetsList@enrichmentScore
+  df$clusterLabel <- clusterIdents[match(df$pathway, names(clusterIdents))]
+  df$value <- df[[plotFrom]]
+  df <- df[!is.na(df$value) & !is.na(df$clusterLabel), , drop = FALSE]
 
-    ### Extract cluster to highlight
-    clusterPattern <- stringr::str_c('^',highlightClusterNo, ': ', collapse = '|')
+  ### Order the clusters by their median value
+  df$clusterLabel <- droplevels(df$clusterLabel)
+  df$clusterLabel <- stats::reorder(df$clusterLabel, df$value, FUN = median)
 
-    clusterNameToHighlight <-
-      stringr::str_subset(
-        string = levels(geneSetsList@cluster@active.ident),
-        pattern = clusterPattern
-      )
+  valueLabel <- sub("^ ", "", enrichmentSummaryLabel('', plotFrom))
 
-    if(removeClusterId) {
-      clusterNameToHighlight <-
-        stringr::str_remove(clusterNameToHighlight, "^[0-9]+: ")
-    }
-  }
+  # A violin needs at least two values; single gene sets are still drawn as
+  # points
+  violinData <- df %>%
+    dplyr::group_by(clusterLabel, source) %>%
+    dplyr::filter(dplyr::n() > 1) %>%
+    dplyr::ungroup()
 
-
-  ### Update if not default
-  if( ! is.null(resolution)) {
-    geneSetsList <- changeUsedResolution(
-      geneSetsList = geneSetsList,
-      resolution = resolution,
-      removeClusterId = removeClusterId
-    )
-  }
-
-  ### Assign conditions
   nCond <- countConditions(geneSetsList)
 
   if ( nCond != '1' ) {
-
-    df <-
-      geneSetsList@cluster %>%
-      #tidyseurat::mutate(label = geneSetsList@cluster@active.ident) %>%
-      mutate(label = geneSetsList@cluster@active.ident) %>%
-      dplyr::right_join(.,
-                        geneSetsList@enrichmentScore,
-                        by = c("gene_set" = "pathway")) %>%
-      dplyr::group_by(label) %>%
-      dplyr::mutate(median_enrichment_score = median(enrichment_score)) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(
-        id = stringr::str_c(source, label),
-        label = reorder(label, enrichment_score, FUN = median)
-      )
-
-    if(removeClusterId) {
-      df$label <- stringr::str_remove(df$label, "^[0-9]+: ")
-    }
-
-
     p1 <-
       df %>%
       ggplot(aes(
-        x = label,
-        y = enrichment_score,
+        x = clusterLabel,
+        y = value,
         fill = source
       )) +
-      geom_violin(scale = 'width', draw_quantiles = 0.5) +
-      geom_point(alpha = 1/3,
-                 size = 0.75,
-                 position = position_jitterdodge(dodge.width = 0.9)) +
+      violinWithMedian(violinData) +
+      geom_point(
+        alpha = 1/3,
+        size = 0.75,
+        position = position_jitterdodge(
+          jitter.width = 0.2,
+          jitter.height = 0,
+          dodge.width = 0.9,
+          seed = 1
+        )
+      ) +
       labs(x = "Gene Set Cluster",
-           y = "Enrichment",
-           fill = "Source") +
+           y = valueLabel,
+           fill = "Gene set source") +
       theme_bw() +
       theme(
         legend.position = "bottom"
@@ -126,41 +98,31 @@ plotViolin <- function(
       coord_flip()
   }
   if ( nCond == '1' ) {
-    geneSetsList@cluster <- Seurat::AddMetaData(
-      object = geneSetsList@cluster,
-      metadata = geneSetsList@enrichmentScore$enrichment_score,
-      col.name = 'enrichment_score'
-    )
-
-    df <-
-      geneSetsList@cluster %>%
-      #tidyseurat::mutate(label = geneSetsList@cluster@active.ident) %>%
-      mutate(label = geneSetsList@cluster@active.ident) %>%
-      dplyr::group_by(label) %>%
-      dplyr::mutate(median_enrichment_score = median(enrichment_score)) %>%
-      dplyr::ungroup() %>%
-      mutate(
-        label = reorder(label, enrichment_score, FUN = median)
-      )
-
-    if(removeClusterId) {
-      df$label <- stringr::str_remove(df$label, "^[0-9]+: ")
-    }
+    df <- df %>%
+      dplyr::group_by(clusterLabel) %>%
+      dplyr::mutate(median_value = median(value)) %>%
+      dplyr::ungroup()
+    violinData <- df %>%
+      dplyr::group_by(clusterLabel) %>%
+      dplyr::filter(dplyr::n() > 1) %>%
+      dplyr::ungroup()
 
     p1 <-
       df %>%
       ggplot(aes(
-        x = label,
-        y = enrichment_score,
-        fill = median_enrichment_score
+        x = clusterLabel,
+        y = value,
+        fill = median_value
       )) +
-      geom_violin(scale = 'width', draw_quantiles = 0.5) +
-      geom_point(alpha = 1/3,
-                 size = 0.75,
-                 position = position_jitterdodge(dodge.width = 0.9)) +
+      violinWithMedian(violinData) +
+      geom_point(
+        alpha = 1/3,
+        size = 0.75,
+        position = position_jitter(width = 0.2, height = 0, seed = 1)
+      ) +
       labs(x = "Gene Set Cluster",
-           y = "Enrichment",
-           fill = "Median ES") +
+           y = valueLabel,
+           fill = paste("Median", valueLabel)) +
       theme_bw() +
       theme(
         legend.position = "bottom"
@@ -169,21 +131,34 @@ plotViolin <- function(
   }
 
   ### Make highlighted clusters bold
-  if(! is.null(highlightClusterNo)) {
-
+  if(length(clusterNameToHighlight)) {
     suppressWarnings(
       p1 <-
         p1 +
         theme(axis.text.y=element_text(
           face=boldXaxisLabels(
-            src = df$label,
+            src = df$clusterLabel,
             clusterNameToHighlight
           )
         ))
     )
-
   }
 
-
   return(p1)
+}
+
+#' Violin layer with a line at the median
+#'
+#' ggplot2 4.0 replaced `draw_quantiles` by `quantiles`/`quantile.linetype`;
+#' use whichever the installed version supports.
+#' @param data Data for the layer.
+#' @return A ggplot2 layer.
+#' @keywords internal
+violinWithMedian <- function(data) {
+  if (utils::packageVersion("ggplot2") >= "4.0.0") {
+    geom_violin(data = data, scale = 'width',
+                quantiles = 0.5, quantile.linetype = 1)
+  } else {
+    geom_violin(data = data, scale = 'width', draw_quantiles = 0.5)
+  }
 }

@@ -6,14 +6,16 @@
 \usage{
 summarizeEnrichment(
   geneSetsList,
+  resolution = NULL,
   scoreColumn = "enrichment_score",
-  summaryStat = "median",
+  summaryStat = "mean",
   removeClusterId = FALSE
 )
 }
 \arguments{
-\item{geneSetsList}{A labelled 'gsList' object, with the resolution to plot
-already applied (see `changeUsedResolution()`).}
+\item{geneSetsList}{A labeled 'gsList' object.}
+
+\item{resolution}{`NULL` (the active resolution) or a clustered resolution.}
 
 \item{scoreColumn}{Name of the column in the `enrichmentScore` slot to
 summarize, e.g. `'enrichment_score'` or `'nlog10pval'`. Should already have
@@ -26,7 +28,8 @@ to a single value (i.e. via `match.arg()` in the caller).}
 }
 \value{
 A data.frame with columns `source`, `cluster`, `enrichmentSummary`
-  and `genesets`, arranged by cluster.
+  and `genesets` (the number of gene sets in the cluster and source,
+  including gene sets without a value), arranged by cluster.
 }
 \description{
 Internal helper. Summarizes the per-gene-set enrichment scores of

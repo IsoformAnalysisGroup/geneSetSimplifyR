@@ -2,20 +2,23 @@
 % Please edit documentation in R/utils.R
 \name{numericClusterFactor}
 \alias{numericClusterFactor}
-\title{Coerce a cluster-id vector/factor to start at 0 with numeric level order}
+\title{Coerce a cluster-id vector/factor to consecutive ids starting at 0}
 \usage{
 numericClusterFactor(x)
 }
 \arguments{
-\item{x}{A factor or vector of (coercible-to-numeric) cluster ids.}
+\item{x}{A factor or vector of cluster ids.}
 }
 \value{
-A factor with levels in numeric order, starting at 0.
+A factor with levels `0, 1, ..., k - 1`.
 }
 \description{
-Internal helper. Seurat may store cluster factor levels in lexicographic
-order ("10" before "2"), which breaks code that pairs labels to levels by
-position. This renumbers ids to start at 0 and rebuilds the factor with
-numeric level order.
+Internal helper. Backends differ in how they number clusters: Seurat is
+0-based, igraph is 1-based, a custom backend may return gaps (e.g.
+`c(1, 3, 5)`) or non-numeric labels. Seurat may also store factor levels in
+lexicographic order ("10" before "2"), which breaks code that pairs labels to
+levels by position. This maps the ids to consecutive integers starting at 0,
+in numeric order when every id is numeric (character order otherwise), and
+returns a factor with numeric level order.
 }
 \keyword{internal}

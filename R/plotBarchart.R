@@ -1,16 +1,21 @@
 #' Plot clusters as a bar chart
 #'
-#' @description Creates a bar chart showing the size of each gene-set cluster colored by condition.
+#' @description Creates a bar chart showing the number of gene sets in each
+#'   cluster, per source when there are several.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
-#' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
+#' @param resolution The cluster resolution to plot. Default `NULL` uses the
+#'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
+#'   the one last set with `updateResolution()` or `updateClusterLabels()`.
 #' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.
 #'
-#' @return A list of ggplot objects.
+#' @return A ggplot object.
 #' @export
 #'
-#' @examples plotBarchart(exampleGsList)
+#' @examples
+#' plotBarchart(exampleGsList)
+#' plotBarchart(exampleGsList, resolution = 0.6, highlightClusterNo = 1)
 plotBarchart <- function(
     geneSetsList,
     resolution = NULL,
@@ -18,66 +23,22 @@ plotBarchart <- function(
     highlightClusterNo = NULL
 ) {
   # Check input
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object")
-  }
+  checkGsList(geneSetsList)
 
-  if (length(geneSetsList@cluster) == 0) {
-    stop(
-      "No clustering performed for 'geneSetsList'.
-         Please run 'clusterGeneSets()' and 'labelClusters()' before plotting."
-    )
-  }
-
-  if (length(geneSetsList@labels) == 0) {
-    stop(
-      "No labels created for 'geneSetsList'.
-         Please run 'labelClusters()' before plotting."
-    )
-  }
-
-  ### Extract clusters to highlight
-  if(! is.null(highlightClusterNo)) {
-
-    if( ! is.null(resolution)) {
-      geneSetsList <- changeUsedResolution(
-        geneSetsList = geneSetsList,
-        resolution = resolution,
-        removeClusterId = FALSE
-      )
-    }
-
-    ### Extract cluster to highlight
-    clusterPattern <- stringr::str_c('^',highlightClusterNo, ': ', collapse = '|')
-
-    clusterNameToHighlight <-
-      stringr::str_subset(
-        string = levels(geneSetsList@cluster@active.ident),
-        pattern = clusterPattern
-      )
-
-    if(removeClusterId) {
-      clusterNameToHighlight <-
-        stringr::str_remove(clusterNameToHighlight, "^[0-9]+: ")
-    }
-  }
-
-
-  ### Update if not default
-  if( ! is.null(resolution)) {
-    geneSetsList <- changeUsedResolution(
-      geneSetsList = geneSetsList,
-      resolution = resolution,
-      removeClusterId = removeClusterId
-    )
-  }
+  clusterNameToHighlight <- highlightedClusterNames(
+    geneSetsList = geneSetsList,
+    resolution = resolution,
+    highlightClusterNo = highlightClusterNo,
+    removeClusterId = removeClusterId
+  )
 
   ### Extract plot data
   plotData <-
     extractTable(
       geneSetsList,
+      resolution = resolution,
       removeClusterId = removeClusterId,
-      summarize = T
+      summarize = TRUE
     )
 
   plotData$cluster <- factor(
@@ -94,8 +55,8 @@ plotBarchart <- function(
       geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
       labs(
         x = "Gene Set Cluster",
-        y = "Gene Set",
-        fill = "Gene set source",
+        y = "Number of gene sets",
+        fill = "Gene set source"
       ) +
       theme_bw() +
       theme(
@@ -111,7 +72,7 @@ plotBarchart <- function(
       geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
       labs(
         x = "Gene Set Cluster",
-        y = "Gene Set"
+        y = "Number of gene sets"
       ) +
       theme_bw() +
       theme(
@@ -121,7 +82,7 @@ plotBarchart <- function(
   }
 
   ### Make highlighted clusters bold
-  if(! is.null(highlightClusterNo)) {
+  if(length(clusterNameToHighlight)) {
     suppressWarnings(
       p1 <-
         p1 +

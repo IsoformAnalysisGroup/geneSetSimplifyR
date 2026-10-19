@@ -14,18 +14,22 @@ plotBarchart(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().}
+\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
+active resolution: the optimal resolution found by `clusterGeneSets()`, or
+the one last set with `updateResolution()` or `updateClusterLabels()`.}
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
-\item{highlightClusterNo}{A vector with the cluster numbers of the cluster (at the resolution) to highlight in the UMAP}
+\item{highlightClusterNo}{A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.}
 }
 \value{
-A list of ggplot objects.
+A ggplot object.
 }
 \description{
-Creates a bar chart showing the size of each gene-set cluster colored by condition.
+Creates a bar chart showing the number of gene sets in each
+  cluster, per source when there are several.
 }
 \examples{
 plotBarchart(exampleGsList)
+plotBarchart(exampleGsList, resolution = 0.6, highlightClusterNo = 1)
 }

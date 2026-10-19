@@ -13,8 +13,6 @@
 #' @keywords internal
 #' @noRd
 #'
-#' @examples
-#' gsListObject <- getLabels(geneSetsList = exampleGsList, stopWords = stopWords, clusterResolution = 2.1)
 getLabels <- function(geneSetsList,
                       stopWords,
                       clusterResolution,
@@ -28,8 +26,11 @@ getLabels <- function(geneSetsList,
   centralGenesets <- tibble::tibble()
   matrix <- as.matrix(seuratObj@graphs[["GSEA_snn"]])
 
+  # Cluster ids are consecutive and start at 0 (see numericClusterFactor())
+  clusterIds <- as.numeric(levels(seuratObj@meta.data[[clusterResolution]]))
+
   # Get info for each cluster
-  for (i in 1:length(levels(seuratObj@meta.data[[clusterResolution]]))) {
+  for (i in clusterIds + 1) {
     # GET TOKENS
     # example:
       # geneset
@@ -65,7 +66,7 @@ getLabels <- function(geneSetsList,
                               n = 2,
                               drop = FALSE) %>%
       # single-word names can't form a bigram (label is NA); fall back to the
-      # word itself so informative one-word gene sets are still labelled.
+      # word itself so informative one-word gene sets are still labeled.
       dplyr::mutate(label = dplyr::coalesce(label, stringr::str_to_lower(tokenSource))) %>%
       dplyr::mutate(label = stringr::str_to_title(label)) %>%
       dplyr::mutate(cluster = i - 1) %>%
@@ -86,8 +87,8 @@ getLabels <- function(geneSetsList,
     g <-
       igraph::graph_from_adjacency_matrix(
         clusterMatrix,
-        diag = F,
-        weighted = T,
+        diag = FALSE,
+        weighted = TRUE,
         mode = "undirected"
       )
 
@@ -100,7 +101,7 @@ getLabels <- function(geneSetsList,
       names(c) <- clusterGenesets
     }
 
-    c <- sort(c, decreasing = T)
+    c <- sort(c, decreasing = TRUE)
 
     centralGenesetsCluster <-
       tibble::tibble(
@@ -117,14 +118,24 @@ getLabels <- function(geneSetsList,
     centralGenesets %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%
     dplyr::group_by(cluster) %>%
-    dplyr::slice_max(centrality_score, n = nLabels, with_ties = F) %>%
+    dplyr::slice_max(centrality_score, n = nLabels, with_ties = FALSE) %>%
     dplyr::ungroup()
 
   # GET TFIDF
-  wordListRegex = paste0("\\b(?:", paste(stopWords, collapse = "|"), ")\\b")
+  # Drop bigrams containing a stop word. Words are escaped so stop words with
+  # regex symbols (e.g. "c++") are matched literally; an empty stop-word list
+  # keeps every bigram.
+  stopWords <- stopWords[!is.na(stopWords) & nzchar(stopWords)]
+  if (length(stopWords)) {
+    wordListRegex <- paste0(
+      "\\b(?:", paste(stringr::str_escape(stopWords), collapse = "|"), ")\\b"
+    )
+    hasStopWord <- grepl(wordListRegex, wordsDataset$label, ignore.case = TRUE)
+  } else {
+    hasStopWord <- rep(FALSE, nrow(wordsDataset))
+  }
 
-  cleanedWords <- wordsDataset %>%
-    dplyr::filter(!grepl(wordListRegex, label, ignore.case = TRUE)) %>%
+  cleanedWords <- wordsDataset[!hasStopWord, , drop = FALSE] %>%
     dplyr::mutate(cluster = as.character(cluster)) %>%
     dplyr::count(cluster, label, sort = TRUE)
 
@@ -143,7 +154,7 @@ getLabels <- function(geneSetsList,
     clustersTFIDF %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%
     dplyr::group_by(cluster) %>%
-    dplyr::slice_max(tf_idf, n = nLabels, with_ties = F) %>%
+    dplyr::slice_max(tf_idf, n = nLabels, with_ties = FALSE) %>%
     dplyr::ungroup()
 
   clustersTFIDFGenesets <- wordsDataset %>%
@@ -181,7 +192,7 @@ getLabels <- function(geneSetsList,
   labelsDefault <- combinedScores %>%
     dplyr::mutate(cluster = as.numeric(cluster)) %>%
     dplyr::group_by(cluster) %>%
-    dplyr::slice_max(weighted_score, n = nLabels, with_ties = F) %>%
+    dplyr::slice_max(weighted_score, n = nLabels, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     dplyr::select(label, cluster, weighted_score)
 
@@ -189,8 +200,11 @@ getLabels <- function(geneSetsList,
   # The top-ranked bigram per cluster is used as the cluster's displayed name.
   # When several clusters share the same top bigram, append each cluster's
   # second-ranked bigram so the names become unique, e.g. two clusters both
-  # labelled "Metabolic Process" become "Metabolic Process; Mrna Splicing" and
-  # "Metabolic Process; Catabolic Process".
+  # labeled "Metabolic Process" become "Metabolic Process; Mrna Splicing" and
+  # "Metabolic Process; Catabolic Process". If names are still not unique (e.g.
+  # the second labels are shared too, or a cluster has no second label), the
+  # cluster id is appended as a last resort, so every cluster keeps a distinct
+  # name even when plots drop the "<id>: " prefix.
   labelsDefault <- labelsDefault %>%
     dplyr::group_by(cluster) %>%
     dplyr::arrange(dplyr::desc(weighted_score), .by_group = TRUE) %>%
@@ -217,6 +231,21 @@ getLabels <- function(geneSetsList,
         )
       ) %>%
       dplyr::select(-second_label)
+  }
+
+  topRanked <- labelsDefault %>% dplyr::filter(rank == 1)
+  stillShared <- topRanked$label[
+    duplicated(topRanked$label) | duplicated(topRanked$label, fromLast = TRUE)
+  ]
+  if (length(stillShared)) {
+    labelsDefault <- labelsDefault %>%
+      dplyr::mutate(
+        label = ifelse(
+          rank == 1 & label %in% stillShared,
+          paste0(label, " (", cluster, ")"),
+          label
+        )
+      )
   }
 
   geneSetsList@labels[[clusterResolution]][["labelsDefault"]] <-

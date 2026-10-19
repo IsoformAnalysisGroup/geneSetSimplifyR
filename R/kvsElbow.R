@@ -1,6 +1,8 @@
 #' Determine the elbow cutoff to be used to run UMAP
 #'
-#' @param variance Stored in a Seurat object as 'seuratObj@reductions$lsi@stde'
+#' @param variance Standard deviations of the LSI components, stored in a
+#'   Seurat object as `seuratObj@reductions$lsi@stdev`. Must be sorted in
+#'   decreasing order.
 #' @param method Which elbow-detection method to use. One of:
 #'   \describe{
 #'     \item{`"distance"` (default)}{Returns the point of the (smoothed) scree
@@ -14,14 +16,17 @@
 #' @param zScoreCutoff Integer indicating the cut off value for the Z-score.
 #'   Only used when `method = "zscore"`.
 #'
-#' @return Elbow cutoff
+#' @details Short scree curves (fewer than 50 components, i.e. inputs with 50
+#'   or fewer gene sets) are supported. With fewer than four components after
+#'   dropping the first one, all components are used.
 #'
-#' @examples
-#' # elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
+#' @return A list with element `elbow_cutoff`: the index of the last LSI
+#'   component to use (at least 2).
+#' @keywords internal
 kvsElbow <- function(
     variance,
     method = c("distance", "zscore"),
-    zScoreCutoff=2.5
+    zScoreCutoff = 2.5
 ) {
   method <- match.arg(method)
 
@@ -29,29 +34,35 @@ kvsElbow <- function(
   if (is.unsorted(-variance)) {
     stop("'variance' should be sorted in decreasing order")
   }
-  if(length(variance) < 50) {
-    stop('variance should at least be 50 observations for this method to work')
+  if (length(variance) < 2) {
+    stop("'variance' should hold at least 2 components.")
+  }
+
+  ### Too few components to locate an elbow: use them all
+  if (length(variance) < 5) {
+    return(list(elbow_cutoff = length(variance)))
   }
 
   if (method == "zscore") {
     ### Scale
-    varianceScaled <- scale(variance, center = T, scale = TRUE)
-
+    varianceScaled <- scale(variance, center = TRUE, scale = TRUE)
 
     ### Calculate stepwise change (1st order derivative)
     stepwiseDecrease <-
       varianceScaled[-length(varianceScaled)] -
       varianceScaled[-1]
 
-
     ### Calculate z-score from stepwise change
-    stepwiseZ <-
-      (stepwiseDecrease - median(stepwiseDecrease)) /
-      mad(stepwiseDecrease)
-
+    stepwiseMad <- mad(stepwiseDecrease)
+    if (!is.finite(stepwiseMad) || stepwiseMad == 0) {
+      stepwiseZ <- rep(0, length(stepwiseDecrease))
+    } else {
+      stepwiseZ <-
+        (stepwiseDecrease - median(stepwiseDecrease)) / stepwiseMad
+    }
 
     if(!any(stepwiseZ > zScoreCutoff)) {
-      cutoffIndex <- 13
+      cutoffIndex <- min(13L, length(variance))
     } else {
       cutoffIndex <- max(max(which(stepwiseZ > zScoreCutoff)) + 1L, 2L)
     }
@@ -70,7 +81,11 @@ kvsElbow <- function(
 
     ### Normalize both axes to [0, 1] so neither dominates the distance
     xNorm <- (x - min(x)) / (max(x) - min(x))
-    yNorm <- (y - min(y)) / (max(y) - min(y))
+    yRange <- max(y) - min(y)
+    if (yRange == 0) {
+      return(list(elbow_cutoff = length(variance)))
+    }
+    yNorm <- (y - min(y)) / yRange
 
     ### Endpoints of the scree curve
     p1 <- c(xNorm[1], yNorm[1])

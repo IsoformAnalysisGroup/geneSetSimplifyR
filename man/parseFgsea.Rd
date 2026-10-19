@@ -7,8 +7,10 @@
 parseFgsea(fgseaResult, geneSets, cutoff = 0.05, source = "fgsea")
 }
 \arguments{
-\item{fgseaResult}{Output of `fgsea::fgsea()`. Must contain `pathway`,
-`padj`, and `NES` columns.}
+\item{fgseaResult}{Output of `fgsea::fgsea()` or `fgsea::fora()`. Must
+contain `pathway` and `padj` columns, and either `NES` (GSEA) or
+`foldEnrichment` (over-representation analysis, used as
+`log2(foldEnrichment)`).}
 
 \item{geneSets}{Named list of gene-set memberships (the same one passed to
 `fgsea::fgsea()`).}
@@ -25,7 +27,8 @@ A list with:
     \item{`geneSetsList`}{`geneSets` filtered to pathways passing the
       cutoff.}
     \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
-      `enrichment_score` (fgsea's NES). One row per pathway.}
+      `enrichment_score` (fgsea's NES), `pval` (when present) and `padj`.
+      One row per pathway.}
   }
 }
 \description{
@@ -36,17 +39,26 @@ Converts [fgsea::fgsea()] output into the two inputs
   distinct `source` label and `rbind()` the resulting `geneSetsDF`s.
 }
 \examples{
-\dontrun{
+# A small table in the format of fgsea::fgsea() output
+pathways <- names(exampleGeneSets)[1:60]
+fgseaRes <- data.frame(
+  pathway = pathways,
+  pval = rep(c(0.001, 0.01, 0.3), 20),
+  padj = rep(c(0.004, 0.03, 0.5), 20),
+  NES = seq(-2.5, 2.5, length.out = 60)
+)
 parsed <- parseFgsea(
   fgseaResult = fgseaRes,
-  geneSets    = mSigDB,
+  geneSets    = exampleGeneSets,
   cutoff      = 0.05,
   source      = "treatmentA"
 )
+head(parsed$geneSetsDF)
 gss <- geneSetSimplifyR(
   geneSetsList = parsed$geneSetsList,
-  geneSetsDF   = parsed$geneSetsDF
+  geneSetsDF   = parsed$geneSetsDF,
+  resolution   = 1.1,
+  verbose      = FALSE
 )
-}
 
 }

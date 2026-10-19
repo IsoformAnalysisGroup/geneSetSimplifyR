@@ -7,7 +7,9 @@
 kvsElbow(variance, method = c("distance", "zscore"), zScoreCutoff = 2.5)
 }
 \arguments{
-\item{variance}{Stored in a Seurat object as 'seuratObj@reductions$lsi@stde'}
+\item{variance}{Standard deviations of the LSI components, stored in a
+Seurat object as `seuratObj@reductions$lsi@stdev`. Must be sorted in
+decreasing order.}
 
 \item{method}{Which elbow-detection method to use. One of:
 \describe{
@@ -24,11 +26,15 @@ kvsElbow(variance, method = c("distance", "zscore"), zScoreCutoff = 2.5)
 Only used when `method = "zscore"`.}
 }
 \value{
-Elbow cutoff
+A list with element `elbow_cutoff`: the index of the last LSI
+  component to use (at least 2).
 }
 \description{
 Determine the elbow cutoff to be used to run UMAP
 }
-\examples{
-# elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
+\details{
+Short scree curves (fewer than 50 components, i.e. inputs with 50
+  or fewer gene sets) are supported. With fewer than four components after
+  dropping the first one, all components are used.
 }
+\keyword{internal}

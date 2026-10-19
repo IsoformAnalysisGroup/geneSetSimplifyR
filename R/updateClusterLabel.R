@@ -1,72 +1,106 @@
-#' Plot label information for a particular cluster
+#' Rename a cluster
 #'
-#' @param geneSetsList 'gsList' object that has been clustered with the 'clusterGeneSets()' function.
-#' @param resolution Float. The clustering resolution to use as the default.
-#' The labels of this resolution will be set as the 'active.idents' in the Seurat object containing the clustering,
-#' and thus this is the resolution used for the different plotting functions.
-#' The 'resolution' must have been used as a resolution in the 'clusterGeneSets()' function.
-#' @param clusterNumber Which cluster to plot. Here the cluster number is used
-#' @param newClusterName The new name of the cluster
+#' @description Replaces the label of one cluster with a name of your choice.
+#'   The original label is kept and reported as `initial_cluster_label` by
+#'   `extractTable(summarize = FALSE)`, also after several renames.
 #'
-#' @return 'gsList' object with a single cluster label updated. The original names are also stored.
+#' @param geneSetsList 'gsList' object that has been clustered and labeled.
+#' @param resolution Numeric. The clustering resolution of the cluster to
+#'   rename. It must have been used as a resolution in `clusterGeneSets()`.
+#'   When given, this resolution also becomes the active resolution: plotting
+#'   and table functions called with `resolution = NULL` afterwards use it.
+#'   Default `NULL` renames a cluster of the active resolution.
+#' @param clusterNumber The number of the cluster to rename, as shown in front
+#'   of its label (e.g. `0` for "0: Immune Response").
+#' @param newClusterName The new name of the cluster.
+#'
+#' @return 'gsList' object with the cluster label updated.
 #' @export
 #'
 #' @examples
-#' exampleGsList <- updateClusterLabels(geneSetsList = exampleGsList, 
-#' clusterNumber = 0, newClusterName = 'cancer response')
+#' gsListObject <- updateClusterLabels(
+#'   geneSetsList = exampleGsList,
+#'   clusterNumber = 0,
+#'   newClusterName = 'cancer response'
+#' )
+#' head(extractTable(gsListObject, summarize = FALSE))
 updateClusterLabels <- function(
     geneSetsList,
     resolution = NULL,
     clusterNumber,
     newClusterName
 ) {
-  if( ! is.null(resolution)) {
-    geneSetsList <- changeUsedResolution(
-      geneSetsList = geneSetsList,
-      resolution = resolution,
-      removeClusterId = FALSE
+  checkGsList(geneSetsList)
+  geneSetsList <- upgradeGsList(geneSetsList)
+
+  if (missing(clusterNumber) || length(clusterNumber) != 1L ||
+      is.na(clusterNumber)) {
+    stop("'clusterNumber' should be a single cluster number.")
+  }
+  if (missing(newClusterName) || !is.character(newClusterName) ||
+      length(newClusterName) != 1L || is.na(newClusterName) ||
+      !nzchar(trimws(newClusterName))) {
+    stop("'newClusterName' should be a single non-empty string.")
+  }
+
+  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+
+  clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
+  if (!as.character(clusterNumber) %in% clusterIds) {
+    stop(
+      "Cluster ", clusterNumber, " does not exist at resolution ",
+      sub("^GSEA_snn_res\\.", "", resolutionColumn), ". Available clusters: ",
+      paste(clusterIds, collapse = ", "), "."
     )
   }
 
+  labelsDefault <- geneSetsList@labels[[resolutionColumn]]$labelsDefault
 
-  if( ! is.null(resolution)) {
-    resolutionColumn <-
-      paste0("GSEA_snn_res.", resolution)
-  } else {
-    resolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
+  ### Save the original labels the first time a label is changed
+  if (!'org_label' %in% colnames(labelsDefault)) {
+    labelsDefault$org_label <- labelsDefault$label
   }
-  ### Save original
-  geneSetsList@labels[[resolutionColumn]]$labelsDefault$org_label <-
-    geneSetsList@labels[[resolutionColumn]]$labelsDefault$label
 
-  ### Overwrite with new
-  toModify <- which(
-    geneSetsList@labels[[resolutionColumn]]$labelsDefault$cluster == clusterNumber
-  )[1]
-
-  geneSetsList@labels[[resolutionColumn]]$labelsDefault$label[toModify] <- newClusterName
-
-  ### Update stored labes
-  currentClusterLabels <-
-    levels(geneSetsList@cluster@active.ident)
-
-  ### Align the freshly built labels to the current active.ident level order BY
-  ### cluster id, not by position. The level order need not be numeric -- Seurat
-  ### can store it lexicographically (e.g. the best resolution) -- so a
-  ### positional from/to pairing in mapvalues would relabel the wrong clusters.
-  ### The id is the "<id>: " prefix on each existing level.
-  defaultLabels <- alignedClusterLabels(
+  ### Warn if the new name is already used by another cluster
+  otherLabels <- alignedClusterLabels(
     geneSetsList = geneSetsList,
     resolutionColumn = resolutionColumn,
-    clusterIds = sub(": .*$", "", currentClusterLabels),
+    clusterIds = setdiff(clusterIds, as.character(clusterNumber)),
+    removeClusterId = TRUE
+  )
+  if (newClusterName %in% otherLabels) {
+    warning(
+      "Another cluster is already labeled '", newClusterName, "'. ",
+      "The two clusters stay separate but can be hard to tell apart.",
+      call. = FALSE
+    )
+  }
+
+  ### Overwrite the top label of the cluster (the one that is displayed)
+  inCluster <- which(
+    as.character(labelsDefault$cluster) == as.character(clusterNumber)
+  )
+  if (length(inCluster)) {
+    toModify <- inCluster[which.max(labelsDefault$weighted_score[inCluster])]
+    labelsDefault$label[toModify] <- newClusterName
+  } else {
+    ### Clusters without any label get one
+    newRow <- labelsDefault[0, , drop = FALSE]
+    newRow[1, 'label'] <- newClusterName
+    newRow[1, 'cluster'] <- as.numeric(clusterNumber)
+    newRow[1, 'weighted_score'] <- Inf
+    labelsDefault <- dplyr::bind_rows(labelsDefault, newRow)
+  }
+
+  geneSetsList@labels[[resolutionColumn]]$labelsDefault <- labelsDefault
+
+  ### Make this resolution the active one and refresh the identities
+  geneSetsList@metadata$active_resolution <- resolutionColumn
+  geneSetsList <- changeUsedResolution(
+    geneSetsList = geneSetsList,
+    resolution = NULL,
     removeClusterId = FALSE
   )
 
-  geneSetsList@cluster@active.ident <-
-    plyr::mapvalues(x = geneSetsList@cluster@active.ident,
-                    from = currentClusterLabels,
-                    to = defaultLabels)
-
   return(geneSetsList)
 }
-

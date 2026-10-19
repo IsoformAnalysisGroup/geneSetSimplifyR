@@ -3,14 +3,21 @@
 \docType{data}
 \name{exampleGsList}
 \alias{exampleGsList}
-\title{Example Gene Sets}
+\title{Example clustered and labeled gene sets}
 \format{
-A gsList object with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
+A 'gsList' object (see [gsList-class]).
+}
+\source{
+Made from `exampleGeneSets` and `exampleEnrichment`.
 }
 \usage{
 exampleGsList
 }
 \description{
-A gsList object with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
+A 'gsList' object made with `geneSetSimplifyR(exampleGeneSets,
+exampleEnrichment)`: 197 gene sets from 2 sources ("Expression" and
+"Splicing") clustered at 10 resolutions. Use it to try the plotting and
+table functions without running the workflow. The script that creates it is
+in `inst/scripts/make-exampleGsList.R`.
 }
 \keyword{datasets}

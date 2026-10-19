@@ -1,8 +1,16 @@
 #' Plot label information for a particular cluster
 #'
-#' @param geneSetsList 'gsList' object that has been clustered with the 'clusterGeneSets()' function.
-#' @param resolution The cluster resolution to plot. Default to NULL which means the optimal clustering found by clusterGeneSets().
-#' @param clusterNumber Which cluster to plot. Here the cluster number is used
+#' @description Shows why a cluster got its label: the top label candidates
+#'   with their combined and TF-IDF scores, the most central gene sets, the
+#'   most frequent words and genes, and the largest gene sets of the cluster.
+#'   Labels are the original ones from `labelClusters()`, also after a rename
+#'   with `updateClusterLabels()`.
+#'
+#' @param geneSetsList 'gsList' object that has been clustered and labeled.
+#' @param clusterNumber Which cluster to plot, given by its cluster number.
+#' @param resolution The cluster resolution to plot. Default `NULL` uses the
+#'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
+#'   the one last set with `updateResolution()` or `updateClusterLabels()`.
 #' @param nLabels The number of labels to plot. Default to 5
 #' @param maxChar The max number of characters of labels shown in plot. Longer labels will be truncated using "...". Defaults to 50
 #'
@@ -10,7 +18,7 @@
 #' @export
 #'
 #' @examples
-#' gsListObject <- plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
+#' plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
 
 plotClusterLabels <- function(
     geneSetsList,
@@ -19,17 +27,23 @@ plotClusterLabels <- function(
     nLabels = 5,
     maxChar = 50
 ) {
-  ### Make resolution vector
-  if( ! is.null(resolution)) {
-    resolutionColumn <-
-      paste0("GSEA_snn_res.", resolution)
-  } else {
-    resolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
+  checkGsList(geneSetsList)
+
+  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+
+  clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
+  if (missing(clusterNumber) || length(clusterNumber) != 1L ||
+      !as.character(clusterNumber) %in% clusterIds) {
+    stop(
+      "'clusterNumber' should be one of the clusters at resolution ",
+      sub("^GSEA_snn_res\\.", "", resolutionColumn), ": ",
+      paste(clusterIds, collapse = ", "), "."
+    )
   }
 
   ### Extract plot data
-  if(TRUE) {
-    ### Overwrite with original labels if nessesary
+  {
+    ### Overwrite with original labels if necessary
     if( 'org_label' %in% colnames(geneSetsList@labels[[resolutionColumn]]$labelsDefault) ) {
       geneSetsList@labels[[resolutionColumn]]$labelsDefault$label <-
         geneSetsList@labels[[resolutionColumn]]$labelsDefault$org_label
@@ -40,11 +54,11 @@ plotClusterLabels <- function(
       dplyr::filter(cluster == clusterNumber) %>%
       dplyr::rename(value = weighted_score) %>%
       dplyr::mutate(
-        label = factor(label, levels=label),
+        label = factor(label, levels=unique(label)),
         measure = 'Label Weighted TF IDF',
-        index = 1:dplyr::n()
+        index = seq_len(dplyr::n())
       ) %>%
-      dplyr::filter(index %in% 1:nLabels) %>%
+      dplyr::filter(index <= nLabels) %>%
       dplyr::select(
         label,
         value,
@@ -56,11 +70,11 @@ plotClusterLabels <- function(
       dplyr::filter(cluster == clusterNumber) %>%
       dplyr::rename(value = tf_idf) %>%
       dplyr::mutate(
-        label = factor(label, levels=label),
+        label = factor(label, levels=unique(label)),
         measure = 'Label TF IDF',
-        index = 1:dplyr::n()
+        index = seq_len(dplyr::n())
       ) %>%
-      dplyr::filter(index %in% 1:nLabels) %>%
+      dplyr::filter(index <= nLabels) %>%
       dplyr::select(
         label,
         value,
@@ -75,23 +89,21 @@ plotClusterLabels <- function(
         label = geneset
       ) %>%
       dplyr::mutate(
-        label = factor(label, levels=label),
+        label = factor(label, levels=unique(label)),
         measure = 'Gene Set Centrality Score',
-        index = 1:dplyr::n()
+        index = seq_len(dplyr::n())
       ) %>%
-      dplyr::filter(index %in% 1:nLabels) %>%
+      dplyr::filter(index <= nLabels) %>%
       dplyr::select(
         label,
         value,
         measure
       )
 
-    gsInCluster <-
-      geneSetsList@cluster@meta.data %>%
-      dplyr::filter(
-        get(resolutionColumn) == clusterNumber
-      ) %>%
-      dplyr::pull(gene_set)
+    clusterMeta <- geneSetsList@cluster@meta.data
+    gsInCluster <- clusterMeta$gene_set[
+      as.character(clusterMeta[[resolutionColumn]]) == as.character(clusterNumber)
+    ]
 
     # drop = FALSE keeps this a data.frame for a single-gene-set cluster, which
     # would otherwise collapse to a plain vector and break colSums()/apply().
@@ -121,7 +133,7 @@ plotClusterLabels <- function(
       ) %>%
       unlist() %>%
       table() %>%
-      sort(decreasing = T) %>%
+      sort(decreasing = TRUE) %>%
       head(n=nLabels)
     localGeneFreqDf <-
       tibble::tibble(

@@ -5,13 +5,13 @@
 \alias{geneSetSimplifyR-package}
 \title{geneSetSimplifyR: Simplify Gene-Set Enrichment Analysis}
 \description{
-geneSetSimplifyR seeks to simplify gene-set enrichment analysis (GSEA) via clustering of gene sets. Given a list of gene sets of interest the package clusters these using LSI and SNN and subsequently the clusters are labelled using TF-IDF to find the best suitable two-word label for each cluster. The package contains several plotting functions so the user can quickly visualize the clustering output and draw biological meaningful insights.
+Simplifies the results of gene-set enrichment analysis (GSEA) by clustering the enriched gene sets on the genes they share. Gene sets are embedded with latent semantic indexing (LSI) of their gene membership, and clustered by community detection on a shared nearest neighbor (SNN) graph. Each cluster is labeled with the two-word phrase that best describes its gene-set names, found by term frequency-inverse document frequency (TF-IDF) and gene-set centrality. Results from several conditions or analyses can be combined. The package contains several plotting functions so the user can quickly visualize the clustering output and draw biologically meaningful insights.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/chihs-dtu/geneSetSimplifyR}
-  \item Report bugs at \url{https://github.com/chihs-dtu/geneSetSimplifyR/issues}
+  \item \url{https://github.com/IsoformAnalysisGroup/geneSetSimplifyR}
+  \item Report bugs at \url{https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues}
 }
 
 }

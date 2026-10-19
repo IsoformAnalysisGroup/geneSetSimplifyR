@@ -1,8 +1,13 @@
-#' Example Gene Sets
+#' Example clustered and labeled gene sets
 #'
-#' A gsList object with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
+#' A 'gsList' object made with `geneSetSimplifyR(exampleGeneSets,
+#' exampleEnrichment)`: 197 gene sets from 2 sources ("Expression" and
+#' "Splicing") clustered at 10 resolutions. Use it to try the plotting and
+#' table functions without running the workflow. The script that creates it is
+#' in `inst/scripts/make-exampleGsList.R`.
 #'
-#' @format A gsList object with 204 gene sets from 2 source(s) clustered into 4 labeled clusters.
+#' @format A 'gsList' object (see [gsList-class]).
+#' @source Made from `exampleGeneSets` and `exampleEnrichment`.
 "exampleGsList"
 
 #' Example Enrichment Results
@@ -13,7 +18,7 @@
 #' \describe{
 #'   \item{source}{The source/group used when applying GSEA.}
 #'   \item{pathway}{The pathway name when applying GSEA.}
-#'   \item{enrichment_score}{Enrichment scores form GSEA results.}
+#'   \item{enrichment_score}{Enrichment scores from GSEA results.}
 #' }
 #' @source A subset of public data.
 "exampleEnrichment"
@@ -31,7 +36,13 @@
 
 #' Stop Words
 #'
-#' A list of character strings used for annotating the cluster.
+#' Words ignored when labeling clusters, e.g. "of", "and", "process". Bigrams
+#' (two-word label candidates) containing one of these words are not used as
+#' labels.
 #'
-#' @format A list of character strings.
+#' @format A character vector.
+#' @examples
+#' head(stopWords)
+#' # Add your own stop words
+#' myStopWords <- c(stopWords, "regulation", "response")
 "stopWords"

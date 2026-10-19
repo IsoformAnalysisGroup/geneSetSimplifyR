@@ -47,14 +47,19 @@ Fetches gene-set memberships from MSigDB via
   }
 }
 \examples{
-\dontrun{
-# All pathways in C5 / GO:BP
-allBP <- getGeneSets(collection = "C5", subcollection = "GO:BP")
+\donttest{
+if (requireNamespace("msigdbr", quietly = TRUE)) {
+  # Hallmark gene sets (gene symbols)
+  hallmark <- getGeneSets(collection = "H", gene_id_type = "gene_symbol")
 
-# Just the genes for two specific pathways
-subset <- getGeneSets(
-  pathway_names = c("GOBP_CELL_CYCLE", "GOBP_DNA_REPAIR")
-)
+  # Just the genes of two specific pathways
+  twoSets <- getGeneSets(
+    pathway_names = c("HALLMARK_APOPTOSIS", "HALLMARK_HYPOXIA"),
+    collection = "H",
+    gene_id_type = "gene_symbol"
+  )
+  lengths(twoSets)
+}
 }
 
 }

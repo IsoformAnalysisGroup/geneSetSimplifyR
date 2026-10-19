@@ -41,7 +41,6 @@ Adds a clustering backend to the package registry so it can be
   straight to `clusterGeneSets()`.
 }
 \examples{
-\dontrun{
 registerClusterMethod(
   "leiden_cpm",
   function(snn, resolution, verbose = FALSE, ...) {
@@ -54,11 +53,15 @@ registerClusterMethod(
     ))
   },
   description = "igraph Leiden with the CPM objective",
-  packages = "igraph"
+  packages = "igraph",
+  overwrite = TRUE
 )
+listClusterMethods()
 
-gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm")
-}
+geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
+                               verbose = FALSE)
+gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm",
+                                resolution = 0.05, verbose = FALSE)
 }
 \seealso{
 [clusterMethod()], [listClusterMethods()]

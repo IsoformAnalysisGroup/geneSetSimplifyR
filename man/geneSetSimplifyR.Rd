@@ -12,7 +12,10 @@ geneSetSimplifyR(
   cluster_algo = "louvain",
   clusterArgs = list(),
   elbow_method = "distance",
-  removeFirstWord = FALSE
+  K = NA,
+  removeFirstWord = FALSE,
+  stopWords = geneSetSimplifyR::stopWords,
+  nLabels = 10
 )
 }
 \arguments{
@@ -23,10 +26,11 @@ the genes belonging to that gene set.}
 \item{geneSetsDF}{Optional data.frame with gene sets and enrichment scores that can be useful
 for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
 Should have a column named 'pathway' containing the gene sets and a column
-named 'enrichment_score' with the enrichment scores from GSEA analysis for each gene set.
-Optionally have a column named 'source' indicating the source of each gene set. This allows for
+named 'enrichment_score' (or 'NES') with the enrichment scores from GSEA analysis for each gene set.
+Optionally have a column named 'pval' (or 'pvalue') with the p-value of each gene set, and
+a column named 'source' indicating the source of each gene set. This allows for
 analysis of multi-conditional data throughout the entire workflow and is also supported by many
-plotting functions. See the vignette for more info.}
+plotting functions. See \code{\link{initializeList}} and the vignette for more info.}
 
 \item{resolution}{Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.}
 
@@ -43,13 +47,23 @@ method.}
 \item{elbow_method}{Method passed to \code{clusterGeneSets()} for selecting the
 number of LSI dimensions. Options: 'distance'(default), 'zscore'.}
 
+\item{K}{Number of nearest neighbors for the KNN graph, passed to
+\code{clusterGeneSets()}. `NA` (default) uses `round(sqrt(N))` for `N`
+gene sets.}
+
 \item{removeFirstWord}{Logical. If TRUE, strip the first word (everything before
 the first underscore) from each gene-set name before generating cluster labels.
 Useful for MSigDB-style names where the first token is an author or database
 prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
+
+\item{stopWords}{Words ignored when labeling clusters, passed to
+\code{labelClusters()}. Defaults to the shipped \code{\link{stopWords}}.}
+
+\item{nLabels}{Number of top labels to keep per cluster, passed to
+\code{labelClusters()}. Default 10.}
 }
 \value{
-'gsList' object with labelled clusters for all clustered resolutions.
+'gsList' object with labeled clusters for all clustered resolutions.
 }
 \description{
 Wrapper function that runs the three core functions of
@@ -59,5 +73,10 @@ To read more about the individual functions see their corresponding help pages:
 \code{\link{initializeList}}, \code{\link{clusterGeneSets}}, \code{\link{labelClusters}}
 }
 \examples{
-gsListObject <- geneSetSimplifyR(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+gsListObject <- geneSetSimplifyR(
+  geneSetsList = exampleGeneSets,
+  geneSetsDF = exampleEnrichment,
+  verbose = FALSE
+)
+gsListObject
 }

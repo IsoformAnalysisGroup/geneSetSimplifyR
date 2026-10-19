@@ -24,9 +24,8 @@ Helper for writing clustering methods that operate on a full
   set names as dimnames.
 }
 \examples{
-\dontrun{
-simMat <- snnToMatrix(gsListObject@cluster@graphs$GSEA_snn)
-}
+simMat <- snnToMatrix(exampleGsList@cluster@graphs$GSEA_snn)
+simMat[1:3, 1:3]
 }
 \seealso{
 [clusterMethod()], [snnToIgraph()]

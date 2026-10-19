@@ -28,13 +28,16 @@ prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
 }
 \value{
-'gsList' object with labelled clusters for all clustered resolutions.
+'gsList' object with labeled clusters for all clustered resolutions.
 }
 \description{
 Label clusters in clustered gene sets list object
 }
 \examples{
-geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
-gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
-gsListObject <- labelClusters(geneSetsList = gsListObject)
+# Relabel the shipped example, e.g. with extra stop words
+gsListObject <- labelClusters(
+  geneSetsList = exampleGsList,
+  stopWords = c(stopWords, "regulation"),
+  verbose = FALSE
+)
 }

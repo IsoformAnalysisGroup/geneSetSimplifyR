@@ -6,7 +6,7 @@
 \usage{
 clusterGeneSets(
   geneSetsList,
-  resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 3.1, 4.1, 5.1),
+  resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 2.6, 3.1, 4.1, 5.1),
   algorithm = "louvain",
   clusterArgs = list(),
   K = NA,
@@ -35,11 +35,12 @@ method, for example `list(n.start = 20)` for the Seurat backends,
 `list(maxK = 50)` for 'kmeans', `list(p = -1)` for 'apcluster', or
 `list(cutoff = 0.9)` for 'binary_cut'.}
 
-\item{K}{Integer or NA. Number of nearest neighbours used when building the
-KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
-`N` is the number of gene sets.}
+\item{K}{Integer or NA. Number of nearest neighbors used when building the
+KNN graph. If `NA` (default) it is set to `round(sqrt(N))`, where `N` is
+the number of gene sets. Must be smaller than `N`.}
 
-\item{elbow_method}{option: distance, zscore.}
+\item{elbow_method}{Method for choosing the number of LSI dimensions from
+the scree curve: 'distance' (default) or 'zscore'. See the Details.}
 
 \item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
 }
@@ -51,15 +52,35 @@ KNN graph. If `NA` (default) it is set to `min(round(sqrt(N)), 30)` where
 \description{
 Cluster gene sets
 }
+\details{
+At least 10 gene sets are needed. The LSI uses up to 50
+  dimensions (fewer when there are 50 gene sets or less); the first one,
+  which mostly reflects gene-set size, is always left out.
+
+  Clustering does not change the random number stream of the R session:
+  the UMAP and the seeded clustering backends restore it afterwards.
+  Re-clustering an object removes its existing labels, so run
+  `labelClusters()` again afterwards.
+}
 \examples{
-# Create gsListObject
-geneSetsList <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
-gsListObject <- clusterGeneSets(geneSetsList = geneSetsList)
+geneSetsList <- initializeList(
+  geneSetsList = exampleGeneSets,
+  geneSetsDF = exampleEnrichment,
+  verbose = FALSE
+)
+gsListObject <- clusterGeneSets(
+  geneSetsList = geneSetsList,
+  resolution = c(0.6, 1.1),
+  verbose = FALSE
+)
 
 # Swap in a different community-detection implementation
-\dontrun{
-gsListObject <- clusterGeneSets(geneSetsList, algorithm = "igraph_leiden")
-}
+gsListObject <- clusterGeneSets(
+  geneSetsList,
+  algorithm = "igraph_leiden",
+  resolution = 1,
+  verbose = FALSE
+)
 }
 \seealso{
 [clusterMethod()], [registerClusterMethod()], [listClusterMethods()]

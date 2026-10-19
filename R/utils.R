@@ -1,17 +1,27 @@
-#' Coerce a cluster-id vector/factor to start at 0 with numeric level order
+#' Coerce a cluster-id vector/factor to consecutive ids starting at 0
 #'
-#' Internal helper. Seurat may store cluster factor levels in lexicographic
-#' order ("10" before "2"), which breaks code that pairs labels to levels by
-#' position. This renumbers ids to start at 0 and rebuilds the factor with
-#' numeric level order.
+#' Internal helper. Backends differ in how they number clusters: Seurat is
+#' 0-based, igraph is 1-based, a custom backend may return gaps (e.g.
+#' `c(1, 3, 5)`) or non-numeric labels. Seurat may also store factor levels in
+#' lexicographic order ("10" before "2"), which breaks code that pairs labels to
+#' levels by position. This maps the ids to consecutive integers starting at 0,
+#' in numeric order when every id is numeric (character order otherwise), and
+#' returns a factor with numeric level order.
 #'
-#' @param x A factor or vector of (coercible-to-numeric) cluster ids.
-#' @return A factor with levels in numeric order, starting at 0.
+#' @param x A factor or vector of cluster ids.
+#' @return A factor with levels `0, 1, ..., k - 1`.
 #' @keywords internal
 numericClusterFactor <- function(x) {
-  ids <- as.numeric(as.character(x))
-  ids <- ids - min(ids)                       # start from 0 (robust to 0/1-indexing)
-  factor(ids, levels = sort(unique(ids)))     # numeric level order
+  x <- as.character(x)
+  asNumber <- suppressWarnings(as.numeric(x))
+  if (!anyNA(asNumber[!is.na(x)])) {
+    uniqueIds <- sort(unique(asNumber))
+    ids <- match(asNumber, uniqueIds) - 1L
+  } else {
+    uniqueIds <- sort(unique(x))
+    ids <- match(x, uniqueIds) - 1L
+  }
+  factor(ids, levels = seq_along(uniqueIds) - 1L)
 }
 
 #' Normalize cluster factor level order in a clustered gsList
@@ -27,18 +37,11 @@ numericClusterFactor <- function(x) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' neftelGss <- normalizeClusterLevels(neftelGss)
-#' }
+#' gsListObject <- normalizeClusterLevels(exampleGsList)
+#' levels(gsListObject@cluster$GSEA_snn_res.1.1)
 normalizeClusterLevels <- function(geneSetsList) {
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object")
-  }
-  resCols <- grep(
-    "GSEA_snn_res.",
-    names(geneSetsList@cluster@meta.data),
-    value = TRUE
-  )
+  checkGsList(geneSetsList, needLabels = FALSE)
+  resCols <- availableResolutionColumns(geneSetsList)
   for (col in resCols) {
     geneSetsList@cluster@meta.data[[col]] <-
       numericClusterFactor(geneSetsList@cluster@meta.data[[col]])
@@ -52,7 +55,7 @@ normalizeClusterLevels <- function(geneSetsList) {
 #' the top-scoring label per cluster, and returns one label per element of
 #' `clusterIds`, in that order.
 #'
-#' Two things this guards against:
+#' Three things this guards against:
 #' \itemize{
 #'   \item **Order.** The label table is in numeric cluster order; a factor's
 #'     levels need not be, so labels are matched by cluster id rather than by
@@ -60,10 +63,13 @@ normalizeClusterLevels <- function(geneSetsList) {
 #'   \item **Coverage.** A cluster can be missing from the label table (e.g. a
 #'     cluster whose gene-set names yield no usable bigram). Those fall back to
 #'     the bare cluster id, so the returned vector always has the same length as
-#'     `clusterIds` instead of blowing up downstream in `plyr::mapvalues()`.
+#'     `clusterIds`.
+#'   \item **Uniqueness.** When `removeClusterId = TRUE`, two clusters with the
+#'     same label (e.g. after a manual rename) would otherwise be merged into a
+#'     single factor level. Those clusters keep their id prefix instead.
 #' }
 #'
-#' @param geneSetsList A labelled 'gsList' object.
+#' @param geneSetsList A labeled 'gsList' object.
 #' @param resolutionColumn Name of the resolution, e.g. `"GSEA_snn_res.1"`.
 #' @param clusterIds Character vector of cluster ids to label, in the desired
 #'   output order (typically `levels(active.ident)`).
@@ -88,37 +94,156 @@ alignedClusterLabels <- function(
   topLabels <- labelTable %>%
     dplyr::mutate(cluster = as.numeric(as.character(cluster))) %>%
     dplyr::group_by(cluster) %>%
-    dplyr::slice_max(weighted_score, n = 1, with_ties = F) %>%
+    dplyr::slice_max(weighted_score, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup()
 
   clusterIds <- as.character(clusterIds)
   idx <- match(clusterIds, as.character(topLabels$cluster))
+  withId <- ifelse(
+    is.na(idx),
+    clusterIds,
+    paste0(clusterIds, ": ", topLabels$label[idx])
+  )
 
-  if (removeClusterId) {
-    out <- ifelse(is.na(idx), clusterIds, topLabels$label[idx])
-  } else {
-    out <- ifelse(
-      is.na(idx),
-      clusterIds,
-      paste0(clusterIds, ": ", topLabels$label[idx])
-    )
+  if (!removeClusterId) {
+    return(withId)
   }
 
+  out <- ifelse(is.na(idx), clusterIds, topLabels$label[idx])
+  isDuplicated <- duplicated(out) | duplicated(out, fromLast = TRUE)
+  out[isDuplicated] <- withId[isDuplicated]
   return(out)
 }
 
+#' Relabel the levels of a factor
+#'
+#' Internal helper replacing `plyr::mapvalues()` for factors: every level found
+#' in `from` is renamed to the matching element of `to`; other levels are kept.
+#'
+#' @param x A factor.
+#' @param from,to Character vectors of equal length.
+#' @return The relabeled factor.
+#' @keywords internal
+relabelFactor <- function(x, from, to) {
+  if (!is.factor(x)) {
+    x <- factor(x)
+  }
+  lev <- levels(x)
+  idx <- match(lev, from)
+  lev[!is.na(idx)] <- to[idx[!is.na(idx)]]
+  levels(x) <- lev
+  return(x)
+}
+
+#' Metadata column name of a resolution
+#'
+#' @param resolution A single resolution, numeric or coercible to numeric.
+#' @return The name of the matching column, e.g. `"GSEA_snn_res.1.1"`.
+#' @keywords internal
+resolutionColumnName <- function(resolution) {
+  paste0("GSEA_snn_res.", as.character(as.numeric(resolution)))
+}
+
+#' Resolution columns available in a clustered gsList
+#'
+#' @param geneSetsList A clustered 'gsList' object.
+#' @return Character vector of `GSEA_snn_res.<res>` column names.
+#' @keywords internal
+availableResolutionColumns <- function(geneSetsList) {
+  grep(
+    "^GSEA_snn_res\\.",
+    names(geneSetsList@cluster@meta.data),
+    value = TRUE
+  )
+}
+
+#' Resolve which resolution a function should use
+#'
+#' Internal helper shared by the plotting and table functions. An explicit
+#' `resolution` always wins. With `resolution = NULL` the active resolution is
+#' used: the one last set by `updateClusterLabels()` or `updateResolution()`,
+#' or the optimal resolution found by `clusterGeneSets()` if neither was used.
+#'
+#' @param geneSetsList A clustered 'gsList' object.
+#' @param resolution `NULL` or a single resolution that was clustered.
+#' @return The name of the resolution column, e.g. `"GSEA_snn_res.1.1"`.
+#' @keywords internal
+resolveResolutionColumn <- function(geneSetsList, resolution = NULL) {
+  available <- availableResolutionColumns(geneSetsList)
+
+  if (!is.null(resolution)) {
+    resolutionNumber <- suppressWarnings(as.numeric(resolution))
+    if (length(resolution) != 1L || is.na(resolutionNumber)) {
+      stop("'resolution' should be a single number (or NULL).")
+    }
+    resolutionColumn <- resolutionColumnName(resolutionNumber)
+    if (!resolutionColumn %in% available) {
+      stop(
+        "Resolution ", resolution, " was not used in 'clusterGeneSets()'. ",
+        "Available resolution(s): ",
+        paste(sub("^GSEA_snn_res\\.", "", available), collapse = ", "), "."
+      )
+    }
+    return(resolutionColumn)
+  }
+
+  activeColumn <- NULL
+  if (.hasSlot(geneSetsList, "metadata")) {
+    activeColumn <- geneSetsList@metadata$active_resolution
+  }
+  if (!is.null(activeColumn) && activeColumn %in% available) {
+    return(activeColumn)
+  }
+
+  return(geneSetsList@cluster@meta.data$best_cluster_res[1])
+}
+
+#' Check that a gsList is clustered (and optionally labeled)
+#'
+#' @param geneSetsList Object to check.
+#' @param needLabels Whether labels from `labelClusters()` are required.
+#' @return `invisible(TRUE)`; errors otherwise.
+#' @keywords internal
+checkGsList <- function(geneSetsList, needLabels = TRUE) {
+  if (!inherits(geneSetsList, "gsList")) {
+    stop("'geneSetsList' should be a gsList object.")
+  }
+
+  if (length(geneSetsList@cluster) == 0) {
+    stop(
+      "No clustering performed for 'geneSetsList'. ",
+      "Please run 'clusterGeneSets()' and 'labelClusters()' first."
+    )
+  }
+
+  if (needLabels && length(geneSetsList@labels) == 0) {
+    stop(
+      "No labels created for 'geneSetsList'. ",
+      "Please run 'labelClusters()' first."
+    )
+  }
+
+  invisible(TRUE)
+}
+
+#' Set the cluster identities used for plotting
+#'
+#' Internal helper. Sets `active.ident` of the Seurat object to the clusters of
+#' the requested resolution, labeled as `"<id>: <label>"` (or `"<label>"` with
+#' `removeClusterId = TRUE`). Only the returned copy is changed, so plotting a
+#' different resolution never alters the user's object.
+#'
+#' @param geneSetsList A labeled 'gsList' object.
+#' @param resolution `NULL` (the active resolution) or a clustered resolution.
+#' @param removeClusterId Logical. Drop the `"<id>: "` prefix from the labels.
+#' @return The 'gsList' object with updated identities.
+#' @keywords internal
 changeUsedResolution <- function(
     geneSetsList,
     resolution = NULL,
     removeClusterId = FALSE
 ) {
-  if( ! is.null(resolution)) {
-    resolutionColumn <-
-      paste0("GSEA_snn_res.", resolution)
-  } else {
-    resolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
-  }
-
+  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
 
   Seurat::Idents(geneSetsList@cluster) <-
     geneSetsList@cluster@meta.data[[resolutionColumn]]
@@ -136,69 +261,119 @@ changeUsedResolution <- function(
     removeClusterId = removeClusterId
   )
 
-  geneSetsList@cluster@active.ident <-
-    plyr::mapvalues(x = geneSetsList@cluster@active.ident,
-                    from = currentClusterLabels,
-                    to = defaultLabels)
+  geneSetsList@cluster@active.ident <- relabelFactor(
+    x = geneSetsList@cluster@active.ident,
+    from = currentClusterLabels,
+    to = defaultLabels
+  )
   return(geneSetsList)
+}
+
+#' Cluster names to highlight in a plot
+#'
+#' Internal helper. Translates cluster numbers into the cluster names shown in
+#' the plot of the given resolution.
+#'
+#' @param geneSetsList A labeled 'gsList' object.
+#' @param resolution `NULL` (the active resolution) or a clustered resolution.
+#' @param highlightClusterNo Numeric vector of cluster numbers, or `NULL`.
+#' @param removeClusterId Logical. Whether the plot drops the `"<id>: "` prefix.
+#' @return Character vector of cluster names (empty when nothing to highlight).
+#' @keywords internal
+highlightedClusterNames <- function(
+    geneSetsList,
+    resolution,
+    highlightClusterNo,
+    removeClusterId
+) {
+  if (is.null(highlightClusterNo)) {
+    return(character(0))
+  }
+
+  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+  clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
+  highlightClusterNo <- as.character(highlightClusterNo)
+
+  unknown <- setdiff(highlightClusterNo, clusterIds)
+  if (length(unknown)) {
+    warning(
+      "Cluster(s) ", paste(unknown, collapse = ", "),
+      " do not exist at this resolution and cannot be highlighted.",
+      call. = FALSE
+    )
+  }
+
+  allNames <- alignedClusterLabels(
+    geneSetsList = geneSetsList,
+    resolutionColumn = resolutionColumn,
+    clusterIds = clusterIds,
+    removeClusterId = removeClusterId
+  )
+  return(allNames[clusterIds %in% highlightClusterNo])
 }
 
 #' Update default resolution of gsList
 #'
-#' @param geneSetsList 'gsList' object that has been clustered with the 'clusterGeneSets()' function.
-#' @param resolution Float. The clustering resolution to use as the new default.
-#' The new 'resolution' must have been used as a resolution in the 'clusterGeneSets()' function.
+#' @description Sets the resolution used by all plotting and table functions
+#'   when their `resolution` argument is `NULL`. It replaces the optimal
+#'   resolution found by `clusterGeneSets()` as the default.
 #'
-#' @return 'gsList' object updated with new default resolution
+#' @param geneSetsList 'gsList' object that has been clustered and labeled.
+#' @param resolution Numeric. The clustering resolution to use as the new
+#'   default. It must have been used as a resolution in `clusterGeneSets()`.
+#'
+#' @return 'gsList' object updated with the new default resolution.
 #' @export
 #'
 #' @examples
-#' gsListObject <- updateResolution(exampleGsList, 1.1)
+#' gsListObject <- updateResolution(exampleGsList, 0.6)
+#' extractResolution(gsListObject)
 updateResolution <- function(
     geneSetsList,
     resolution
 ) {
+  checkGsList(geneSetsList)
+  geneSetsList <- upgradeGsList(geneSetsList)
+  if (missing(resolution) || is.null(resolution)) {
+    stop("'resolution' should be a single number.")
+  }
+
+  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+
+  geneSetsList@cluster$best_cluster_res <- resolutionColumn
+  geneSetsList@metadata$selected_resolution <- as.numeric(resolution)
+  geneSetsList@metadata$active_resolution <- resolutionColumn
+
   geneSetsList <- changeUsedResolution(
     geneSetsList = geneSetsList,
-    resolution = resolution,
+    resolution = NULL,
     removeClusterId = FALSE
   )
-
-  geneSetsList@cluster$best_cluster_res <-
-    stringr::str_c('GSEA_snn_res.',resolution)
-
-  geneSetsList@metadata$selected_resolution <- resolution
 
   return(geneSetsList)
 }
 
-#' Extract default resolution
+#' Extract the resolution currently used by default
+#'
+#' @description Returns the resolution that the plotting and table functions
+#'   use when their `resolution` argument is `NULL`. This is the optimal
+#'   resolution found by `clusterGeneSets()`, unless it was changed with
+#'   `updateResolution()` or `updateClusterLabels(resolution = ...)`.
 #'
 #' @param geneSetsList 'gsList' object that has been clustered with the 'clusterGeneSets()' function.
 #'
-#' @return default resolution
+#' @return The default resolution, as a number.
 #' @export
 #'
 #' @examples
-#' gsListObject <- updateResolution(exampleGsList, 1.1)
+#' extractResolution(exampleGsList)
 extractResolution <- function(
     geneSetsList
 ) {
+  checkGsList(geneSetsList, needLabels = FALSE)
 
-  # Check input
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object")
-  }
-
-  if (length(geneSetsList@cluster) == 0) {
-    stop(
-      "No clustering performed for 'geneSetsList'.
-         Please run 'clusterGeneSets()' and 'labelClusters()' before plotting."
-    )
-  }
-
-  res <- geneSetsList@cluster$best_cluster_res[1] %>%
-    stringr::str_remove('GSEA_snn_res.') %>%
+  res <- resolveResolutionColumn(geneSetsList, NULL) %>%
+    sub(pattern = "^GSEA_snn_res\\.", replacement = "") %>%
     as.numeric()
 
   return(res)
@@ -313,8 +488,8 @@ quoteAndCollapse <- function(x) {
 #' `enrichment mean` column of `extractTable()` so the summary can follow
 #' `summaryStat`.
 #'
-#' @param geneSetsList A labelled 'gsList' object, with the resolution to plot
-#'   already applied (see `changeUsedResolution()`).
+#' @param geneSetsList A labeled 'gsList' object.
+#' @param resolution `NULL` (the active resolution) or a clustered resolution.
 #' @param scoreColumn Name of the column in the `enrichmentScore` slot to
 #'   summarize, e.g. `'enrichment_score'` or `'nlog10pval'`. Should already have
 #'   been checked with `validatePlotFrom()` in the caller.
@@ -322,12 +497,14 @@ quoteAndCollapse <- function(x) {
 #'   to a single value (i.e. via `match.arg()` in the caller).
 #' @param removeClusterId Logical. Drop the `"<id>: "` prefix from the labels.
 #' @return A data.frame with columns `source`, `cluster`, `enrichmentSummary`
-#'   and `genesets`, arranged by cluster.
+#'   and `genesets` (the number of gene sets in the cluster and source,
+#'   including gene sets without a value), arranged by cluster.
 #' @keywords internal
 summarizeEnrichment <- function(
     geneSetsList,
+    resolution = NULL,
     scoreColumn = 'enrichment_score',
-    summaryStat = 'median',
+    summaryStat = 'mean',
     removeClusterId = FALSE
 ) {
   summaryFun <- switch(
@@ -340,6 +517,7 @@ summarizeEnrichment <- function(
 
   enrichmentTable <- extractTable(
     geneSetsList = geneSetsList,
+    resolution = resolution,
     summarize = FALSE,
     removeClusterId = removeClusterId
   )
@@ -351,6 +529,9 @@ summarizeEnrichment <- function(
   # Copied to a fixed name so the summary below works for any requested column
   enrichmentTable$scoreToSummarize <- enrichmentTable[[scoreColumn]]
 
+  # extractTable() returns the rows in cluster-id order; keep that order
+  clusterOrder <- unique(enrichmentTable$cluster)
+
   enrichmentTable %>%
     dplyr::group_by(source, cluster) %>%
     dplyr::summarise(
@@ -361,7 +542,7 @@ summarizeEnrichment <- function(
       genesets = dplyr::n(),
       .groups = 'drop'
     ) %>%
-    dplyr::arrange(cluster)
+    dplyr::arrange(match(cluster, clusterOrder))
 }
 
 #' Apply a summary statistic while tolerating missing values
@@ -438,40 +619,23 @@ countConditions <- function(
 }
 
 cutGeneSetName <- function(aVec, maxChar = 60) {
-  # aVec <- c(paste0(rep('a', 30), collapse = ''), paste0(rep('b', 50), collapse = ''), paste0(paste0(rep('c', 50), collapse = ''), '_up'))
+  ### Names ending in a direction suffix keep it after truncation
+  directionPattern <- '_(up|dn|down)$'
+  hasDirection <- grepl(directionPattern, aVec, ignore.case = TRUE)
+  suffix <- rep('', length(aVec))
+  suffix[hasDirection] <- regmatches(
+    aVec[hasDirection],
+    regexpr(directionPattern, aVec[hasDirection], ignore.case = TRUE)
+  )
 
-  ### make vector with max lengths
-  maxVecCar <- rep(maxChar, length(aVec)) - 3 # for the "..."
-
-  ### Annotat up and down
-  hasDirection <- which( grepl('_up$|_dn$|_down$', aVec ))
-  if( length(hasDirection) ) {
-    orgDirection <- sapply(
-      strsplit(aVec[hasDirection], '_' ),
-      function(x) tail(x,1)
-    )
-
-    # Update max lengths
-    maxVecCar[hasDirection] <- maxVecCar[hasDirection] - (nchar(orgDirection) +1) # +1 for the "_"
-  }
-
-
-  ### Modify those which are to long
-  toModify <- which(nchar(aVec) > maxVecCar)
-  if(length(toModify)) {
+  ### Only names longer than 'maxChar' are shortened
+  toModify <- nchar(aVec) > maxChar
+  if (any(toModify)) {
+    keepChar <- pmax(maxChar - 3 - nchar(suffix[toModify]), 1) # 3 for "..."
     aVec[toModify] <- paste0(
-      substr(aVec[toModify], 1, maxVecCar[toModify]),
-      '...'
-    )
-  }
-
-  ### Add up, down back
-  addDirBack <- intersect(hasDirection, toModify)
-  if( length(addDirBack) ) {
-    aVec[addDirBack] <- paste0(
-      aVec[addDirBack],
-      '_',
-      orgDirection
+      substr(aVec[toModify], 1, keepChar),
+      '...',
+      suffix[toModify]
     )
   }
 
@@ -479,17 +643,8 @@ cutGeneSetName <- function(aVec, maxChar = 60) {
 }
 
 boldXaxisLabels <- function(src, levelsToBold) {
-  if (!is.factor(src)) src <- factor(src)                   # make sure it's a factor
-  src_levels <- levels(src)                                 # retrieve the levels in their order
-  brave <- levelsToBold %in% src_levels                          # make sure everything we want to make bold is actually in the factor levels
-  if (all(brave)) {                                         # if so
-    b_pos <- purrr::map_int(levelsToBold, ~which(.==src_levels)) # then find out where they are
-    b_vec <- rep("plain", length(src_levels))               # make'm all plain first
-    b_vec[b_pos] <- "bold"                                  # make our targets bold
-    b_vec                                                   # return the new vector
-  } else {
-    stop("All elements of 'levelsToBold' must be in src")
-  }
+  if (!is.factor(src)) src <- factor(src)
+  ifelse(levels(src) %in% levelsToBold, "bold", "plain")
 }
 
 
@@ -523,14 +678,19 @@ boldXaxisLabels <- function(src, levelsToBold) {
 #'   for a pathway. Names are pathway names (`gs_name`).
 #'
 #' @examples
-#' \dontrun{
-#' # All pathways in C5 / GO:BP
-#' allBP <- getGeneSets(collection = "C5", subcollection = "GO:BP")
+#' \donttest{
+#' if (requireNamespace("msigdbr", quietly = TRUE)) {
+#'   # Hallmark gene sets (gene symbols)
+#'   hallmark <- getGeneSets(collection = "H", gene_id_type = "gene_symbol")
 #'
-#' # Just the genes for two specific pathways
-#' subset <- getGeneSets(
-#'   pathway_names = c("GOBP_CELL_CYCLE", "GOBP_DNA_REPAIR")
-#' )
+#'   # Just the genes of two specific pathways
+#'   twoSets <- getGeneSets(
+#'     pathway_names = c("HALLMARK_APOPTOSIS", "HALLMARK_HYPOXIA"),
+#'     collection = "H",
+#'     gene_id_type = "gene_symbol"
+#'   )
+#'   lengths(twoSets)
+#' }
 #' }
 #'
 #' @export

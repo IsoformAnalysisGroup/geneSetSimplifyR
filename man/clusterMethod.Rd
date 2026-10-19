@@ -49,7 +49,7 @@ Wraps a community-detection function into the object
   returned ids are named, they are reordered to match `colnames(snn)`.
 }
 \examples{
-# A backend built on igraph's fast-greedy modularity optimisation
+# A backend built on igraph's fast-greedy modularity optimization
 fastGreedy <- clusterMethod(
   fn = function(snn, resolution, verbose = FALSE, ...) {
     g <- snnToIgraph(snn)
@@ -59,12 +59,20 @@ fastGreedy <- clusterMethod(
   },
   name = "fast_greedy",
   description = "igraph fast-greedy modularity (ignores resolution)",
-  packages = "igraph"
+  packages = "igraph",
+  usesResolution = FALSE
 )
+fastGreedy
 
-\dontrun{
-gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy)
-}
+# Try it on the SNN graph of the example data
+ids <- fastGreedy$fn(exampleGsList@cluster@graphs$GSEA_snn, resolution = 1)
+table(ids)
+
+# Use it in the workflow
+geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
+                               verbose = FALSE)
+gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy,
+                                verbose = FALSE)
 }
 \seealso{
 [registerClusterMethod()], [listClusterMethods()],
