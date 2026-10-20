@@ -5,20 +5,30 @@
 \alias{exampleEnrichment}
 \title{Example Enrichment Results}
 \format{
-A data frame with 3 columns, source, pathway, and enrichment_score.
+A tibble with 206 rows (one per gene set and source) and 5 columns:
 \describe{
-  \item{source}{The source/group used when applying GSEA.}
-  \item{pathway}{The pathway name when applying GSEA.}
-  \item{enrichment_score}{Enrichment scores from GSEA results.}
+  \item{source}{The analysis the gene set was found in: "Expression" or
+    "Splicing".}
+  \item{pathway}{The gene set name.}
+  \item{enrichment_score}{Normalized enrichment score (NES) from fgsea.}
+  \item{pval}{p-value from fgsea.}
+  \item{padj}{Benjamini-Hochberg adjusted p-value from fgsea.}
 }
 }
 \source{
-A subset of public data.
+Computed with `fgsea::fgseaMultilevel()` on MSigDB gene sets; see
+  `inst/scripts/make-exampleEnrichment.R`. Vitting-Seerup K, Sandelin A.
+  The Landscape of Isoform Switches in Human Cancers. Mol Cancer Res.
+  2017;15(9):1206-1220.
 }
 \usage{
 exampleEnrichment
 }
 \description{
-A subset of the colorectal data where gene-set enrichment was done both for differentially expressed genes ("Expression") and differentially spliced genes ("Splicing").
+fgsea results for the TCGA colon adenocarcinoma data analyzed in
+Vitting-Seerup & Sandelin (2017), where gene-set enrichment was done both
+for differentially expressed genes ("Expression") and differentially
+spliced genes ("Splicing"). Only gene sets with an adjusted p-value below
+0.05 are included, a subset of 197 gene sets.
 }
 \keyword{datasets}
