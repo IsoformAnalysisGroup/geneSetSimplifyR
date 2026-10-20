@@ -162,7 +162,7 @@ plotBarchart(
 )
 ```
 
-The bar chart shows the number of gene sets in each cluster, per source. With multi-source data this immediately highlights clusters dominated by one source versus those shared between sources, which can suggest biology specific to one source (e.g. expression-related cancer cluster) versus shared programs.
+The bar chart shows the number of gene sets in each cluster, per source. With multi-source data this immediately highlights clusters dominated by one source versus those shared between sources, which can suggest biology specific to one source versus shared programs. Here, for example, the "Stem Cell" cluster consists almost only of gene sets enriched among differentially expressed genes, while the "Peptidyl Lysine" cluster consists almost only of gene sets enriched among differentially spliced genes.
 
 Also note that the `highlightClusterNo` argument is available for most plotting functions, making it easy to visually communicate which clusters you think are most interesting (shown in bold).
 
@@ -179,7 +179,7 @@ plotUMAP(
 
 Which automatically plots the source as the shape. The UMAP plot function has many arguments enabling fine-tuning of the plot, and `interactive = TRUE` gives a plot where hovering over a point shows its gene set. Here we just want to highlight the use of `removeClusterId`. While the cluster numbers are useful for quick referral to clusters (important later), it is often desirable to remove them. Hence the `removeClusterId` argument (implemented in most plot functions) removes the cluster number (e.g. the "1: " prefix in "1: Serum Response").
 
-We already mentioned how we see differences in cluster composition. This can naturally also be directly visualized:
+We already mentioned how we see differences in cluster composition. This can naturally also be directly visualized. Gene sets found in both sources are counted once, as "Both":
 
 ```{r proportion}
 plotProportions(
@@ -240,14 +240,17 @@ plotDendrogram(
 )
 ```
 
-This illustrates the well-known fact that UMAPs can be somewhat misleading about how clusters are positioned relative to each other — the dendrogram and the UMAP can disagree on which clusters are closest.
+The dendrogram complements the UMAP: distances between clusters in a UMAP are not always meaningful, while the dendrogram is computed directly from the gene sets the clusters share. The distances are often all close to 1, because few gene sets of different clusters are neighbors, so the axis is zoomed in on the range of the merges.
 
 ## Exploring and verifying clusters
 
 The most important thing to get right is the clustering "level" controlled by the `resolution` argument (as shown above in the [Cluster and label gene-sets] section). `geneSetSimplifyR` picks a sensible default automatically, but we always recommend visualizing how different cluster resolutions affect the clusters via the [clustree R package](https://cran.r-project.org/web/packages/clustree/index.html) here wrapped in the *plotClustree()* function:
 
-```{r plotClustree}
-plotClustree(exampleGsList)
+```{r plotClustree, fig.height=9, fig.width=9, out.width="100%"}
+plotClustree(
+  exampleGsList,
+  resolutionsToPlot = c(0.1, 0.6, 1.1, 1.6, 2.1) # a subset keeps the tree readable
+)
 ```
 
 This is a very powerful way to see how the gene-sets are distributed into different clusters and for helping with verifying the clustering "level", as determined by the resolution, is correct.
@@ -291,8 +294,8 @@ plotClusterLabels(
 From which a LOT of summary info can be seen for this particular cluster:
 
 -   The label TF-IDF meaning the two-words that are most enriched in this cluster compared to other clusters (bottom left)
--   The gene-sets most central in the KNN graph produced (top right)
--   The weighted TF IDF - that is the TF IDF scores weighted by gene-set centrality. This is the one that defines the cluster label (top left).
+-   The gene-sets most central in the shared nearest neighbor (SNN) graph of the cluster (top right)
+-   The weighted TF IDF - that is the TF-IDF score of each label combined with the centrality of the gene sets it comes from (both scaled to 0-1 and added). The top label defines the cluster label (top left).
 -   The most frequent words in the gene-set names (top mid)
 -   The most frequent genes in the gene-sets (bottom mid)
 -   The largest gene-sets in the cluster (bottom right)
@@ -349,7 +352,7 @@ p1 <- plotBarchart(
   geneSetsList = exampleGsList,
   highlightClusterNo = c(0,1)
 )
-class(p1)
+inherits(p1, "ggplot")
 
 p1
 ```
@@ -373,10 +376,10 @@ p1 +
 `geneSetSimplifyR` ships small helpers that convert the output of popular enrichment-analysis tools into the `geneSetsList` + `geneSetsDF` pair `geneSetSimplifyR()` expects, so you don't have to reshape the data by hand:
 
 -   `parsePairedGSEA()` — parses a `pairedGSEA::paired_ora()` result. Each of the three blocks (`expression`, `splicing`, `paired`) is filtered by its own padj cutoff (`cutoff_exp`, `cutoff_splicing`, `cutoff_paired`) and contributes its surviving pathways as a separate `source`.
--   `parseFgsea()` — parses a single `fgsea::fgsea()` result; filters by a `padj` cutoff and labels rows with a user-supplied `source` string. Run it once per analysis (with a distinct `source`) and `rbind()` the resulting `geneSetsDF`s to combine several analyses into one multi-source clustering.
+-   `parseFgsea()` — parses a single `fgsea::fgsea()` (GSEA) or `fgsea::fora()` (ORA) result; filters by a `padj` cutoff and labels rows with a user-supplied `source` string. To combine several analyses into one multi-source clustering, run it once per analysis (with a distinct `source`), `rbind()` the resulting `geneSetsDF`s and combine the `geneSetsList`s (e.g. `c(a, b)` followed by removing duplicated names).
 -   `getGeneSets()` — fetches MSigDB gene sets (via [msigdbr](https://cran.r-project.org/package=msigdbr)) by collection / sub-collection or by a vector of pathway names. Handy for building a `geneSetsList` from scratch or for inspecting the members of specific pathways after clustering.
 
-Each function returns a list with two elements, `geneSetsList` and `geneSetsDF`, ready to pass straight into `geneSetSimplifyR()`:
+The two parsers return a list with two elements, `geneSetsList` and `geneSetsDF`, ready to pass straight into `geneSetSimplifyR()`. `getGeneSets()` returns a named list of gene sets that can be used as `geneSetsList`:
 
 ```{r parsers example, eval=FALSE}
 # pairedGSEA example
@@ -441,9 +444,11 @@ parsed <- parseFgsea(oraRes, examplePathways, cutoff=0.05)
 oraGsList <- geneSetSimplifyR(
   geneSetsList = parsed$geneSetsList,
   geneSetsDF   = parsed$geneSetsDF,
-  verbose      = FALSE
+  verbose      = FALSE,
+  removeFirstWord = TRUE # the names start with an id, e.g. 5990980_Cell_Cycle
 )
 oraGsList
+plotEnrichments(oraGsList) # uses the -log10 p-values kept by parseFgsea()
 ```
 
 # Session info

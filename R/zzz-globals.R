@@ -14,7 +14,8 @@ utils::globalVariables(c(
   "enrichmentSummary", "enrichment_score", "frac", "frac_cluster",
   "gene_ids", "geneset", "genesets", "index", "label", "mean_size",
   "measure", "median_value", "n", "n_cond",
-  "pathway", "rank", "scoreToSummarize", "second_label", "tf_idf",
+  "pathway", "rank", "scoreToSummarize", "second_label", "sortKey",
+  "tableOrder", "tf_idf",
   "tf_idf_scaled", "tokenSource", "value", "weighted_score", "words",
   "x", "xend", "y", "yend"
 ))

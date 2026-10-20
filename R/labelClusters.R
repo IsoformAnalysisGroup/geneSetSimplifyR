@@ -126,6 +126,8 @@ labelClusters <-
     ### Record labeling metadata
     geneSetsList@metadata$active_resolution <- defaultResolutionColumn
     geneSetsList@metadata$n_labels <- nLabels
+    geneSetsList@metadata$remove_first_word <- removeFirstWord
+    geneSetsList@metadata$stop_words <- stopWords
     geneSetsList@metadata$labeled_at <- Sys.time()
 
     if(verbose) {

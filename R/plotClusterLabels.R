@@ -145,15 +145,23 @@ plotClusterLabels <- function(
         label = factor(label, levels=unique(label) ),
       )
 
+    ### Words of the gene-set names, prepared as in labelClusters()
+    labelSettings <- labelingSettings(geneSetsList)
+    nameWords <- stringr::str_replace_all(gsInCluster, "_", " ")
+    if (labelSettings$removeFirstWord) {
+      nameWords <- stringr::str_remove(nameWords, "^\\S+\\s*")
+    }
+
     topWords <-
-      stringr::str_replace_all(gsInCluster, "_", " ") %>%
+      nameWords %>%
       stringr::str_split(pattern = ' ') %>%
       unlist() %>%
       tolower() %>%
       tibble::tibble(words = .) %>%
+      dplyr::filter(nzchar(words)) %>%
       dplyr::anti_join(
         x = .,
-        y = tibble::tibble(words =geneSetSimplifyR::stopWords),
+        y = tibble::tibble(words = tolower(labelSettings$stopWords)),
         by = 'words'
       ) %>%
       dplyr::group_by(words) %>%
@@ -207,11 +215,20 @@ plotClusterLabels <- function(
 
   }
 
+  ### Order the bars by value. Ties keep the order of the label tables, so
+  ### the top bar of 'Label Weighted TF IDF' is the label the cluster got.
+  jointData <- jointData %>%
+    dplyr::filter(value != 0) %>%
+    dplyr::mutate(tableOrder = seq_len(dplyr::n())) %>%
+    dplyr::group_by(measure) %>%
+    dplyr::arrange(dplyr::desc(value), tableOrder, .by_group = TRUE) %>%
+    dplyr::mutate(sortKey = -seq_len(dplyr::n())) %>%
+    dplyr::ungroup()
+
   ### Plot
   p1 <-
     jointData %>%
-    dplyr::filter(value != 0) %>%
-    ggplot(aes(x=tidytext::reorder_within(label, value, measure), y=value)) +
+    ggplot(aes(x=tidytext::reorder_within(label, sortKey, measure), y=value)) +
     geom_bar(stat="identity", position='dodge') +
     facet_wrap(~measure, ncol=3, scales = 'free') +
     tidytext::scale_x_reordered() +
@@ -225,3 +242,20 @@ plotClusterLabels <- function(
   return(p1)
 }
 
+#' Settings used by labelClusters()
+#'
+#' @param geneSetsList A labeled 'gsList' object.
+#' @return A list with `removeFirstWord` and `stopWords`. Objects labeled by
+#'   older versions, which did not record them, get the defaults.
+#' @keywords internal
+labelingSettings <- function(geneSetsList) {
+  meta <- if (.hasSlot(geneSetsList, "metadata")) geneSetsList@metadata else list()
+  list(
+    removeFirstWord = isTRUE(meta$remove_first_word),
+    stopWords = if (is.null(meta$stop_words)) {
+      geneSetSimplifyR::stopWords
+    } else {
+      meta$stop_words
+    }
+  )
+}

@@ -99,7 +99,8 @@ plotEnrichments <- function(
       ) +
       theme_bw() +
       theme(
-        legend.position = "bottom"
+        legend.position = "bottom",
+        legend.box = "vertical" # side by side, the legends get clipped
       ) +
       guides(color = guide_legend(order = 1), size = guide_legend(order = 2)) +
       coord_flip()
