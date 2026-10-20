@@ -28,6 +28,12 @@ threeSourceGsList <- function() {
   g
 }
 
+withoutPvalues <- function(g) {
+  g@enrichmentScore$pval <- NA
+  g@enrichmentScore$nlog10pval <- NA
+  g
+}
+
 withPvalues <- function(g) {
   es <- g@enrichmentScore
   es$pval <- seq(1e-4, 0.05, length.out = nrow(es))

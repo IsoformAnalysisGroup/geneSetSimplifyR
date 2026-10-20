@@ -62,17 +62,30 @@ test_that("plotHeatmap copes with constant values", {
 })
 
 test_that("plotFrom prefers -log10 p-values when present", {
-  g <- withPvalues(twoSources)
-  expect_equal(plotEnrichments(g)$labels$y, "Mean -log10(p-value)")
-  expect_equal(plotEnrichments(twoSources)$labels$y, "Mean Enrichment")
-  expect_equal(plotViolin(g)$labels$y, "-log10(p-value)")
+  noPvalues <- withoutPvalues(twoSources)
+  expect_equal(plotEnrichments(twoSources)$labels$y, "Mean -log10(p-value)")
+  expect_equal(plotEnrichments(noPvalues)$labels$y, "Mean Enrichment")
+  expect_equal(plotViolin(twoSources)$labels$y, "-log10(p-value)")
+  expect_equal(plotViolin(noPvalues)$labels$y, "Enrichment")
   expect_equal(
-    plotEnrichments(g, plotFrom = "enrichment_score",
+    plotEnrichments(twoSources, plotFrom = "enrichment_score",
                     summaryStat = "median")$labels$y,
     "Median Enrichment"
   )
-  expect_error(plotEnrichments(twoSources, plotFrom = "nlog10pval"),
+  expect_error(plotEnrichments(noPvalues, plotFrom = "nlog10pval"),
                "all values are NA")
+  # Other numeric columns supplied by the user can be plotted too
+  expect_equal(plotEnrichments(twoSources, plotFrom = "padj")$labels$y,
+               "Mean padj")
+})
+
+test_that("the example data carries fgsea p-values", {
+  expect_true(all(c("pval", "padj") %in% names(exampleEnrichment)))
+  expect_true(all(exampleEnrichment$padj < 0.05))
+  expect_equal(
+    exampleGsList@enrichmentScore$nlog10pval,
+    -log10(exampleGsList@enrichmentScore$pval)
+  )
 })
 
 test_that("plotViolin keeps the median order without cluster ids", {
