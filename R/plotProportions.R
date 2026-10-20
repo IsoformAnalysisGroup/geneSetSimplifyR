@@ -113,6 +113,7 @@ plotProportions <- function(
     plotData %>%
     ggplot(aes(x = cluster, fill = source)) +
     geom_bar(position = "fill") +
+    scale_fill_manual(values = sourceColors(df$source)) +
     labs(y = "Fraction of Gene Sets", x = "Gene Set Cluster", fill = "Gene set source") +
     theme_bw() +
     theme(
@@ -141,4 +142,22 @@ plotProportions <- function(
 
 
   return(p)
+}
+
+#' Fill colors for sources, matching the other plots
+#'
+#' Each source gets the color ggplot2 gives it in the plots that show only
+#' sources (the default hue palette); gene sets found in several sources
+#' ('Both' / 'Multiple') are gray.
+#'
+#' @param sources Character vector of source names.
+#' @return A named character vector of colors.
+#' @keywords internal
+sourceColors <- function(sources) {
+  sourceLevels <- sort(unique(as.character(sources)))
+  n <- length(sourceLevels)
+  hues <- seq(15, 375, length.out = n + 1)[seq_len(n)]
+  colors <- grDevices::hcl(h = hues, c = 100, l = 65)
+  names(colors) <- sourceLevels
+  c(colors, Both = "grey60", Multiple = "grey60")
 }

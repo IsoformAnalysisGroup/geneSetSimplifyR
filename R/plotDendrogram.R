@@ -75,8 +75,13 @@ plotDendrogram <- function(
   # Perform hierarchical clustering using the complete linkage method
   hcAvg <- hclust(as.dist(avgDist), method = "complete")
 
-  ### Draw the dendrogram as line segments, leaves on the y axis
-  segments <- dendrogramSegments(hcAvg)
+  ### Draw the dendrogram as line segments, leaves on the y axis. The
+  ### average distances between clusters are often all close to 1, so the
+  ### axis starts just below the lowest merge instead of at 0.
+  heightRange <- range(hcAvg$height)
+  leafHeight <- heightRange[1] -
+    max(diff(heightRange), 0.05 * heightRange[2], 1e-3)
+  segments <- dendrogramSegments(hcAvg, leafHeight = leafHeight)
   leafLabels <- hcAvg$labels[hcAvg$order]
 
   p1 <-
@@ -115,10 +120,11 @@ plotDendrogram <- function(
 #' Line segments of a dendrogram
 #'
 #' @param hc An `hclust` object.
+#' @param leafHeight Height at which the leaves are drawn.
 #' @return A data.frame with columns `x`, `y`, `xend` and `yend`; leaves are
-#'   at `x = 1, 2, ...` in the order of `hc$order` and at height 0.
+#'   at `x = 1, 2, ...` in the order of `hc$order` and at `leafHeight`.
 #' @keywords internal
-dendrogramSegments <- function(hc) {
+dendrogramSegments <- function(hc, leafHeight = 0) {
   nLeaves <- length(hc$order)
   leafX <- integer(nLeaves)
   leafX[hc$order] <- seq_len(nLeaves)
@@ -126,7 +132,7 @@ dendrogramSegments <- function(hc) {
   nodeX <- numeric(nLeaves - 1)
   nodeY <- hc$height
   position <- function(id) {
-    if (id < 0) c(leafX[-id], 0) else c(nodeX[id], nodeY[id])
+    if (id < 0) c(leafX[-id], leafHeight) else c(nodeX[id], nodeY[id])
   }
 
   segments <- vector("list", nLeaves - 1)

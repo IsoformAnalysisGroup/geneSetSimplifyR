@@ -4,14 +4,16 @@
 \alias{dendrogramSegments}
 \title{Line segments of a dendrogram}
 \usage{
-dendrogramSegments(hc)
+dendrogramSegments(hc, leafHeight = 0)
 }
 \arguments{
 \item{hc}{An `hclust` object.}
+
+\item{leafHeight}{Height at which the leaves are drawn.}
 }
 \value{
 A data.frame with columns `x`, `y`, `xend` and `yend`; leaves are
-  at `x = 1, 2, ...` in the order of `hc$order` and at height 0.
+  at `x = 1, 2, ...` in the order of `hc$order` and at `leafHeight`.
 }
 \description{
 Line segments of a dendrogram
