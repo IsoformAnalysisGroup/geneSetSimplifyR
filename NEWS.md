@@ -20,7 +20,8 @@ First version submitted to Bioconductor.
   as `geneSetsList`.
 * `plotEnrichments()`, `plotHeatmap()` and `plotViolin()` gain `plotFrom` (the
   column to plot; by default -log10 p-values when available, else enrichment
-  scores). `plotEnrichments()` and `plotHeatmap()` gain `summaryStat`.
+  scores). `plotEnrichments()` and `plotHeatmap()` gain `summaryStat` (default
+  'median').
 * `plotHeatmap(scaleCols =)` with default `"auto"`: clusters are z-scored
   across sources only when there are three or more sources.
 * `labelClusters(removeFirstWord =)` drops the first word (e.g. an author

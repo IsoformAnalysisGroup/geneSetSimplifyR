@@ -63,20 +63,20 @@ test_that("plotHeatmap copes with constant values", {
 
 test_that("plotFrom prefers -log10 p-values when present", {
   noPvalues <- withoutPvalues(twoSources)
-  expect_equal(plotEnrichments(twoSources)$labels$y, "Mean -log10(p-value)")
-  expect_equal(plotEnrichments(noPvalues)$labels$y, "Mean Enrichment")
+  expect_equal(plotEnrichments(twoSources)$labels$y, "Median -log10(p-value)")
+  expect_equal(plotEnrichments(noPvalues)$labels$y, "Median Enrichment")
   expect_equal(plotViolin(twoSources)$labels$y, "-log10(p-value)")
   expect_equal(plotViolin(noPvalues)$labels$y, "Enrichment")
   expect_equal(
     plotEnrichments(twoSources, plotFrom = "enrichment_score",
-                    summaryStat = "median")$labels$y,
-    "Median Enrichment"
+                    summaryStat = "mean")$labels$y,
+    "Mean Enrichment"
   )
   expect_error(plotEnrichments(noPvalues, plotFrom = "nlog10pval"),
                "all values are NA")
   # Other numeric columns supplied by the user can be plotted too
   expect_equal(plotEnrichments(twoSources, plotFrom = "padj")$labels$y,
-               "Mean padj")
+               "Median padj")
 })
 
 test_that("the example data carries fgsea p-values", {

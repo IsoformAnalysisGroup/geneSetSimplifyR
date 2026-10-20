@@ -189,7 +189,7 @@ plotProportions(
 )
 ```
 
-We can also utilize the p-values and enrichment scores we have for each gene set. The simplest visualization is a lollipop plot of each cluster's mean -log10(p-value):
+We can also utilize the p-values and enrichment scores we have for each gene set. The simplest visualization is a lollipop plot of each cluster's median -log10(p-value):
 
 ```{r enrichment}
 plotEnrichments(
@@ -199,13 +199,13 @@ plotEnrichments(
 )
 ```
 
-Which value is plotted is controlled by `plotFrom`, and how the gene sets of a cluster are summarized by `summaryStat` ('mean', 'median' or 'max'). By default the -log10 p-values are plotted when available, else the enrichment scores. Any numeric column you supplied in `geneSetsDF` can be used, here the median enrichment score:
+Which value is plotted is controlled by `plotFrom`, and how the gene sets of a cluster are summarized by `summaryStat` ('median', 'max' or 'mean'). By default the -log10 p-values are plotted when available, else the enrichment scores. Any numeric column you supplied in `geneSetsDF` can be used, here the mean enrichment score:
 
-```{r enrichment median}
+```{r enrichment mean}
 plotEnrichments(
   geneSetsList = exampleGsList,
   plotFrom = 'enrichment_score',
-  summaryStat = 'median',
+  summaryStat = 'mean',
   removeClusterId = TRUE
 )
 ```
