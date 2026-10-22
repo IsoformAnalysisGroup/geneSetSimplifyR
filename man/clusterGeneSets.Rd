@@ -20,24 +20,24 @@ clusterGeneSets(
 \item{resolution}{Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.}
 
 \item{algorithm}{Clustering method applied to the SNN graph. Either the name
-  of a registered method (see [listClusterMethods()]; e.g. 'louvain',
-  'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
-  'binary_cut'), a `gsClusterMethod` built with [clusterMethod()], or a
-  function following the same contract. Only this step is swappable -- the
-  SNN graph itself is always built the same way.
+of a registered method (see \code{\link[=listClusterMethods]{listClusterMethods()}}; e.g. 'louvain',
+'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
+'binary_cut'), a \code{gsClusterMethod} built with \code{\link[=clusterMethod]{clusterMethod()}}, or a
+function following the same contract. Only this step is swappable -- the
+SNN graph itself is always built the same way.
 
-  Methods that determine the number of clusters themselves ('kmeans',
-  'apcluster', 'binary_cut') ignore `resolution` and are run once; the result
-  is stored under the first requested resolution.}
+Methods that determine the number of clusters themselves ('kmeans',
+'apcluster', 'binary_cut') ignore \code{resolution} and are run once; the result
+is stored under the first requested resolution.}
 
 \item{clusterArgs}{Named list of extra arguments passed on to the clustering
-method, for example `list(n.start = 20)` for the Seurat backends,
-`list(maxK = 50)` for 'kmeans', `list(p = -1)` for 'apcluster', or
-`list(cutoff = 0.9)` for 'binary_cut'.}
+method, for example \code{list(n.start = 20)} for the Seurat backends,
+\code{list(maxK = 50)} for 'kmeans', \code{list(p = -1)} for 'apcluster', or
+\code{list(cutoff = 0.9)} for 'binary_cut'.}
 
 \item{K}{Integer or NA. Number of nearest neighbors used when building the
-KNN graph. If `NA` (default) it is set to `round(sqrt(N))`, where `N` is
-the number of gene sets. Must be smaller than `N`.}
+KNN graph. If \code{NA} (default) it is set to \code{round(sqrt(N))}, where \code{N} is
+the number of gene sets. Must be smaller than \code{N}.}
 
 \item{elbow_method}{Method for choosing the number of LSI dimensions from
 the scree curve: 'distance' (default) or 'zscore'. See the Details.}
@@ -46,21 +46,21 @@ the scree curve: 'distance' (default) or 'zscore'. See the Details.}
 }
 \value{
 'gsList' object with clustering stored. The best resolution (highest
- silhouette score) is annotated and used throughout the rest of the workflow (unless
- specified in subsequent functions).
+silhouette score) is annotated and used throughout the rest of the workflow (unless
+specified in subsequent functions).
 }
 \description{
 Cluster gene sets
 }
 \details{
 At least 10 gene sets are needed. The LSI uses up to 50
-  dimensions (fewer when there are 50 gene sets or less); the first one,
-  which mostly reflects gene-set size, is always left out.
+dimensions (fewer when there are 50 gene sets or less); the first one,
+which mostly reflects gene-set size, is always left out.
 
-  Clustering does not change the random number stream of the R session:
-  the UMAP and the seeded clustering backends restore it afterwards.
-  Re-clustering an object removes its existing labels, so run
-  `labelClusters()` again afterwards.
+Clustering does not change the random number stream of the R session:
+the UMAP and the seeded clustering backends restore it afterwards.
+Re-clustering an object removes its existing labels, so run
+\code{labelClusters()} again afterwards.
 }
 \examples{
 geneSetsList <- initializeList(
@@ -83,5 +83,5 @@ gsListObject <- clusterGeneSets(
 )
 }
 \seealso{
-[clusterMethod()], [registerClusterMethod()], [listClusterMethods()]
+\code{\link[=clusterMethod]{clusterMethod()}}, \code{\link[=registerClusterMethod]{registerClusterMethod()}}, \code{\link[=listClusterMethods]{listClusterMethods()}}
 }

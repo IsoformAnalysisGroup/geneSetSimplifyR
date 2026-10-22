@@ -14,37 +14,37 @@ getGeneSets(
 }
 \arguments{
 \item{pathway_names}{Character vector of MSigDB pathway names
-(i.e. `gs_name` values). If `NULL` (default), all pathways in the
+(i.e. \code{gs_name} values). If \code{NULL} (default), all pathways in the
 requested collection/subcollection are returned.}
 
-\item{species}{Species, passed to `msigdbr::msigdbr()`. Default
-`"Homo sapiens"`.}
+\item{species}{Species, passed to \code{msigdbr::msigdbr()}. Default
+\code{"Homo sapiens"}.}
 
-\item{collection}{MSigDB collection (e.g. `"C5"`, `"H"`, `"C2"`). Default
-`"C5"`.}
+\item{collection}{MSigDB collection (e.g. \code{"C5"}, \code{"H"}, \code{"C2"}). Default
+\code{"C5"}.}
 
-\item{subcollection}{Optional MSigDB sub-collection (e.g. `"GO:BP"`).
-`NULL` (default) returns the full collection.}
+\item{subcollection}{Optional MSigDB sub-collection (e.g. \code{"GO:BP"}).
+\code{NULL} (default) returns the full collection.}
 
 \item{gene_id_type}{Which gene identifier to use for the returned vectors.
-One of `"ensembl_gene"` (default), `"gene_symbol"`, or `"entrez_gene"`.}
+One of \code{"ensembl_gene"} (default), \code{"gene_symbol"}, or \code{"entrez_gene"}.}
 }
 \value{
 A named list where each element is a character vector of gene IDs
-  for a pathway. Names are pathway names (`gs_name`).
+for a pathway. Names are pathway names (\code{gs_name}).
 }
 \description{
 Fetches gene-set memberships from MSigDB via
-  [msigdbr::msigdbr()] and returns them in the named-list format expected
-  by `geneSetSimplifyR()` (pathway name -> character vector of gene IDs).
+\code{\link[msigdbr:msigdbr]{msigdbr::msigdbr()}} and returns them in the named-list format expected
+by \code{geneSetSimplifyR()} (pathway name -> character vector of gene IDs).
 
-  Useful in two situations:
-  \itemize{
-    \item Inspecting the gene members of specific pathways (e.g. the top
-      pathways from a cluster after running the workflow).
-    \item Building a `geneSetsList` from scratch without going through
-      `pairedGSEA::prepare_msigdb()`.
-  }
+Useful in two situations:
+\itemize{
+\item Inspecting the gene members of specific pathways (e.g. the top
+pathways from a cluster after running the workflow).
+\item Building a \code{geneSetsList} from scratch without going through
+\code{pairedGSEA::prepare_msigdb()}.
+}
 }
 \examples{
 \donttest{

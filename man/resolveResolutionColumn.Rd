@@ -9,15 +9,15 @@ resolveResolutionColumn(geneSetsList, resolution = NULL)
 \arguments{
 \item{geneSetsList}{A clustered 'gsList' object.}
 
-\item{resolution}{`NULL` or a single resolution that was clustered.}
+\item{resolution}{\code{NULL} or a single resolution that was clustered.}
 }
 \value{
-The name of the resolution column, e.g. `"GSEA_snn_res.1.1"`.
+The name of the resolution column, e.g. \code{"GSEA_snn_res.1.1"}.
 }
 \description{
 Internal helper shared by the plotting and table functions. An explicit
-`resolution` always wins. With `resolution = NULL` the active resolution is
-used: the one last set by `updateClusterLabels()` or `updateResolution()`,
-or the optimal resolution found by `clusterGeneSets()` if neither was used.
+\code{resolution} always wins. With \code{resolution = NULL} the active resolution is
+used: the one last set by \code{updateClusterLabels()} or \code{updateResolution()},
+or the optimal resolution found by \code{clusterGeneSets()} if neither was used.
 }
 \keyword{internal}

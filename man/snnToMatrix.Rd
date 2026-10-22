@@ -10,23 +10,23 @@ snnToMatrix(snn, warnAbove = 5000)
 \item{snn}{The SNN graph passed to a cluster method.}
 
 \item{warnAbove}{Number of gene sets above which a warning about the memory
-cost of densifying is emitted. Set to `Inf` to silence. The dense matrix
-needs roughly `8 * N^2` bytes, so 10,000 gene sets is about 800 MB.}
+cost of densifying is emitted. Set to \code{Inf} to silence. The dense matrix
+needs roughly \code{8 * N^2} bytes, so 10,000 gene sets is about 800 MB.}
 }
 \value{
 A dense symmetric numeric matrix with gene sets as rows/columns.
 }
 \description{
 Helper for writing clustering methods that operate on a full
-  similarity matrix rather than a graph (affinity propagation, binary cut,
-  k-means on similarity profiles). The SNN graph is already a similarity
-  matrix with values in `[0, 1]`; this simply densifies it and keeps the gene
-  set names as dimnames.
+similarity matrix rather than a graph (affinity propagation, binary cut,
+k-means on similarity profiles). The SNN graph is already a similarity
+matrix with values in \verb{[0, 1]}; this simply densifies it and keeps the gene
+set names as dimnames.
 }
 \examples{
 simMat <- snnToMatrix(exampleGsList@cluster@graphs$GSEA_snn)
 simMat[1:3, 1:3]
 }
 \seealso{
-[clusterMethod()], [snnToIgraph()]
+\code{\link[=clusterMethod]{clusterMethod()}}, \code{\link[=snnToIgraph]{snnToIgraph()}}
 }

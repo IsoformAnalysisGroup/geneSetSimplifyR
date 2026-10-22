@@ -13,7 +13,7 @@ runClusterMethod(
 )
 }
 \arguments{
-\item{method}{A `gsClusterMethod`.}
+\item{method}{A \code{gsClusterMethod}.}
 
 \item{snn}{The SNN graph (sparse symmetric matrix).}
 
@@ -24,7 +24,7 @@ runClusterMethod(
 \item{clusterArgs}{Named list of extra arguments forwarded to the method.}
 }
 \value{
-An unnamed vector of cluster ids, ordered as `colnames(snn)`.
+An unnamed vector of cluster ids, ordered as \code{colnames(snn)}.
 }
 \description{
 Internal. Checks the method's dependencies, calls it for a single

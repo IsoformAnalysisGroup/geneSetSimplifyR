@@ -10,7 +10,7 @@ resolutionColumnName(resolution)
 \item{resolution}{A single resolution, numeric or coercible to numeric.}
 }
 \value{
-The name of the matching column, e.g. `"GSEA_snn_res.1.1"`.
+The name of the matching column, e.g. \code{"GSEA_snn_res.1.1"}.
 }
 \description{
 Metadata column name of a resolution

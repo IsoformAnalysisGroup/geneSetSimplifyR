@@ -49,7 +49,7 @@ method.}
 number of LSI dimensions. Options: 'distance'(default), 'zscore'.}
 
 \item{K}{Number of nearest neighbors for the KNN graph, passed to
-\code{clusterGeneSets()}. `NA` (default) uses `round(sqrt(N))` for `N`
+\code{clusterGeneSets()}. \code{NA} (default) uses \code{round(sqrt(N))} for \code{N}
 gene sets.}
 
 \item{removeFirstWord}{Logical. If TRUE, strip the first word (everything before

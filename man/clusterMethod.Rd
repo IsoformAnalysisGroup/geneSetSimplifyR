@@ -2,7 +2,7 @@
 % Please edit documentation in R/clusterMethods.R
 \name{clusterMethod}
 \alias{clusterMethod}
-\title{Define a clustering method for `clusterGeneSets()`}
+\title{Define a clustering method for \code{clusterGeneSets()}}
 \usage{
 clusterMethod(
   fn,
@@ -13,40 +13,40 @@ clusterMethod(
 )
 }
 \arguments{
-\item{fn}{A function with signature `function(snn, resolution, verbose, ...)`
-returning one cluster id per column of `snn` (vector, factor, or
+\item{fn}{A function with signature \verb{function(snn, resolution, verbose, ...)}
+returning one cluster id per column of \code{snn} (vector, factor, or
 single-column data.frame/matrix). See details.}
 
 \item{name}{Short name for the method, used in messages and in the
-`algorithm` argument of `clusterGeneSets()`.}
+\code{algorithm} argument of \code{clusterGeneSets()}.}
 
 \item{description}{One-line description of what the method does.}
 
 \item{packages}{Character vector of packages the method needs. They are
-checked with `requireNamespace()` before the method runs, so a missing
+checked with \code{requireNamespace()} before the method runs, so a missing
 dependency produces a clear error instead of a cryptic one.}
 
 \item{usesResolution}{Whether the method's output actually depends on
-`resolution`. Set to `FALSE` for algorithms that determine the number of
-clusters themselves (e.g. affinity propagation); `clusterGeneSets()` then
+\code{resolution}. Set to \code{FALSE} for algorithms that determine the number of
+clusters themselves (e.g. affinity propagation); \code{clusterGeneSets()} then
 runs the method once rather than repeating identical work for every
-requested resolution. Defaults to `TRUE`.}
+requested resolution. Defaults to \code{TRUE}.}
 }
 \value{
-An object of class `gsClusterMethod`.
+An object of class \code{gsClusterMethod}.
 }
 \description{
 Wraps a community-detection function into the object
-  `clusterGeneSets()` expects. The function receives the shared-nearest-
-  neighbour (SNN) graph built by `clusterGeneSets()` and a single resolution,
-  and returns one cluster id per gene set.
+\code{clusterGeneSets()} expects. The function receives the shared-nearest-
+neighbour (SNN) graph built by \code{clusterGeneSets()} and a single resolution,
+and returns one cluster id per gene set.
 }
 \details{
-`snn` is a sparse symmetric matrix (a Seurat `Graph`) whose
-  rows/columns are gene sets and whose values are SNN similarities in
-  `[0, 1]`. Returned ids may be 0- or 1-based; `clusterGeneSets()` renumbers
-  them to start at 0 and orders the factor levels numerically. If the
-  returned ids are named, they are reordered to match `colnames(snn)`.
+\code{snn} is a sparse symmetric matrix (a Seurat \code{Graph}) whose
+rows/columns are gene sets and whose values are SNN similarities in
+\verb{[0, 1]}. Returned ids may be 0- or 1-based; \code{clusterGeneSets()} renumbers
+them to start at 0 and orders the factor levels numerically. If the
+returned ids are named, they are reordered to match \code{colnames(snn)}.
 }
 \examples{
 # A backend built on igraph's fast-greedy modularity optimization
@@ -75,6 +75,6 @@ gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy,
                                 verbose = FALSE)
 }
 \seealso{
-[registerClusterMethod()], [listClusterMethods()],
-  [clusterGeneSets()]
+\code{\link[=registerClusterMethod]{registerClusterMethod()}}, \code{\link[=listClusterMethods]{listClusterMethods()}},
+\code{\link[=clusterGeneSets]{clusterGeneSets()}}
 }

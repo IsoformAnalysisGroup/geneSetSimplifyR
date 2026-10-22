@@ -12,11 +12,16 @@
 \arguments{
 \item{object}{A 'gsList' object.}
 }
+\value{
+\code{gsList} objects are created by \code{\link[=initializeList]{initializeList()}}, not by calling
+the class generator directly. \code{show()} prints a summary of the object and
+returns it invisibly.
+}
 \description{
-A `gsList` holds the input and results of the geneSetSimplifyR
-  workflow. It is created by [initializeList()], filled by
-  [clusterGeneSets()] and [labelClusters()], or all at once by
-  [geneSetSimplifyR()]. Use [extractTable()] to get the results as a table.
+A \code{gsList} holds the input and results of the geneSetSimplifyR
+workflow. It is created by \code{\link[=initializeList]{initializeList()}}, filled by
+\code{\link[=clusterGeneSets]{clusterGeneSets()}} and \code{\link[=labelClusters]{labelClusters()}}, or all at once by
+\code{\link[=geneSetSimplifyR]{geneSetSimplifyR()}}. Use \code{\link[=extractTable]{extractTable()}} to get the results as a table.
 }
 \section{Functions}{
 \itemize{
@@ -30,16 +35,16 @@ A `gsList` holds the input and results of the geneSetSimplifyR
 columns; 1 if the gene is in the gene set, else 0.}
 
 \item{\code{enrichmentScore}}{A data.frame with one row per gene set and source:
-`pathway`, `source`, `enrichment_score`, `pval`, `nlog10pval` and any
-other column supplied to [initializeList()].}
+\code{pathway}, \code{source}, \code{enrichment_score}, \code{pval}, \code{nlog10pval} and any
+other column supplied to \code{\link[=initializeList]{initializeList()}}.}
 
 \item{\code{cluster}}{A Seurat object with the LSI, UMAP, SNN graph and the cluster
-of every gene set for each resolution (`GSEA_snn_res.<resolution>`
+of every gene set for each resolution (\verb{GSEA_snn_res.<resolution>}
 metadata columns).}
 
 \item{\code{labels}}{A list with, for each resolution, the cluster labels
-(`labelsDefault`), the TF-IDF scores of the label candidates
-(`labelsTFIDF`) and the most central gene sets (`labelsCentrality`).}
+(\code{labelsDefault}), the TF-IDF scores of the label candidates
+(\code{labelsTFIDF}) and the most central gene sets (\code{labelsCentrality}).}
 
 \item{\code{metadata}}{A list with parameters and results of the workflow, e.g.
 the number of nearest neighbors, the chosen resolution and silhouette

@@ -9,17 +9,17 @@ changeUsedResolution(geneSetsList, resolution = NULL, removeClusterId = FALSE)
 \arguments{
 \item{geneSetsList}{A labeled 'gsList' object.}
 
-\item{resolution}{`NULL` (the active resolution) or a clustered resolution.}
+\item{resolution}{\code{NULL} (the active resolution) or a clustered resolution.}
 
-\item{removeClusterId}{Logical. Drop the `"<id>: "` prefix from the labels.}
+\item{removeClusterId}{Logical. Drop the \code{"<id>: "} prefix from the labels.}
 }
 \value{
 The 'gsList' object with updated identities.
 }
 \description{
-Internal helper. Sets `active.ident` of the Seurat object to the clusters of
-the requested resolution, labeled as `"<id>: <label>"` (or `"<label>"` with
-`removeClusterId = TRUE`). Only the returned copy is changed, so plotting a
+Internal helper. Sets \code{active.ident} of the Seurat object to the clusters of
+the requested resolution, labeled as \code{"<id>: <label>"} (or \code{"<label>"} with
+\code{removeClusterId = TRUE}). Only the returned copy is changed, so plotting a
 different resolution never alters the user's object.
 }
 \keyword{internal}

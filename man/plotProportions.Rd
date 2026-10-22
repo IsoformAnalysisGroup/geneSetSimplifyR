@@ -14,9 +14,9 @@ plotProportions(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
-active resolution: the optimal resolution found by `clusterGeneSets()`, or
-the one last set with `updateResolution()` or `updateClusterLabels()`.}
+\item{resolution}{The cluster resolution to plot. Default \code{NULL} uses the
+active resolution: the optimal resolution found by \code{clusterGeneSets()}, or
+the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.}
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 

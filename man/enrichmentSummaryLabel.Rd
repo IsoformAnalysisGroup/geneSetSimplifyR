@@ -9,7 +9,7 @@ enrichmentSummaryLabel(summaryStat = "mean", scoreColumn = "enrichment_score")
 \arguments{
 \item{summaryStat}{One of 'mean', 'median' or 'max'.}
 
-\item{scoreColumn}{Name of the summarized column. `'enrichment_score'` is
+\item{scoreColumn}{Name of the summarized column. \code{'enrichment_score'} is
 spelled out as "Enrichment"; any other column is named as-is so the axis
 says what is actually plotted.}
 }

@@ -9,10 +9,10 @@ checkGsList(geneSetsList, needLabels = TRUE)
 \arguments{
 \item{geneSetsList}{Object to check.}
 
-\item{needLabels}{Whether labels from `labelClusters()` are required.}
+\item{needLabels}{Whether labels from \code{labelClusters()} are required.}
 }
 \value{
-`invisible(TRUE)`; errors otherwise.
+\code{invisible(TRUE)}; errors otherwise.
 }
 \description{
 Check that a gsList is clustered (and optionally labeled)

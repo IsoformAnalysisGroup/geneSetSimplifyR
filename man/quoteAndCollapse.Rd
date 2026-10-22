@@ -10,8 +10,8 @@ quoteAndCollapse(x)
 \item{x}{A character vector.}
 }
 \value{
-A single string, e.g. `"'pval', 'padj'"`. Returns `"none"` for an
-  empty vector so error messages stay readable.
+A single string, e.g. \code{"'pval', 'padj'"}. Returns \code{"none"} for an
+empty vector so error messages stay readable.
 }
 \description{
 Internal helper.

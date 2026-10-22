@@ -6,8 +6,8 @@
 \title{Example Gene Sets}
 \format{
 A named list of gene sets, where the names represent the gene set
-  names and each list element contains the corresponding genes for that
-  gene set.
+names and each list element contains the corresponding genes for that
+gene set.
 }
 \source{
 A subset of public data.

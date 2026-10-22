@@ -13,7 +13,7 @@ violinWithMedian(data)
 A ggplot2 layer.
 }
 \description{
-ggplot2 4.0 replaced `draw_quantiles` by `quantiles`/`quantile.linetype`;
+ggplot2 4.0 replaced \code{draw_quantiles} by \code{quantiles}/\code{quantile.linetype};
 use whichever the installed version supports.
 }
 \keyword{internal}

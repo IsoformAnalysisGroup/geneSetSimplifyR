@@ -14,9 +14,9 @@ The default resolution, as a number.
 }
 \description{
 Returns the resolution that the plotting and table functions
-  use when their `resolution` argument is `NULL`. This is the optimal
-  resolution found by `clusterGeneSets()`, unless it was changed with
-  `updateResolution()` or `updateClusterLabels(resolution = ...)`.
+use when their \code{resolution} argument is \code{NULL}. This is the optimal
+resolution found by \code{clusterGeneSets()}, unless it was changed with
+\code{updateResolution()} or \code{updateClusterLabels(resolution = ...)}.
 }
 \examples{
 extractResolution(exampleGsList)

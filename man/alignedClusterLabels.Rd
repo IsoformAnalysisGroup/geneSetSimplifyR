@@ -14,34 +14,34 @@ alignedClusterLabels(
 \arguments{
 \item{geneSetsList}{A labeled 'gsList' object.}
 
-\item{resolutionColumn}{Name of the resolution, e.g. `"GSEA_snn_res.1"`.}
+\item{resolutionColumn}{Name of the resolution, e.g. \code{"GSEA_snn_res.1"}.}
 
 \item{clusterIds}{Character vector of cluster ids to label, in the desired
-output order (typically `levels(active.ident)`).}
+output order (typically \code{levels(active.ident)}).}
 
-\item{removeClusterId}{Logical. Drop the `"<id>: "` prefix from the labels.}
+\item{removeClusterId}{Logical. Drop the \code{"<id>: "} prefix from the labels.}
 }
 \value{
-Character vector of labels, one per element of `clusterIds`.
+Character vector of labels, one per element of \code{clusterIds}.
 }
 \description{
-Internal helper. Takes the `labelsDefault` table for one resolution, keeps
+Internal helper. Takes the \code{labelsDefault} table for one resolution, keeps
 the top-scoring label per cluster, and returns one label per element of
-`clusterIds`, in that order.
+\code{clusterIds}, in that order.
 }
 \details{
 Three things this guards against:
 \itemize{
-  \item **Order.** The label table is in numeric cluster order; a factor's
-    levels need not be, so labels are matched by cluster id rather than by
-    position.
-  \item **Coverage.** A cluster can be missing from the label table (e.g. a
-    cluster whose gene-set names yield no usable bigram). Those fall back to
-    the bare cluster id, so the returned vector always has the same length as
-    `clusterIds`.
-  \item **Uniqueness.** When `removeClusterId = TRUE`, two clusters with the
-    same label (e.g. after a manual rename) would otherwise be merged into a
-    single factor level. Those clusters keep their id prefix instead.
+\item \strong{Order.} The label table is in numeric cluster order; a factor's
+levels need not be, so labels are matched by cluster id rather than by
+position.
+\item \strong{Coverage.} A cluster can be missing from the label table (e.g. a
+cluster whose gene-set names yield no usable bigram). Those fall back to
+the bare cluster id, so the returned vector always has the same length as
+\code{clusterIds}.
+\item \strong{Uniqueness.} When \code{removeClusterId = TRUE}, two clusters with the
+same label (e.g. after a manual rename) would otherwise be merged into a
+single factor level. Those clusters keep their id prefix instead.
 }
 }
 \keyword{internal}

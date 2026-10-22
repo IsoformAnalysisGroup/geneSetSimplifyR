@@ -10,8 +10,8 @@ labelingSettings(geneSetsList)
 \item{geneSetsList}{A labeled 'gsList' object.}
 }
 \value{
-A list with `removeFirstWord` and `stopWords`. Objects labeled by
-  older versions, which did not record them, get the defaults.
+A list with \code{removeFirstWord} and \code{stopWords}. Objects labeled by
+older versions, which did not record them, get the defaults.
 }
 \description{
 Settings used by labelClusters()

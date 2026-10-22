@@ -10,7 +10,7 @@ upgradeGsList(geneSetsList)
 \item{geneSetsList}{A 'gsList' object.}
 }
 \value{
-The object, with an empty `metadata` slot added if it had none.
+The object, with an empty \code{metadata} slot added if it had none.
 }
 \description{
 Add slots missing from objects created by older package versions

@@ -7,17 +7,17 @@
 listClusterMethods()
 }
 \value{
-A `data.frame` with columns `name`, `description`, `packages` and
-  `uses_resolution` (`FALSE` for methods that choose the number of clusters
-  themselves, which `clusterGeneSets()` therefore runs only once).
+A \code{data.frame} with columns \code{name}, \code{description}, \code{packages} and
+\code{uses_resolution} (\code{FALSE} for methods that choose the number of clusters
+themselves, which \code{clusterGeneSets()} therefore runs only once).
 }
 \description{
-Returns the clustering backends `clusterGeneSets()` can be
-  pointed at by name, including any added with [registerClusterMethod()].
+Returns the clustering backends \code{clusterGeneSets()} can be
+pointed at by name, including any added with \code{\link[=registerClusterMethod]{registerClusterMethod()}}.
 }
 \examples{
 listClusterMethods()
 }
 \seealso{
-[clusterMethod()], [registerClusterMethod()]
+\code{\link[=clusterMethod]{clusterMethod()}}, \code{\link[=registerClusterMethod]{registerClusterMethod()}}
 }
