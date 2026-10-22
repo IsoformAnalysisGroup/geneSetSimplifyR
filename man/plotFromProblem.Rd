@@ -7,20 +7,20 @@
 plotFromProblem(enrichmentDF, column)
 }
 \arguments{
-\item{enrichmentDF}{The `enrichmentScore` slot of a 'gsList' object.}
+\item{enrichmentDF}{The \code{enrichmentScore} slot of a 'gsList' object.}
 
 \item{column}{Name of a single column.}
 }
 \value{
-`NA_character_` if the column can be plotted, otherwise a one-line
-  description of the problem.
+\code{NA_character_} if the column can be plotted, otherwise a one-line
+description of the problem.
 }
 \description{
-Internal helper for `validatePlotFrom()`.
+Internal helper for \code{validatePlotFrom()}.
 }
 \details{
 The three checks are done in this order on purpose: a score that was never
-supplied to `initializeList()` is stored as a logical `NA` column, so
+supplied to \code{initializeList()} is stored as a logical \code{NA} column, so
 checking for "all NA" before "is numeric" gives the informative reason rather
 than a confusing complaint about the column type.
 }

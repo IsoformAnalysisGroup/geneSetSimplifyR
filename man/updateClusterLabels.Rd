@@ -15,13 +15,13 @@ updateClusterLabels(
 \item{geneSetsList}{'gsList' object that has been clustered and labeled.}
 
 \item{resolution}{Numeric. The clustering resolution of the cluster to
-rename. It must have been used as a resolution in `clusterGeneSets()`.
+rename. It must have been used as a resolution in \code{clusterGeneSets()}.
 When given, this resolution also becomes the active resolution: plotting
-and table functions called with `resolution = NULL` afterwards use it.
-Default `NULL` renames a cluster of the active resolution.}
+and table functions called with \code{resolution = NULL} afterwards use it.
+Default \code{NULL} renames a cluster of the active resolution.}
 
 \item{clusterNumber}{The number of the cluster to rename, as shown in front
-of its label (e.g. `0` for "0: Immune Response").}
+of its label (e.g. \code{0} for "0: Immune Response").}
 
 \item{newClusterName}{The new name of the cluster.}
 }
@@ -30,8 +30,8 @@ of its label (e.g. `0` for "0: Immune Response").}
 }
 \description{
 Replaces the label of one cluster with a name of your choice.
-  The original label is kept and reported as `initial_cluster_label` by
-  `extractTable(summarize = FALSE)`, also after several renames.
+The original label is kept and reported as \code{initial_cluster_label} by
+\code{extractTable(summarize = FALSE)}, also after several renames.
 }
 \examples{
 gsListObject <- updateClusterLabels(

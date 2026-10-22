@@ -13,38 +13,38 @@ parsePairedGSEA(
 )
 }
 \arguments{
-\item{oraResult}{Data frame from `pairedGSEA::paired_ora()`. Needs a
-`pathway` column plus `padj_<block>` and `enrichment_score_<block>`
+\item{oraResult}{Data frame from \code{pairedGSEA::paired_ora()}. Needs a
+\code{pathway} column plus \verb{padj_<block>} and \verb{enrichment_score_<block>}
 columns for each enabled block.}
 
 \item{geneSets}{Named list of gene-set memberships (the same one passed to
-`pairedGSEA::paired_ora()`).}
+\code{pairedGSEA::paired_ora()}).}
 
-\item{cutoff_exp}{padj cutoff for the expression block, or `NULL` to skip
+\item{cutoff_exp}{padj cutoff for the expression block, or \code{NULL} to skip
 using expression. Default 0.05.}
 
-\item{cutoff_splicing}{padj cutoff for the splicing block, or `NULL` to
+\item{cutoff_splicing}{padj cutoff for the splicing block, or \code{NULL} to
 skip using splicing. Default 0.05.}
 
-\item{cutoff_paired}{padj cutoff for the paired block, or `NULL` to skip
+\item{cutoff_paired}{padj cutoff for the paired block, or \code{NULL} to skip
 it. Default 0.05.}
 }
 \value{
 A list with:
-  \describe{
-    \item{`geneSetsList`}{`geneSets` filtered to pathways passing at least
-      one cutoff.}
-    \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
-      `enrichment_score`, `padj` and `pval` (when `oraResult` has
-      `pval_<block>` columns). One row per (pathway, source).}
-  }
+\describe{
+\item{\code{geneSetsList}}{\code{geneSets} filtered to pathways passing at least
+one cutoff.}
+\item{\code{geneSetsDF}}{Long-format data frame: \code{source}, \code{pathway},
+\code{enrichment_score}, \code{padj} and \code{pval} (when \code{oraResult} has
+\verb{pval_<block>} columns). One row per (pathway, source).}
+}
 }
 \description{
-Converts `pairedGSEA::paired_ora()` output into the two inputs
-  `geneSetSimplifyR()` needs: `geneSetsList` and `geneSetsDF` (with `source`,
-  `pathway`, `enrichment_score`). Each of the three blocks (expression,
-  splicing, paired) is filtered by its own padj cutoff and added as a
-  separate `source`. Pathways passing multiple cutoffs appear once per source.
+Converts \code{pairedGSEA::paired_ora()} output into the two inputs
+\code{geneSetSimplifyR()} needs: \code{geneSetsList} and \code{geneSetsDF} (with \code{source},
+\code{pathway}, \code{enrichment_score}). Each of the three blocks (expression,
+splicing, paired) is filtered by its own padj cutoff and added as a
+separate \code{source}. Pathways passing multiple cutoffs appear once per source.
 }
 \examples{
 # A small table in the format of pairedGSEA::paired_ora() output

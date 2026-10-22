@@ -23,6 +23,10 @@
 #'   the number of nearest neighbors, the chosen resolution and silhouette
 #'   scores.
 #'
+#' @return `gsList` objects are created by [initializeList()], not by calling
+#'   the class generator directly. `show()` prints a summary of the object and
+#'   returns it invisibly.
+#'
 #' @exportClass gsList
 #' @examples
 #' exampleGsList

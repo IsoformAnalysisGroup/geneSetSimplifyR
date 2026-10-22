@@ -16,9 +16,9 @@ plotEnrichments(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
-active resolution: the optimal resolution found by `clusterGeneSets()`, or
-the one last set with `updateResolution()` or `updateClusterLabels()`.}
+\item{resolution}{The cluster resolution to plot. Default \code{NULL} uses the
+active resolution: the optimal resolution found by \code{clusterGeneSets()}, or
+the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.}
 
 \item{plotFrom}{Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used (the default therefore falls back to 'enrichment_score' when no p-values were supplied).}
 

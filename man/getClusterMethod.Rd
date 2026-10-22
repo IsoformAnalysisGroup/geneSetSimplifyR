@@ -7,16 +7,16 @@
 getClusterMethod(algorithm)
 }
 \arguments{
-\item{algorithm}{A registered method name, a `gsClusterMethod`, or a function
-following the cluster-method contract (see [clusterMethod()]).}
+\item{algorithm}{A registered method name, a \code{gsClusterMethod}, or a function
+following the cluster-method contract (see \code{\link[=clusterMethod]{clusterMethod()}}).}
 }
 \value{
-A `gsClusterMethod`.
+A \code{gsClusterMethod}.
 }
 \description{
-Turns the `algorithm` argument of [clusterGeneSets()] -- a
-  registered name, a `gsClusterMethod`, or a bare function -- into a
-  `gsClusterMethod`.
+Turns the \code{algorithm} argument of \code{\link[=clusterGeneSets]{clusterGeneSets()}} -- a
+registered name, a \code{gsClusterMethod}, or a bare function -- into a
+\code{gsClusterMethod}.
 }
 \examples{
 getClusterMethod("louvain")

@@ -23,9 +23,9 @@ plotUMAP(
 \arguments{
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
-\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
-active resolution: the optimal resolution found by `clusterGeneSets()`, or
-the one last set with `updateResolution()` or `updateClusterLabels()`.}
+\item{resolution}{The cluster resolution to plot. Default \code{NULL} uses the
+active resolution: the optimal resolution found by \code{clusterGeneSets()}, or
+the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.}
 
 \item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
 
@@ -53,7 +53,7 @@ package; hovering over a point shows its gene set and cluster.}
 }
 \value{
 A ggplot object (a patchwork from 'Seurat::DimPlot()'), or a
-  plotly object when `interactive = TRUE`.
+plotly object when \code{interactive = TRUE}.
 }
 \description{
 Graphs the output of the UMAP dimensionality reduction as a scatterplot

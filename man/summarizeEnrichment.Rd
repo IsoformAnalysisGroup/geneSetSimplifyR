@@ -15,27 +15,27 @@ summarizeEnrichment(
 \arguments{
 \item{geneSetsList}{A labeled 'gsList' object.}
 
-\item{resolution}{`NULL` (the active resolution) or a clustered resolution.}
+\item{resolution}{\code{NULL} (the active resolution) or a clustered resolution.}
 
-\item{scoreColumn}{Name of the column in the `enrichmentScore` slot to
-summarize, e.g. `'enrichment_score'` or `'nlog10pval'`. Should already have
-been checked with `validatePlotFrom()` in the caller.}
+\item{scoreColumn}{Name of the column in the \code{enrichmentScore} slot to
+summarize, e.g. \code{'enrichment_score'} or \code{'nlog10pval'}. Should already have
+been checked with \code{validatePlotFrom()} in the caller.}
 
 \item{summaryStat}{One of 'mean', 'median' or 'max'. Must already be resolved
-to a single value (i.e. via `match.arg()` in the caller).}
+to a single value (i.e. via \code{match.arg()} in the caller).}
 
-\item{removeClusterId}{Logical. Drop the `"<id>: "` prefix from the labels.}
+\item{removeClusterId}{Logical. Drop the \code{"<id>: "} prefix from the labels.}
 }
 \value{
-A data.frame with columns `source`, `cluster`, `enrichmentSummary`
-  and `genesets` (the number of gene sets in the cluster and source,
-  including gene sets without a value), arranged by cluster.
+A data.frame with columns \code{source}, \code{cluster}, \code{enrichmentSummary}
+and \code{genesets} (the number of gene sets in the cluster and source,
+including gene sets without a value), arranged by cluster.
 }
 \description{
 Internal helper. Summarizes the per-gene-set enrichment scores of
-`extractTable()` into one value per cluster and source, using the statistic
+\code{extractTable()} into one value per cluster and source, using the statistic
 requested by the plot function. Done here rather than reusing the
-`enrichment mean` column of `extractTable()` so the summary can follow
-`summaryStat`.
+\verb{enrichment mean} column of \code{extractTable()} so the summary can follow
+\code{summaryStat}.
 }
 \keyword{internal}

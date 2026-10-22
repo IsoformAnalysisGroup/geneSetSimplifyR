@@ -35,9 +35,9 @@ A ggplot2 object
 }
 \description{
 Graphs a clustering tree showing how the clusters of
-  consecutive resolutions relate to each other: each node is a cluster
-  (labeled with its top label), and edges show how many gene sets move
-  from a cluster at one resolution to a cluster at the next.
+consecutive resolutions relate to each other: each node is a cluster
+(labeled with its top label), and edges show how many gene sets move
+from a cluster at one resolution to a cluster at the next.
 }
 \examples{
 plotClustree(exampleGsList)

@@ -15,7 +15,7 @@ relabelFactor(x, from, to)
 The relabeled factor.
 }
 \description{
-Internal helper replacing `plyr::mapvalues()` for factors: every level found
-in `from` is renamed to the matching element of `to`; other levels are kept.
+Internal helper replacing \code{plyr::mapvalues()} for factors: every level found
+in \code{from} is renamed to the matching element of \code{to}; other levels are kept.
 }
 \keyword{internal}

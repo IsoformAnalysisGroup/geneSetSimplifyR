@@ -10,7 +10,7 @@ initializeList(geneSetsList, geneSetsDF = NULL, verbose = TRUE)
 \item{geneSetsList}{A list containing the gene sets to be analyzed.
 The name of each element in the list should be a gene set and each element should contain
 the genes belonging to that gene set. Alternatively, the path to a GMT file
-with the gene sets (read with [fgsea::gmtPathways()]).}
+with the gene sets (read with \code{\link[fgsea:gmtPathways]{fgsea::gmtPathways()}}).}
 
 \item{geneSetsDF}{Optional data.frame with gene sets and enrichment scores that can be useful
 for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
@@ -40,7 +40,7 @@ Initialize a 'gsList' object from a dataframe with gene sets and enrichment scor
 }
 \details{
 Gene sets without any gene are removed with a warning. Missing gene
-  ids (`NA` or empty strings) are ignored.
+ids (\code{NA} or empty strings) are ignored.
 }
 \examples{
 gsListObject <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)

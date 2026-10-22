@@ -8,33 +8,33 @@ kvsElbow(variance, method = c("distance", "zscore"), zScoreCutoff = 2.5)
 }
 \arguments{
 \item{variance}{Standard deviations of the LSI components, stored in a
-Seurat object as `seuratObj@reductions$lsi@stdev`. Must be sorted in
+Seurat object as \code{seuratObj@reductions$lsi@stdev}. Must be sorted in
 decreasing order.}
 
 \item{method}{Which elbow-detection method to use. One of:
 \describe{
-  \item{`"distance"` (default)}{Returns the point of the (smoothed) scree
-    curve that lies farthest from the chord connecting its endpoints. Light
-    spline smoothing keeps it from being thrown off by jitter in the noisy
-    tail, and it needs no threshold.}
-  \item{`"zscore"`}{Flags the stepwise drops (1st derivative) that are
-    statistical outliers via a robust z-score and returns the last such
-    drop. Sensitive to the `zScoreCutoff` threshold.}
+\item{\code{"distance"} (default)}{Returns the point of the (smoothed) scree
+curve that lies farthest from the chord connecting its endpoints. Light
+spline smoothing keeps it from being thrown off by jitter in the noisy
+tail, and it needs no threshold.}
+\item{\code{"zscore"}}{Flags the stepwise drops (1st derivative) that are
+statistical outliers via a robust z-score and returns the last such
+drop. Sensitive to the \code{zScoreCutoff} threshold.}
 }}
 
 \item{zScoreCutoff}{Integer indicating the cut off value for the Z-score.
-Only used when `method = "zscore"`.}
+Only used when \code{method = "zscore"}.}
 }
 \value{
-A list with element `elbow_cutoff`: the index of the last LSI
-  component to use (at least 2).
+A list with element \code{elbow_cutoff}: the index of the last LSI
+component to use (at least 2).
 }
 \description{
 Determine the elbow cutoff to be used to run UMAP
 }
 \details{
 Short scree curves (fewer than 50 components, i.e. inputs with 50
-  or fewer gene sets) are supported. With fewer than four components after
-  dropping the first one, all components are used.
+or fewer gene sets) are supported. With fewer than four components after
+dropping the first one, all components are used.
 }
 \keyword{internal}

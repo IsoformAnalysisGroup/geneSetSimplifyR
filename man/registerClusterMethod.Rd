@@ -16,29 +16,29 @@ registerClusterMethod(
 \arguments{
 \item{name}{Name to register the method under.}
 
-\item{fn}{Either a `gsClusterMethod` (from [clusterMethod()]) or a function
+\item{fn}{Either a \code{gsClusterMethod} (from \code{\link[=clusterMethod]{clusterMethod()}}) or a function
 following the same contract; a bare function is wrapped automatically.}
 
-\item{description}{One-line description; ignored when `fn` is already a
-`gsClusterMethod`.}
+\item{description}{One-line description; ignored when \code{fn} is already a
+\code{gsClusterMethod}.}
 
-\item{packages}{Packages the method requires; ignored when `fn` is already a
-`gsClusterMethod`.}
+\item{packages}{Packages the method requires; ignored when \code{fn} is already a
+\code{gsClusterMethod}.}
 
-\item{usesResolution}{Whether the method's output depends on `resolution`;
-ignored when `fn` is already a `gsClusterMethod`. See [clusterMethod()].}
+\item{usesResolution}{Whether the method's output depends on \code{resolution};
+ignored when \code{fn} is already a \code{gsClusterMethod}. See \code{\link[=clusterMethod]{clusterMethod()}}.}
 
 \item{overwrite}{Whether to replace an already-registered method of the same
-name. Defaults to `FALSE`.}
+name. Defaults to \code{FALSE}.}
 }
 \value{
-The registered `gsClusterMethod`, invisibly.
+The registered \code{gsClusterMethod}, invisibly.
 }
 \description{
 Adds a clustering backend to the package registry so it can be
-  selected with `clusterGeneSets(algorithm = "<name>")`. Registering is
-  optional -- a `gsClusterMethod` (or a bare function) can also be passed
-  straight to `clusterGeneSets()`.
+selected with \code{clusterGeneSets(algorithm = "<name>")}. Registering is
+optional -- a \code{gsClusterMethod} (or a bare function) can also be passed
+straight to \code{clusterGeneSets()}.
 }
 \examples{
 registerClusterMethod(
@@ -64,5 +64,5 @@ gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm",
                                 resolution = 0.05, verbose = FALSE)
 }
 \seealso{
-[clusterMethod()], [listClusterMethods()]
+\code{\link[=clusterMethod]{clusterMethod()}}, \code{\link[=listClusterMethods]{listClusterMethods()}}
 }

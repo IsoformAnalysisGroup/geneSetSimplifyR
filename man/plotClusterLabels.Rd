@@ -17,9 +17,9 @@ plotClusterLabels(
 
 \item{clusterNumber}{Which cluster to plot, given by its cluster number.}
 
-\item{resolution}{The cluster resolution to plot. Default `NULL` uses the
-active resolution: the optimal resolution found by `clusterGeneSets()`, or
-the one last set with `updateResolution()` or `updateClusterLabels()`.}
+\item{resolution}{The cluster resolution to plot. Default \code{NULL} uses the
+active resolution: the optimal resolution found by \code{clusterGeneSets()}, or
+the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.}
 
 \item{nLabels}{The number of labels to plot. Default to 5}
 
@@ -30,10 +30,10 @@ a ggplot2 object.
 }
 \description{
 Shows why a cluster got its label: the top label candidates
-  with their combined and TF-IDF scores, the most central gene sets, the
-  most frequent words and genes, and the largest gene sets of the cluster.
-  Labels are the original ones from `labelClusters()`, also after a rename
-  with `updateClusterLabels()`.
+with their combined and TF-IDF scores, the most central gene sets, the
+most frequent words and genes, and the largest gene sets of the cluster.
+Labels are the original ones from \code{labelClusters()}, also after a rename
+with \code{updateClusterLabels()}.
 }
 \examples{
 plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)

@@ -13,9 +13,9 @@ silhouetteScore(clusters, distMatrix)
 }
 \value{
 The mean of the per-cluster average silhouette widths; 0 for a
-  single cluster and `NA` when the silhouette is not defined.
+single cluster and \code{NA} when the silhouette is not defined.
 }
 \description{
-Internal helper for `clusterGeneSets()`.
+Internal helper for \code{clusterGeneSets()}.
 }
 \keyword{internal}

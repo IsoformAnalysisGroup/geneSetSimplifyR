@@ -15,9 +15,9 @@ extractTable(
 \item{geneSetsList}{'gsList' object with clusters and labels.}
 
 \item{resolution}{Numeric. Resolution to extract the table for. Default
-`NULL` uses the active resolution: the optimal resolution found by
-`clusterGeneSets()`, or the one last set with `updateResolution()` or
-`updateClusterLabels()`.}
+\code{NULL} uses the active resolution: the optimal resolution found by
+\code{clusterGeneSets()}, or the one last set with \code{updateResolution()} or
+\code{updateClusterLabels()}.}
 
 \item{summarize}{Logical indicating whether to summarize the table by
 cluster (and source). Default is TRUE.}
@@ -26,13 +26,13 @@ cluster (and source). Default is TRUE.}
 from each cluster label. Default: TRUE.}
 }
 \value{
-A data.frame. With `summarize = TRUE`, one row per cluster and
-  source with the mean and standard deviation of the enrichment score
-  (ignoring missing values) and the number of gene sets. With
-  `summarize = FALSE`, one row per gene set and source with all columns of
-  the 'enrichmentScore' slot plus its `cluster`; if a cluster label was
-  changed with `updateClusterLabels()`, the original label is given in
-  `initial_cluster_label`.
+A data.frame. With \code{summarize = TRUE}, one row per cluster and
+source with the mean and standard deviation of the enrichment score
+(ignoring missing values) and the number of gene sets. With
+\code{summarize = FALSE}, one row per gene set and source with all columns of
+the 'enrichmentScore' slot plus its \code{cluster}; if a cluster label was
+changed with \code{updateClusterLabels()}, the original label is given in
+\code{initial_cluster_label}.
 }
 \description{
 Extract summary table of clustering

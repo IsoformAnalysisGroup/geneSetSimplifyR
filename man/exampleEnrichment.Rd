@@ -7,19 +7,19 @@
 \format{
 A tibble with 206 rows (one per gene set and source) and 5 columns:
 \describe{
-  \item{source}{The analysis the gene set was found in: "Expression" or
-    "Splicing".}
-  \item{pathway}{The gene set name.}
-  \item{enrichment_score}{Normalized enrichment score (NES) from fgsea.}
-  \item{pval}{p-value from fgsea.}
-  \item{padj}{Benjamini-Hochberg adjusted p-value from fgsea.}
+\item{source}{The analysis the gene set was found in: "Expression" or
+"Splicing".}
+\item{pathway}{The gene set name.}
+\item{enrichment_score}{Normalized enrichment score (NES) from fgsea.}
+\item{pval}{p-value from fgsea.}
+\item{padj}{Benjamini-Hochberg adjusted p-value from fgsea.}
 }
 }
 \source{
-Computed with `fgsea::fgseaMultilevel()` on MSigDB gene sets; see
-  `inst/scripts/make-exampleEnrichment.R`. Vitting-Seerup K, Sandelin A.
-  The Landscape of Isoform Switches in Human Cancers. Mol Cancer Res.
-  2017;15(9):1206-1220.
+Computed with \code{fgsea::fgseaMultilevel()} on MSigDB gene sets; see
+\code{inst/scripts/make-exampleEnrichment.R}. Vitting-Seerup K, Sandelin A.
+The Landscape of Isoform Switches in Human Cancers. Mol Cancer Res.
+2017;15(9):1206-1220.
 }
 \usage{
 exampleEnrichment

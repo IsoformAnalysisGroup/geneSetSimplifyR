@@ -13,11 +13,11 @@ normalizeClusterLevels(geneSetsList)
 The 'gsList' with normalized cluster factor level order.
 }
 \description{
-Rebuilds every `GSEA_snn_res.<res>` metadata column so its
-  factor levels are in numeric order (0, 1, 2, ...), starting at 0. Newer
-  objects get this automatically inside `clusterGeneSets()`; use this to
-  migrate objects clustered before that fix without re-clustering. Cluster
-  assignments are unchanged -- only the level order is corrected.
+Rebuilds every \verb{GSEA_snn_res.<res>} metadata column so its
+factor levels are in numeric order (0, 1, 2, ...), starting at 0. Newer
+objects get this automatically inside \code{clusterGeneSets()}; use this to
+migrate objects clustered before that fix without re-clustering. Cluster
+assignments are unchanged -- only the level order is corrected.
 }
 \examples{
 gsListObject <- normalizeClusterLevels(exampleGsList)

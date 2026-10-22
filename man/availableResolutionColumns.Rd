@@ -10,7 +10,7 @@ availableResolutionColumns(geneSetsList)
 \item{geneSetsList}{A clustered 'gsList' object.}
 }
 \value{
-Character vector of `GSEA_snn_res.<res>` column names.
+Character vector of \verb{GSEA_snn_res.<res>} column names.
 }
 \description{
 Resolution columns available in a clustered gsList

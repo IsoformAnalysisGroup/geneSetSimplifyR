@@ -8,20 +8,20 @@ snnToIgraph(snn)
 }
 \arguments{
 \item{snn}{The SNN graph passed to a cluster method (a sparse symmetric
-matrix / Seurat `Graph`).}
+matrix / Seurat \code{Graph}).}
 }
 \value{
-A weighted undirected `igraph` object.
+A weighted undirected \code{igraph} object.
 }
 \description{
 Helper for writing igraph-based clustering methods. Turns the
-  sparse symmetric SNN matrix handed to a cluster method into a weighted
-  undirected `igraph` graph whose vertex names are the gene sets.
+sparse symmetric SNN matrix handed to a cluster method into a weighted
+undirected \code{igraph} graph whose vertex names are the gene sets.
 }
 \examples{
 g <- snnToIgraph(exampleGsList@cluster@graphs$GSEA_snn)
 g
 }
 \seealso{
-[clusterMethod()]
+\code{\link[=clusterMethod]{clusterMethod()}}
 }

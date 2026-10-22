@@ -7,36 +7,36 @@
 parseFgsea(fgseaResult, geneSets, cutoff = 0.05, source = "fgsea")
 }
 \arguments{
-\item{fgseaResult}{Output of `fgsea::fgsea()` or `fgsea::fora()`. Must
-contain `pathway` and `padj` columns, and either `NES` (GSEA) or
-`foldEnrichment` (over-representation analysis, used as
-`log2(foldEnrichment)`).}
+\item{fgseaResult}{Output of \code{fgsea::fgsea()} or \code{fgsea::fora()}. Must
+contain \code{pathway} and \code{padj} columns, and either \code{NES} (GSEA) or
+\code{foldEnrichment} (over-representation analysis, used as
+\code{log2(foldEnrichment)}).}
 
 \item{geneSets}{Named list of gene-set memberships (the same one passed to
-`fgsea::fgsea()`).}
+\code{fgsea::fgsea()}).}
 
 \item{cutoff}{padj threshold for filtering pathways. Default 0.05.}
 
-\item{source}{Label written to the `source` column of `geneSetsDF`. Use a
+\item{source}{Label written to the \code{source} column of \code{geneSetsDF}. Use a
 distinct value per run when combining multiple analyses. Default
-`"fgsea"`.}
+\code{"fgsea"}.}
 }
 \value{
 A list with:
-  \describe{
-    \item{`geneSetsList`}{`geneSets` filtered to pathways passing the
-      cutoff.}
-    \item{`geneSetsDF`}{Long-format data frame: `source`, `pathway`,
-      `enrichment_score` (fgsea's NES), `pval` (when present) and `padj`.
-      One row per pathway.}
-  }
+\describe{
+\item{\code{geneSetsList}}{\code{geneSets} filtered to pathways passing the
+cutoff.}
+\item{\code{geneSetsDF}}{Long-format data frame: \code{source}, \code{pathway},
+\code{enrichment_score} (fgsea's NES), \code{pval} (when present) and \code{padj}.
+One row per pathway.}
+}
 }
 \description{
-Converts [fgsea::fgsea()] output into the two inputs
-  `geneSetSimplifyR()` needs: `geneSetsList` and `geneSetsDF` (with
-  `source`, `pathway`, `enrichment_score`). To combine several fgsea runs
-  into one multi-source analysis, call this function once per run with a
-  distinct `source` label and `rbind()` the resulting `geneSetsDF`s.
+Converts \code{\link[fgsea:fgsea]{fgsea::fgsea()}} output into the two inputs
+\code{geneSetSimplifyR()} needs: \code{geneSetsList} and \code{geneSetsDF} (with
+\code{source}, \code{pathway}, \code{enrichment_score}). To combine several fgsea runs
+into one multi-source analysis, call this function once per run with a
+distinct \code{source} label and \code{rbind()} the resulting \code{geneSetsDF}s.
 }
 \examples{
 # A small table in the format of fgsea::fgsea() output

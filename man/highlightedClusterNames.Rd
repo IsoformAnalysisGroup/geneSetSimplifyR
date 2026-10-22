@@ -14,11 +14,11 @@ highlightedClusterNames(
 \arguments{
 \item{geneSetsList}{A labeled 'gsList' object.}
 
-\item{resolution}{`NULL` (the active resolution) or a clustered resolution.}
+\item{resolution}{\code{NULL} (the active resolution) or a clustered resolution.}
 
-\item{highlightClusterNo}{Numeric vector of cluster numbers, or `NULL`.}
+\item{highlightClusterNo}{Numeric vector of cluster numbers, or \code{NULL}.}
 
-\item{removeClusterId}{Logical. Whether the plot drops the `"<id>: "` prefix.}
+\item{removeClusterId}{Logical. Whether the plot drops the \code{"<id>: "} prefix.}
 }
 \value{
 Character vector of cluster names (empty when nothing to highlight).
