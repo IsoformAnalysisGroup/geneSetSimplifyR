@@ -27,3 +27,6 @@ Rplots.pdf
 geneSetSimplifyR_*.tar.gz
 geneSetSimplifyR.BiocCheck/
 vignettes/*.html
+
+# pkgdown website build output
+docs/

@@ -23,14 +23,21 @@ It works on the output of any enrichment tool, with helpers for
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
+BiocManager::install("remotes") # needed to install from GitHub
 BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 ```
 
 `BiocManager` installs the dependencies from both CRAN and Bioconductor.
 
-On macOS, if installation stops with `ERROR: sub-architecture '...' is not
-installed`, add `INSTALL_opts = "--no-multiarch"` to the
-`BiocManager::install()` call.
+### Platform notes
+
+- **Linux:** igraph needs the GLPK library. On Debian/Ubuntu, run
+  `sudo apt-get install libglpk40` first. For other missing system libraries,
+  `pak::pkg_install("IsoformAnalysisGroup/geneSetSimplifyR")` installs the
+  package together with the system libraries it needs.
+- **macOS:** if installation stops with `ERROR: sub-architecture '...' is not
+  installed`, add `INSTALL_opts = "--no-multiarch"` to the
+  `BiocManager::install()` call.
 
 ## Quick start
 
@@ -55,10 +62,22 @@ extractTable(gsList, summarize = FALSE)
 
 ## Documentation
 
-The vignette walks through the whole workflow, from fgsea results to
-renaming clusters:
+The full documentation, including the vignette and all help pages, is online
+at <https://isoformanalysisgroup.github.io/geneSetSimplifyR/>. The vignette
+walks through the whole workflow, from fgsea results to renaming clusters:
+[Get started](https://isoformanalysisgroup.github.io/geneSetSimplifyR/articles/geneSetSimplifyR.html).
+
+GitHub installs skip the vignette by default. To also read it offline in R,
+install with `build_vignettes = TRUE`. This needs a few extra packages and
+[pandoc](https://pandoc.org/installing.html), which comes with RStudio:
 
 ```r
+BiocManager::install(c("knitr", "rmarkdown", "BiocStyle"))
+BiocManager::install(
+  "IsoformAnalysisGroup/geneSetSimplifyR",
+  build_vignettes = TRUE,
+  force = TRUE # reinstall if the package is already installed
+)
 vignette("geneSetSimplifyR", package = "geneSetSimplifyR")
 ```
 
