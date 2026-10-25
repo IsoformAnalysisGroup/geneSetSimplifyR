@@ -1,0 +1,201 @@
+# geneSetSimplifyR
+
+Gene-set enrichment analysis often returns hundreds or thousands of
+significant gene sets, far too many to read one by one.
+`geneSetSimplifyR` groups them into a small number of clusters of
+overlapping gene sets and gives each cluster an informative two-word
+label.
+
+- **Clustering.** Gene sets are compared by the genes they share, using
+  latent semantic indexing and a shared nearest neighbor graph. Several
+  community-detection methods are available, and you can plug in your
+  own.
+- **Labeling.** Each cluster is named after the word pair that best
+  describes its gene-set names (TF-IDF weighted by how central the gene
+  set is).
+- **Visualization.** UMAP, bar chart, lollipop, violin, heatmap,
+  dendrogram and clustering-tree plots, with support for results from
+  several conditions or analyses.
+
+It works on the output of any enrichment tool, with helpers for
+[fgsea](https://bioconductor.org/packages/fgsea/) and pairedGSEA
+results.
+
+## Installation
+
+``` r
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+BiocManager::install("remotes") # needed to install from GitHub
+BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
+```
+
+`BiocManager` installs the dependencies from both CRAN and Bioconductor.
+
+### Platform notes
+
+- **Linux:** igraph needs the GLPK library. On Debian/Ubuntu, run
+  `sudo apt-get install libglpk40` first. For other missing system
+  libraries, `pak::pkg_install("IsoformAnalysisGroup/geneSetSimplifyR")`
+  installs the package together with the system libraries it needs.
+- **macOS:** if installation stops with
+  `ERROR: sub-architecture '...' is not installed`, add
+  `INSTALL_opts = "--no-multiarch"` to the
+  [`BiocManager::install()`](https://bioconductor.github.io/BiocManager/reference/install.html)
+  call.
+
+## Quick start
+
+``` r
+
+library(geneSetSimplifyR)
+
+# A named list of gene sets and, optionally, a table of enrichment results
+# with the columns 'pathway', 'enrichment_score' (or 'NES'), and optionally
+# 'pval' and 'source'.
+gsList <- geneSetSimplifyR(
+  geneSetsList = exampleGeneSets,
+  geneSetsDF = exampleEnrichment
+)
+
+gsList
+plotUMAP(gsList)
+plotEnrichments(gsList)
+
+# One row per gene set with its cluster label, for supplementary tables
+extractTable(gsList, summarize = FALSE)
+```
+
+## Documentation
+
+The full documentation, including the vignette and all help pages, is
+online at <https://isoformanalysisgroup.github.io/geneSetSimplifyR/>.
+The vignette walks through the whole workflow, from fgsea results to
+renaming clusters: [Get
+started](https://isoformanalysisgroup.github.io/geneSetSimplifyR/articles/geneSetSimplifyR.html).
+
+GitHub installs skip the vignette by default. To also read it offline in
+R, install with `build_vignettes = TRUE`. This needs a few extra
+packages and [pandoc](https://pandoc.org/installing.html), which comes
+with RStudio:
+
+``` r
+
+BiocManager::install(c("knitr", "rmarkdown", "BiocStyle"))
+BiocManager::install(
+  "IsoformAnalysisGroup/geneSetSimplifyR",
+  build_vignettes = TRUE,
+  force = TRUE # reinstall if the package is already installed
+)
+vignette("geneSetSimplifyR", package = "geneSetSimplifyR")
+```
+
+Report bugs and questions at
+<https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues>.
+
+# Package index
+
+## Workflow
+
+Cluster and label gene sets.
+
+- [`geneSetSimplifyR()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/geneSetSimplifyR.md)
+  : Run the geneSetSimplifyR workflow
+- [`initializeList()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/initializeList.md)
+  : Initialize gene sets list
+- [`clusterGeneSets()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/clusterGeneSets.md)
+  : Cluster gene sets
+- [`labelClusters()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/labelClusters.md)
+  : Label clusters in clustered gene sets list object
+
+## Visualization
+
+- [`plotBarchart()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotBarchart.md)
+  : Plot clusters as a bar chart
+- [`plotClusterLabels()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotClusterLabels.md)
+  : Plot label information for a particular cluster
+- [`plotClustree()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotClustree.md)
+  : Plot cluster tree
+- [`plotDendrogram()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotDendrogram.md)
+  : Plot dendrogram of cluster averages
+- [`plotEnrichments()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotEnrichments.md)
+  : Plot enrichment as lollipop plot
+- [`plotHeatmap()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotHeatmap.md)
+  : Plot enrichment as heatmap
+- [`plotProportions()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotProportions.md)
+  : Plot proportions of gene sets in each cluster for each source
+- [`plotUMAP()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotUMAP.md)
+  : Scatter plot of UMAP dimensionality reduction
+- [`plotViolin()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/plotViolin.md)
+  : Violin plot of clustering
+
+## Results and resolution
+
+- [`extractTable()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/extractTable.md)
+  : Extract summary table of clustering
+- [`extractResolution()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/extractResolution.md)
+  : Extract the resolution currently used by default
+- [`updateResolution()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/updateResolution.md)
+  : Update default resolution of gsList
+- [`updateClusterLabels()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/updateClusterLabels.md)
+  : Rename a cluster
+- [`normalizeClusterLevels()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/normalizeClusterLevels.md)
+  : Normalize cluster factor level order in a clustered gsList
+
+## Input helpers
+
+Convert enrichment results and fetch gene sets.
+
+- [`parseFgsea()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/parseFgsea.md)
+  : Parse fgsea results into geneSetSimplifyR input
+- [`parsePairedGSEA()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/parsePairedGSEA.md)
+  : Parse pairedGSEA results into geneSetSimplifyR input
+- [`getGeneSets()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/getGeneSets.md)
+  : Fetch MSigDB gene sets by pathway name
+
+## Clustering methods
+
+Use or add community-detection methods for the SNN graph.
+
+- [`listClusterMethods()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/listClusterMethods.md)
+  : List the available clustering methods
+
+- [`getClusterMethod()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/getClusterMethod.md)
+  : Resolve a clustering method specification
+
+- [`clusterMethod()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/clusterMethod.md)
+  :
+
+  Define a clustering method for
+  [`clusterGeneSets()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/clusterGeneSets.md)
+
+- [`registerClusterMethod()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/registerClusterMethod.md)
+  : Register a clustering method for use by name
+
+- [`snnToIgraph()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/snnToIgraph.md)
+  : Convert an SNN graph to an igraph object
+
+- [`snnToMatrix()`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/snnToMatrix.md)
+  : Convert an SNN graph to a dense similarity matrix
+
+## Classes and data
+
+- [`show(`*`<gsList>`*`)`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/gsList-class.md)
+  : The gsList class
+- [`exampleGeneSets`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/exampleGeneSets.md)
+  : Example Gene Sets
+- [`exampleEnrichment`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/exampleEnrichment.md)
+  : Example Enrichment Results
+- [`exampleGsList`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/exampleGsList.md)
+  : Example clustered and labeled gene sets
+- [`stopWords`](https://isoformanalysisgroup.github.io/geneSetSimplifyR/reference/stopWords.md)
+  : Stop Words
+
+# Articles
+
+### Get started
+
+- [Vignette for
+  geneSetSimplifyR](https://isoformanalysisgroup.github.io/geneSetSimplifyR/articles/geneSetSimplifyR.md):
