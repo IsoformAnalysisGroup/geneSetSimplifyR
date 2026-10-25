@@ -1,0 +1,55 @@
+url: https://isoformanalysisgroup.github.io/geneSetSimplifyR/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, news]
+    right: [search, github]
+
+articles:
+  - title: Get started
+    contents:
+      - geneSetSimplifyR
+
+reference:
+  - title: Workflow
+    desc: Cluster and label gene sets.
+    contents:
+      - geneSetSimplifyR
+      - initializeList
+      - clusterGeneSets
+      - labelClusters
+  - title: Visualization
+    contents:
+      - starts_with("plot")
+  - title: Results and resolution
+    contents:
+      - extractTable
+      - extractResolution
+      - updateResolution
+      - updateClusterLabels
+      - normalizeClusterLevels
+  - title: Input helpers
+    desc: Convert enrichment results and fetch gene sets.
+    contents:
+      - parseFgsea
+      - parsePairedGSEA
+      - getGeneSets
+  - title: Clustering methods
+    desc: Use or add community-detection methods for the SNN graph.
+    contents:
+      - listClusterMethods
+      - getClusterMethod
+      - clusterMethod
+      - registerClusterMethod
+      - snnToIgraph
+      - snnToMatrix
+  - title: Classes and data
+    contents:
+      - gsList-class
+      - exampleGeneSets
+      - exampleEnrichment
+      - exampleGsList
+      - stopWords

@@ -45,8 +45,11 @@ That is why we created `geneSetSimplifyR`. `geneSetSimplifyR` solves this proble
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
+BiocManager::install("remotes") # needed to install from GitHub
 BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 ```
+
+This vignette is also available online at <https://isoformanalysisgroup.github.io/geneSetSimplifyR/>.
 
 # geneSetSimplifyR workflow
 

@@ -34,7 +34,8 @@ Encoding: UTF-8
 Language: en-US
 LazyData: true
 LazyDataCompression: xz
-URL: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR
+URL: https://isoformanalysisgroup.github.io/geneSetSimplifyR/,
+    https://github.com/IsoformAnalysisGroup/geneSetSimplifyR
 BugReports: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues
 biocViews: Software, GeneSetEnrichment, Pathways, Clustering,
     DimensionReduction, Visualization

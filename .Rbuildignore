@@ -22,3 +22,6 @@
 ^.*\.Rcheck$
 ^geneSetSimplifyR_.*\.tar\.gz$
 ^geneSetSimplifyR\.BiocCheck$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
