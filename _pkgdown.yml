@@ -43,6 +43,7 @@ reference:
       - getClusterMethod
       - clusterMethod
       - registerClusterMethod
+      - getSNN
       - snnToIgraph
       - snnToMatrix
   - title: Classes and data

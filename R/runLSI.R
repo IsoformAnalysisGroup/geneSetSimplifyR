@@ -114,12 +114,14 @@ truncatedSVD <- function(A, n, verbose = TRUE) {
     ### that as a failure so the fallback runs, and drop other warnings.
     result <- tryCatch(
         withCallingHandlers(
-            # irlba draws a random start vector; keep the user's RNG stream intact
+            # irlba draws a random start vector; keep the user's RNG stream
+            # intact
             withr::with_preserve_seed(
                 irlba::irlba(A = A, nv = n, work = n * 3, tol = 1e-05)
             ),
             warning = function(w) {
-                if (grepl("converge", conditionMessage(w), ignore.case = TRUE)) {
+                if (grepl("converge", conditionMessage(w),
+                    ignore.case = TRUE)) {
                     stop(conditionMessage(w), call. = FALSE)
                 }
                 invokeRestart("muffleWarning")
@@ -134,7 +136,8 @@ truncatedSVD <- function(A, n, verbose = TRUE) {
     if (requireNamespace("RSpectra", quietly = TRUE)) {
         if (verbose) {
             message(
-                "The LSI did not converge with irlba (", conditionMessage(result),
+                "The LSI did not converge with irlba (",
+                conditionMessage(result),
                 "); retrying with RSpectra::svds()..."
             )
         }
@@ -144,8 +147,8 @@ truncatedSVD <- function(A, n, verbose = TRUE) {
     if (verbose) {
         message(
             "The LSI did not converge with irlba (", conditionMessage(result),
-            "); computing a full SVD instead. Installing the 'RSpectra' package ",
-            "makes this fallback faster for large inputs."
+            "); computing a full SVD instead. Installing the 'RSpectra' ",
+            "package makes this fallback faster for large inputs."
         )
     }
     denseSVD(A, n)
@@ -175,17 +178,20 @@ svdsWithRetries <- function(A, n, verbose = TRUE) {
     lastError <- NULL
     for (i in seq_along(ncvSteps)) {
         if (verbose) {
-            message(sprintf(
-                "Running RSpectra::svds() with ncv = %d, maxitr = %d (attempt %d/%d)...",
-                ncvSteps[i], maxitrSteps[i], i, length(ncvSteps)
-            ))
+            message(
+                "Running RSpectra::svds() with ncv = ", ncvSteps[i],
+                ", maxitr = ", maxitrSteps[i],
+                " (attempt ", i, "/", length(ncvSteps), ")..."
+            )
         }
 
         components <- tryCatch(
             RSpectra::svds(
                 A = A,
                 k = n,
-                opts = list(tol = 1e-5, ncv = ncvSteps[i], maxitr = maxitrSteps[i])
+                opts = list(
+                    tol = 1e-5, ncv = ncvSteps[i], maxitr = maxitrSteps[i]
+                )
             ),
             error = function(e) e
         )
@@ -197,7 +203,8 @@ svdsWithRetries <- function(A, n, verbose = TRUE) {
     }
 
     stop(
-        "The SVD failed to converge after ", length(ncvSteps), " attempts with ",
-        "increasing 'ncv' and 'maxitr': ", conditionMessage(lastError)
+        "The SVD failed to converge after ", length(ncvSteps),
+        " attempts with increasing 'ncv' and 'maxitr': ",
+        conditionMessage(lastError)
     )
 }

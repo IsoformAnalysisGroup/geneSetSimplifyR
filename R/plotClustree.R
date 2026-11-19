@@ -12,12 +12,14 @@
 #' minimum and maximum point size of nodes, respectively
 #' @param edge_width Numeric value indicating the width of plotted edges
 #' @param node_text_angle Numeric value indicating the rotation of node labels
-#' @param resolutionsToPlot Resolutions to include in plot. Use NULL to plot all. Default is NULL
+#' @param resolutionsToPlot Resolutions to include in plot. Use NULL to plot
+#'   all. Default is NULL
 #'
 #' @return A ggplot2 object
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotClustree(exampleGsList)
 plotClustree <- function(
     geneSetsList,
@@ -37,8 +39,9 @@ plotClustree <- function(
 
         if(! all(resolutionsToUse %in% resolutions)) {
             stop(
-                "All 'resolutionsToPlot' must be among the resolutions analyzed: ",
-                paste(sub("^GSEA_snn_res\\.", "", resolutions), collapse = ", "), "."
+                "All 'resolutionsToPlot' must be among the resolutions ",
+                "analyzed: ",
+                toString(sub("^GSEA_snn_res\\.", "", resolutions)), "."
             )
         }
 
@@ -60,7 +63,8 @@ plotClustree <- function(
             dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
             dplyr::select(cluster, label)
 
-        ### Match labels to levels by cluster id; level order need not be numeric
+        ### Match labels to levels by cluster id; level order need not be
+        ### numeric
         clusterFactor <- geneSetsList@cluster@meta.data[[resolution]]
         matchedLabels <- labelMap$label[
             match(as.character(levels(clusterFactor)),

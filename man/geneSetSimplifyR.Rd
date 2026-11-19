@@ -19,23 +19,27 @@ geneSetSimplifyR(
 )
 }
 \arguments{
-\item{geneSetsList}{A list containing the gene sets to be analyzed.
-The name of each element in the list should be a gene set and each element should contain
-the genes belonging to that gene set. Alternatively, the path to a GMT file
-with the gene sets.}
+\item{geneSetsList}{A list containing the gene sets to be analyzed. The name
+of each element in the list should be a gene set and each element should
+contain the genes belonging to that gene set. Alternatively, the path to a
+GMT file with the gene sets.}
 
-\item{geneSetsDF}{Optional data.frame with gene sets and enrichment scores that can be useful
-for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
-Should have a column named 'pathway' containing the gene sets and a column
-named 'enrichment_score' (or 'NES') with the enrichment scores from GSEA analysis for each gene set.
-Optionally have a column named 'pval' (or 'pvalue') with the p-value of each gene set, and
-a column named 'source' indicating the source of each gene set. This allows for
-analysis of multi-conditional data throughout the entire workflow and is also supported by many
-plotting functions. See \code{\link{initializeList}} and the vignette for more info.}
+\item{geneSetsDF}{Optional data.frame with gene sets and enrichment scores
+that can be useful for downstream visualization (both for effect size and
+direction and if multiple conditions are analyzed). Should have a column
+named 'pathway' containing the gene sets and a column named
+'enrichment_score' (or 'NES') with the enrichment scores from GSEA analysis
+for each gene set. Optionally have a column named 'pval' (or 'pvalue') with
+the p-value of each gene set, and a column named 'source' indicating the
+source of each gene set. This allows for analysis of multi-conditional data
+throughout the entire workflow and is also supported by many plotting
+functions. See \code{\link{initializeList}} and the vignette for more info.}
 
-\item{resolution}{Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.}
+\item{resolution}{Vector with the desired clustering resolutions to use.
+Higher number usually results in more clusters.}
 
-\item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
+\item{verbose}{a logic indicating whether to print progress statements.
+Defaults to TRUE.}
 
 \item{cluster_algo}{Clustering method applied to the SNN graph, passed to
 \code{clusterGeneSets()}. Either the name of a registered method (see
@@ -45,17 +49,18 @@ plotting functions. See \code{\link{initializeList}} and the vignette for more i
 \item{clusterArgs}{Named list of extra arguments passed on to the clustering
 method.}
 
-\item{elbow_method}{Method passed to \code{clusterGeneSets()} for selecting the
-number of LSI dimensions. Options: 'distance'(default), 'zscore'.}
+\item{elbow_method}{Method passed to \code{clusterGeneSets()} for selecting
+the number of LSI dimensions. Options: 'distance'(default), 'zscore'.}
 
 \item{K}{Number of nearest neighbors for the KNN graph, passed to
 \code{clusterGeneSets()}. \code{NA} (default) uses \code{round(sqrt(N))} for \code{N}
 gene sets.}
 
-\item{removeFirstWord}{Logical. If TRUE, strip the first word (everything before
-the first underscore) from each gene-set name before generating cluster labels.
-Useful for MSigDB-style names where the first token is an author or database
-prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
+\item{removeFirstWord}{Logical. If TRUE, strip the first word (everything
+before the first underscore) from each gene-set name before generating
+cluster labels. Useful for MSigDB-style names where the first token is an
+author or database prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default:
+FALSE.}
 
 \item{stopWords}{Words ignored when labeling clusters, passed to
 \code{labelClusters()}. Defaults to the shipped \code{\link{stopWords}}.}
@@ -70,10 +75,12 @@ prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
 Wrapper function that runs the three core functions of
 the 'geneSetSimplifyR' workflow with default parameters.
 
-To read more about the individual functions see their corresponding help pages:
-\code{\link{initializeList}}, \code{\link{clusterGeneSets}}, \code{\link{labelClusters}}
+To read more about the individual functions see their corresponding help
+pages: \code{\link{initializeList}}, \code{\link{clusterGeneSets}},
+\code{\link{labelClusters}}
 }
 \examples{
+data(exampleGeneSets, exampleEnrichment)
 gsListObject <- geneSetSimplifyR(
     geneSetsList = exampleGeneSets,
     geneSetsDF = exampleEnrichment,

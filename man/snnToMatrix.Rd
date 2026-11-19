@@ -24,7 +24,8 @@ matrix with values in \verb{[0, 1]}; this simply densifies it and keeps the gene
 set names as dimnames.
 }
 \examples{
-simMat <- snnToMatrix(exampleGsList@cluster@graphs$GSEA_snn)
+data(exampleGsList)
+simMat <- snnToMatrix(getSNN(exampleGsList))
 simMat[1:3, 1:3]
 }
 \seealso{

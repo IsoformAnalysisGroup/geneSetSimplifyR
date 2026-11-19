@@ -28,7 +28,9 @@ test_that("arguments are validated", {
     expect_error(clusterGeneSets(g, K = 1, verbose = FALSE), "'K'")
     expect_error(clusterGeneSets(g, K = 60, verbose = FALSE), "'K'")
     expect_error(clusterGeneSets(g, K = NULL, verbose = FALSE), "'K'")
-    expect_error(clusterGeneSets(g, resolution = -1, verbose = FALSE), "positive")
+    expect_error(
+        clusterGeneSets(g, resolution = -1, verbose = FALSE), "positive"
+    )
     expect_error(
         clusterGeneSets(g, clusterArgs = list(resolution = 1), verbose = FALSE),
         "cannot contain"
@@ -94,7 +96,9 @@ test_that("fewer genes than gene sets can be clustered", {
     sets <- lapply(1:60, function(i) sample(genes, sample(3:6, 1)))
     names(sets) <- paste0("SET_", 1:60)
     g <- initializeList(sets, verbose = FALSE)
-    expect_s4_class(clusterGeneSets(g, resolution = 1, verbose = FALSE), "gsList")
+    expect_s4_class(
+        clusterGeneSets(g, resolution = 1, verbose = FALSE), "gsList"
+    )
 })
 
 test_that("the truncated SVD does not change the session's random numbers", {

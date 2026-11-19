@@ -9,13 +9,16 @@
 #' @param resolution The cluster resolution to plot. Default `NULL` uses the
 #'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
 #'   the one last set with `updateResolution()` or `updateClusterLabels()`.
-#' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.
+#' @param removeClusterId Logical, if TRUE the cluster number will be removed
+#'   from each cluster label. Default: FALSE.
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters
+#'   (at the resolution) to highlight (in bold) in the plot.
 #'
 #' @return A ggplot object.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotProportions(exampleGsList)
 plotProportions <- function(
     geneSetsList,
@@ -28,8 +31,9 @@ plotProportions <- function(
     nCond <- countConditions(geneSetsList)
     if( nCond == '1' ) {
         stop(
-            "plotProportions() compares sources and needs gene sets from at least ",
-            "two sources (the 'source' column of 'geneSetsDF' in 'initializeList()')."
+            "plotProportions() compares sources and needs gene sets from at ",
+            "least two sources (the 'source' column of 'geneSetsDF' in ",
+            "'initializeList()')."
         )
     }
 
@@ -48,7 +52,9 @@ plotProportions <- function(
 
     clusterIdents <- geneSetsList@cluster@active.ident
     df <- geneSetsList@enrichmentScore
-    df$cluster <- as.character(clusterIdents[match(df$pathway, names(clusterIdents))])
+    df$cluster <- as.character(
+        clusterIdents[match(df$pathway, names(clusterIdents))]
+    )
 
     groupSize <-
         df %>%
@@ -112,7 +118,11 @@ plotProportions <- function(
         ggplot(aes(x = cluster, fill = source)) +
         geom_bar(position = "fill") +
         scale_fill_manual(values = sourceColors(df$source)) +
-        labs(y = "Fraction of Gene Sets", x = "Gene Set Cluster", fill = "Gene set source") +
+        labs(
+            y = "Fraction of Gene Sets",
+            x = "Gene Set Cluster",
+            fill = "Gene set source"
+        ) +
         theme_bw() +
         theme(
             panel.grid.major = element_blank(),

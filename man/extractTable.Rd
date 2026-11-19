@@ -38,6 +38,7 @@ changed with \code{updateClusterLabels()}, the original label is given in
 Extract summary table of clustering
 }
 \examples{
+data(exampleGsList)
 extractTable(exampleGsList)
 head(extractTable(exampleGsList, resolution = 0.6, summarize = FALSE))
 }

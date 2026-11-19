@@ -18,9 +18,11 @@ plotBarchart(
 active resolution: the optimal resolution found by \code{clusterGeneSets()}, or
 the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.}
 
-\item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
+\item{removeClusterId}{Logical, if TRUE the cluster number will be removed
+from each cluster label. Default: FALSE.}
 
-\item{highlightClusterNo}{A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.}
+\item{highlightClusterNo}{A vector with the cluster numbers of the clusters
+(at the resolution) to highlight (in bold) in the plot.}
 }
 \value{
 A ggplot object.
@@ -30,6 +32,7 @@ Creates a bar chart showing the number of gene sets in each
 cluster, per source when there are several.
 }
 \examples{
+data(exampleGsList)
 plotBarchart(exampleGsList)
 plotBarchart(exampleGsList, resolution = 0.6, highlightClusterNo = 1)
 }

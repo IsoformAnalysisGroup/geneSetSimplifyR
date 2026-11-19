@@ -12,6 +12,8 @@ if (!"geneSetSimplifyR" %in% loadedNamespaces()) {
     library(geneSetSimplifyR)
 }
 
+data(exampleGeneSets, exampleEnrichment)
+
 set.seed(42)
 exampleGsList <- geneSetSimplifyR(
     geneSetsList = exampleGeneSets,
@@ -24,7 +26,8 @@ exampleGsList <- geneSetSimplifyR(
 
 ## Keep the shipped object small: the LSI feature loadings and the raw SVD
 ## output are not used by any function of the package.
-exampleGsList@cluster@reductions$lsi@feature.loadings <- matrix(numeric(0), 0, 0)
+exampleGsList@cluster@reductions$lsi@feature.loadings <-
+    matrix(numeric(0), 0, 0)
 exampleGsList@cluster@reductions$lsi@misc <- list()
 
 save(

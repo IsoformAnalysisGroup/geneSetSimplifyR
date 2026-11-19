@@ -15,9 +15,11 @@ clusterGeneSets(
 )
 }
 \arguments{
-\item{geneSetsList}{'gsList' object created with the 'initializeList()' function.}
+\item{geneSetsList}{'gsList' object created with the 'initializeList()'
+function.}
 
-\item{resolution}{Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.}
+\item{resolution}{Vector with the desired clustering resolutions to use.
+Higher number usually results in more clusters.}
 
 \item{algorithm}{Clustering method applied to the SNN graph. Either the name
 of a registered method (see \code{\link[=listClusterMethods]{listClusterMethods()}}; e.g. 'louvain',
@@ -42,12 +44,13 @@ the number of gene sets. Must be smaller than \code{N}.}
 \item{elbow_method}{Method for choosing the number of LSI dimensions from
 the scree curve: 'distance' (default) or 'zscore'. See the Details.}
 
-\item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
+\item{verbose}{a logic indicating whether to print progress statements.
+Defaults to TRUE.}
 }
 \value{
 'gsList' object with clustering stored. The best resolution (highest
-silhouette score) is annotated and used throughout the rest of the workflow (unless
-specified in subsequent functions).
+silhouette score) is annotated and used throughout the rest of the
+workflow (unless specified in subsequent functions).
 }
 \description{
 Cluster gene sets
@@ -63,6 +66,7 @@ Re-clustering an object removes its existing labels, so run
 \code{labelClusters()} again afterwards.
 }
 \examples{
+data(exampleGeneSets, exampleEnrichment)
 geneSetsList <- initializeList(
     geneSetsList = exampleGeneSets,
     geneSetsDF = exampleEnrichment,

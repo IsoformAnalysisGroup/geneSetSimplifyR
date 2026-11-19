@@ -2,6 +2,11 @@
 ## objects with one or three sources are derived from the shipped example by
 ## editing its enrichment table.
 
+data(
+    exampleGsList, exampleGeneSets, exampleEnrichment,
+    package = "geneSetSimplifyR", envir = environment()
+)
+
 smallInput <- function(n = 60) {
     sets <- exampleGeneSets[seq_len(n)]
     df <- as.data.frame(exampleEnrichment)

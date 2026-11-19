@@ -41,6 +41,7 @@ optional -- a \code{gsClusterMethod} (or a bare function) can also be passed
 straight to \code{clusterGeneSets()}.
 }
 \examples{
+data(exampleGeneSets, exampleEnrichment)
 registerClusterMethod(
     "leiden_cpm",
     function(snn, resolution, verbose = FALSE, ...) {

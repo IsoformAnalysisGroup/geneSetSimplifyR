@@ -93,8 +93,8 @@ kvsElbow <- function(
         perp <- vecFromP1 - outer(proj, chord)
         dist <- sqrt(rowSums(perp^2))
 
-        ### +1 maps the index back to the original numbering (LSI_1 was dropped),
-        ### so the downstream `dims = 2:elbow_cutoff` still lines up.
+        ### +1 maps the index back to the original numbering (LSI_1 was
+        ### dropped), so the downstream `dims = 2:elbow_cutoff` still lines up.
         cutoffIndex <- max(which.max(dist) + 1L, 2L)
     }
 

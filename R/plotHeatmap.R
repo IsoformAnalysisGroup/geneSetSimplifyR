@@ -7,13 +7,28 @@
 #' @param resolution The cluster resolution to plot. Default `NULL` uses the
 #'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
 #'   the one last set with `updateResolution()` or `updateClusterLabels()`.
-#' @param plotFrom Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used (the default therefore falls back to 'enrichment_score' when no p-values were supplied).
-#' @param summaryStat How the values of the gene sets within a cluster are summarized into the value shown in each heatmap cell. One of 'median' (default), 'max' or 'mean'. Note that 'max' is the largest signed value, so for signed scores (e.g. NES) a strongly negative cluster will be summarized by its least negative gene set.
-#' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.
-#' @param transpose A logical indicating whether to transpose the heatmap (switch rows and cols)
-#' @param cutree_rows pheatmap control parameter. Number of clusters the rows are divided into
-#' @param cutree_cols pheatmap control parameter. Number of clusters the columns are divided into
+#' @param plotFrom Name of the column of the 'enrichmentScore' slot to
+#'   visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns
+#'   that are annotated (i.e. not all NA) can be plotted - which columns are
+#'   available depends on what was supplied to 'geneSetsDF' in
+#'   'initializeList()'. Only one column is plotted; if several are supplied the
+#'   first plottable one is used (the default therefore falls back to
+#'   'enrichment_score' when no p-values were supplied).
+#' @param summaryStat How the values of the gene sets within a cluster are
+#'   summarized into the value shown in each heatmap cell. One of 'median'
+#'   (default), 'max' or 'mean'. Note that 'max' is the largest signed value, so
+#'   for signed scores (e.g. NES) a strongly negative cluster will be summarized
+#'   by its least negative gene set.
+#' @param removeClusterId Logical, if TRUE the cluster number will be removed
+#'   from each cluster label. Default: FALSE.
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters
+#'   (at the resolution) to highlight (in bold) in the plot.
+#' @param transpose A logical indicating whether to transpose the heatmap
+#'   (switch rows and cols)
+#' @param cutree_rows pheatmap control parameter. Number of clusters the rows
+#'   are divided into
+#' @param cutree_cols pheatmap control parameter. Number of clusters the columns
+#'   are divided into
 #' @param drawPlot Whether to draw the plot. Default to TRUE.
 #' @param scaleCols Whether to z-score each cluster across the sources before
 #'   plotting. One of `"auto"` (default), `TRUE` or `FALSE`. `"auto"` scales
@@ -30,8 +45,13 @@
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotHeatmap(exampleGsList)
-#' plotHeatmap(exampleGsList, plotFrom = 'enrichment_score', summaryStat = 'mean')
+#' plotHeatmap(
+#'     exampleGsList,
+#'     plotFrom = 'enrichment_score',
+#'     summaryStat = 'mean'
+#' )
 plotHeatmap <- function(
     geneSetsList,
     resolution = NULL,
@@ -85,7 +105,10 @@ plotHeatmap <- function(
     plotMatrix <-
         plotData %>%
         dplyr::select(source, cluster, enrichmentSummary) %>%
-        tidyr::pivot_wider(names_from = cluster, values_from = enrichmentSummary) %>%
+        tidyr::pivot_wider(
+            names_from = cluster,
+            values_from = enrichmentSummary
+        ) %>%
         as.data.frame() %>%
         tibble::column_to_rownames('source') %>%
         as.matrix()
@@ -108,7 +131,8 @@ plotHeatmap <- function(
         plotMatrix <- t(plotMatrix)
     }
 
-    ### Cluster on a copy with absent cells as 0, so the heatmap shows them as NA
+    ### Cluster on a copy with absent cells as 0, so the heatmap shows them as
+    ### NA
     clusteringMatrix <- plotMatrix
     clusteringMatrix[is.na(clusteringMatrix)] <- 0
     doHCluster <- countConditions(geneSetsList) != '1'
@@ -122,11 +146,13 @@ plotHeatmap <- function(
     }
 
     if(any(!is.na(plotMatrix) & plotMatrix < 0)) {
-        # Signed values (e.g. NES, z-scores) get a diverging palette centered on 0
+        # Signed values (e.g. NES, z-scores) get a diverging palette centered
+        # on 0
         myColors <- colorRampPalette(c('royalblue','white',"#e34632"))( 100 )
         breakRange <- c(-1, 1) * max(abs(plotMatrix), na.rm = TRUE)
     } else {
-        # Non-negative values (e.g. unscaled nlog10pval) get a sequential palette
+        # Non-negative values (e.g. unscaled nlog10pval) get a sequential
+        # palette
         myColors <- colorRampPalette(c('white',"black"))( 100 )
         breakRange <- range(plotMatrix, na.rm = TRUE)
     }

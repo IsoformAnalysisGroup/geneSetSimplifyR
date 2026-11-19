@@ -7,7 +7,8 @@
 extractResolution(geneSetsList)
 }
 \arguments{
-\item{geneSetsList}{'gsList' object that has been clustered with the 'clusterGeneSets()' function.}
+\item{geneSetsList}{'gsList' object that has been clustered with the
+'clusterGeneSets()' function.}
 }
 \value{
 The default resolution, as a number.
@@ -19,5 +20,6 @@ resolution found by \code{clusterGeneSets()}, unless it was changed with
 \code{updateResolution()} or \code{updateClusterLabels(resolution = ...)}.
 }
 \examples{
+data(exampleGsList)
 extractResolution(exampleGsList)
 }

@@ -2,9 +2,9 @@
 #'
 #' A 'gsList' object made with `geneSetSimplifyR(exampleGeneSets,
 #' exampleEnrichment, removeFirstWord = TRUE)`: 197 gene sets from 2 sources
-#' ("Expression" and "Splicing") clustered at 10 resolutions. Use it to try the plotting and
-#' table functions without running the workflow. The script that creates it is
-#' in `inst/scripts/make-exampleGsList.R`.
+#' ("Expression" and "Splicing") clustered at 10 resolutions. Use it to try the
+#' plotting and table functions without running the workflow. The script that
+#' creates it is in `inst/scripts/make-exampleGsList.R`.
 #'
 #' @format A 'gsList' object (see [gsList-class]).
 #' @source Made from `exampleGeneSets` and `exampleEnrichment`.
@@ -61,8 +61,16 @@
 #'   MSigDB gene-set names, author names that start MSigDB gene-set names, and
 #'   other short fragments of gene-set names (e.g. "a5p4", "2").
 #' @source Curated by the package authors.
+#' @export
 #' @examples
 #' head(stopWords)
 #' # Add your own stop words
 #' myStopWords <- c(stopWords, "regulation", "response")
-"stopWords"
+stopWords <- c(
+    "gobp", "gomf", "hp", "gocc", "kegg", "gcnp", "reactome", "of", "to",
+    "from", "by", "at", "in", "for", "with", "via", "into", "and", "or", "on",
+    "up", "dn", "vs", "browne", "winter", "shepard", "baelde", "benporath",
+    "blanco", "melo", "ginestier", "bertucci", "zhou", "mueller", "wp",
+    "along", "a5p4", "amit", "d", "2", "turashvili", "rutella", "krige",
+    "biocarta", "delys", "baris", "boylan", "the"
+)

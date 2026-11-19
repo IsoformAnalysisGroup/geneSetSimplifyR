@@ -19,7 +19,8 @@ sparse symmetric SNN matrix handed to a cluster method into a weighted
 undirected \code{igraph} graph whose vertex names are the gene sets.
 }
 \examples{
-g <- snnToIgraph(exampleGsList@cluster@graphs$GSEA_snn)
+data(exampleGsList)
+g <- snnToIgraph(getSNN(exampleGsList))
 g
 }
 \seealso{

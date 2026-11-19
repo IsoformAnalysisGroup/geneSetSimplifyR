@@ -40,6 +40,7 @@
 #'   [clusterGeneSets()]
 #'
 #' @examples
+#' data(exampleGsList, exampleGeneSets, exampleEnrichment)
 #' # A backend built on igraph's fast-greedy modularity optimization
 #' fastGreedy <- clusterMethod(
 #'     fn = function(snn, resolution, verbose = FALSE, ...) {
@@ -56,7 +57,7 @@
 #' fastGreedy
 #'
 #' # Try it on the SNN graph of the example data
-#' ids <- fastGreedy$fn(exampleGsList@cluster@graphs$GSEA_snn, resolution = 1)
+#' ids <- fastGreedy$fn(getSNN(exampleGsList), resolution = 1)
 #' table(ids)
 #'
 #' # Use it in the workflow
@@ -74,7 +75,8 @@ clusterMethod <- function(
     if (!is.function(fn)) {
         stop("'fn' should be a function.")
     }
-    if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
+    if (!is.character(name) || length(name) != 1L || is.na(name) ||
+        !nzchar(name)) {
         stop("'name' should be a single non-empty string.")
     }
     if (length(formals(fn)) < 2L && !"..." %in% names(formals(fn))) {
@@ -103,7 +105,7 @@ print.gsClusterMethod <- function(x, ...) {
         cat("  ", x$description, "\n", sep = "")
     }
     if (length(x$packages)) {
-        cat("  requires: ", paste(x$packages, collapse = ", "), "\n", sep = "")
+        cat("  requires: ", toString(x$packages), "\n", sep = "")
     }
     if (!isTRUE(x$usesResolution)) {
         cat("  picks the number of clusters itself (resolution is ignored)\n")
@@ -137,6 +139,7 @@ print.gsClusterMethod <- function(x, ...) {
 #' @seealso [clusterMethod()], [listClusterMethods()]
 #'
 #' @examples
+#' data(exampleGeneSets, exampleEnrichment)
 #' registerClusterMethod(
 #'     "leiden_cpm",
 #'     function(snn, resolution, verbose = FALSE, ...) {
@@ -166,10 +169,12 @@ registerClusterMethod <- function(
     usesResolution = TRUE,
     overwrite = FALSE
     ) {
-    if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
+    if (!is.character(name) || length(name) != 1L || is.na(name) ||
+        !nzchar(name)) {
         stop("'name' should be a single non-empty string.")
     }
-    if (!overwrite && exists(name, envir = .clusterMethodRegistry, inherits = FALSE)) {
+    if (!overwrite &&
+        exists(name, envir = .clusterMethodRegistry, inherits = FALSE)) {
         stop(
             "A clustering method named '", name, "' is already registered. ",
             "Use overwrite = TRUE to replace it."
@@ -217,7 +222,7 @@ listClusterMethods <- function() {
         description = vapply(methods_, function(m) m$description, character(1)),
         packages = vapply(
             methods_,
-            function(m) paste(m$packages, collapse = ", "),
+            function(m) toString(m$packages),
             character(1)
         ),
         uses_resolution = vapply(
@@ -255,12 +260,13 @@ getClusterMethod <- function(algorithm) {
     }
 
     if (is.character(algorithm) && length(algorithm) == 1L) {
-        if (exists(algorithm, envir = .clusterMethodRegistry, inherits = FALSE)) {
+        if (exists(algorithm, envir = .clusterMethodRegistry,
+            inherits = FALSE)) {
             return(get(algorithm, envir = .clusterMethodRegistry))
         }
         stop(
             "Unknown clustering method '", algorithm, "'. Valid options: ",
-            paste(sort(ls(envir = .clusterMethodRegistry)), collapse = ", "),
+            toString(sort(ls(envir = .clusterMethodRegistry))),
             ". You can add your own with registerClusterMethod()."
         )
     }
@@ -298,7 +304,7 @@ runClusterMethod <- function(
     if (length(missingPkgs)) {
         stop(
             "Clustering method '", method$name, "' requires the package(s): ",
-            paste(missingPkgs, collapse = ", "), ". Please install them."
+            toString(missingPkgs), ". Please install them."
         )
     }
 
@@ -330,8 +336,8 @@ runClusterMethod <- function(
     if (is.null(ids) || length(ids) != ncol(snn)) {
         stop(
             "Clustering method '", method$name, "' returned ",
-            if (is.null(ids)) "NULL" else paste(length(ids), "cluster ids"),
-            "; expected ", ncol(snn), " (one per gene set)."
+            length(ids), " cluster ids; expected ", ncol(snn),
+            " (one per gene set)."
         )
     }
 
@@ -340,7 +346,8 @@ runClusterMethod <- function(
     if (!is.null(idNames) && any(idNames %in% colnames(snn))) {
         if (anyDuplicated(idNames) || !setequal(idNames, colnames(snn))) {
             stop(
-                "Clustering method '", method$name, "' returned names that do not ",
+                "Clustering method '", method$name,
+                "' returned names that do not ",
                 "match the gene sets one-to-one."
             )
         }
@@ -350,7 +357,8 @@ runClusterMethod <- function(
     ids <- as.vector(ids)
     if (is.list(ids)) {
         stop(
-            "Clustering method '", method$name, "' returned a list; expected one ",
+            "Clustering method '", method$name,
+            "' returned a list; expected one ",
             "cluster id per gene set."
         )
     }
@@ -359,6 +367,30 @@ runClusterMethod <- function(
     }
 
     return(unname(ids))
+}
+
+
+#' Get the SNN graph of a clustered gsList
+#'
+#' @description Returns the shared-nearest-neighbor (SNN) graph built by
+#'   `clusterGeneSets()`, in the form a cluster method receives it. Use it to
+#'   try a clustering method outside the workflow.
+#'
+#' @param geneSetsList A 'gsList' object clustered with `clusterGeneSets()`.
+#'
+#' @return The SNN graph: a sparse symmetric matrix (a Seurat `Graph`) with the
+#'   gene sets as rows and columns.
+#' @export
+#'
+#' @seealso [clusterMethod()], [snnToIgraph()], [snnToMatrix()]
+#'
+#' @examples
+#' data(exampleGsList)
+#' snn <- getSNN(exampleGsList)
+#' dim(snn)
+getSNN <- function(geneSetsList) {
+    checkGsList(geneSetsList, needLabels = FALSE)
+    geneSetsList@cluster@graphs$GSEA_snn
 }
 
 
@@ -377,7 +409,8 @@ runClusterMethod <- function(
 #' @seealso [clusterMethod()]
 #'
 #' @examples
-#' g <- snnToIgraph(exampleGsList@cluster@graphs$GSEA_snn)
+#' data(exampleGsList)
+#' g <- snnToIgraph(getSNN(exampleGsList))
 #' g
 snnToIgraph <- function(snn) {
     adjacency <- methods::as(snn, "dgCMatrix")
@@ -416,7 +449,8 @@ snnToIgraph <- function(snn) {
 #' @seealso [clusterMethod()], [snnToIgraph()]
 #'
 #' @examples
-#' simMat <- snnToMatrix(exampleGsList@cluster@graphs$GSEA_snn)
+#' data(exampleGsList)
+#' simMat <- snnToMatrix(getSNN(exampleGsList))
 #' simMat[1:3, 1:3]
 snnToMatrix <- function(snn, warnAbove = 5000) {
     n <- ncol(snn)
@@ -451,9 +485,11 @@ seuratBackend <- function(algo) {
             error = function(e) {
                 if (algo == 4) {
                     stop(
-                        conditionMessage(e), " Seurat's Leiden algorithm may need extra ",
-                        "software (the Python package 'leidenalg' for older Seurat ",
-                        "versions). The 'igraph_leiden' method needs no extra software.",
+                        conditionMessage(e),
+                        " Seurat's Leiden algorithm may need extra ",
+                        "software (the Python package 'leidenalg' for older ",
+                        "Seurat versions). The 'igraph_leiden' method needs ",
+                        "no extra software.",
                         call. = FALSE
                     )
                 }
@@ -554,7 +590,9 @@ kmeansBackend <- function(
     withSeed(seed, {
         for (i in seq_along(ks)) {
             km <- suppressWarnings(
-                stats::kmeans(simMatrix, centers = ks[i], iter.max = iterMax, ...)
+                stats::kmeans(
+                    simMatrix, centers = ks[i], iter.max = iterMax, ...
+                )
             )
             clusterings[[i]] <- km$cluster
             wss[i] <- sum(km$withinss)
@@ -564,7 +602,10 @@ kmeansBackend <- function(
     bestK <- min(elbowFinder(ks, wss), kneeFinder(ks, wss))
 
     if (verbose) {
-        message("kmeans: selected k = ", bestK, " (searched k = 2 to ", maxK, ")")
+        message(
+            "kmeans: selected k = ", bestK,
+            " (searched k = 2 to ", maxK, ")"
+        )
     }
 
     ids <- clusterings[[which(ks == bestK)]]
@@ -630,7 +671,9 @@ binaryCutBackend <- function(
 }
 
 .onLoad <- function(libname, pkgname) {
-    register <- function(name, fn, description, packages, usesResolution = TRUE) {
+    register <- function(
+        name, fn, description, packages, usesResolution = TRUE
+    ) {
         assign(
             name,
             clusterMethod(
@@ -650,7 +693,10 @@ binaryCutBackend <- function(
     )
     register(
         "louvain.multilevel", seuratBackend(2),
-        "Seurat::FindClusters, Louvain with multilevel refinement (algorithm 2)",
+        paste(
+            "Seurat::FindClusters, Louvain with multilevel refinement",
+            "(algorithm 2)"
+        ),
         "Seurat"
     )
     register(
@@ -673,21 +719,25 @@ binaryCutBackend <- function(
             igraph::cluster_leiden,
             defaults = list(objective_function = "modularity", n_iterations = 5)
         ),
-        "igraph::cluster_leiden on the SNN graph (modularity objective)", "igraph"
+        "igraph::cluster_leiden on the SNN graph (modularity objective)",
+        "igraph"
     )
 
     ### Methods that choose k themselves; clusterGeneSets() runs them once
     register(
         "kmeans", kmeansBackend,
         paste(
-            "k-means on SNN similarity profiles; k chosen by elbow/knee on the WSS",
-            "curve (as in simplifyEnrichment)"
+            "k-means on SNN similarity profiles; k chosen by elbow/knee on the",
+            "WSS curve (as in simplifyEnrichment)"
         ),
         packages = character(0), usesResolution = FALSE
     )
     register(
         "apcluster", apclusterBackend,
-        "Affinity propagation (apcluster::apcluster) on the SNN similarity matrix",
+        paste(
+            "Affinity propagation (apcluster::apcluster) on the SNN",
+            "similarity matrix"
+        ),
         packages = "apcluster", usesResolution = FALSE
     )
     register(

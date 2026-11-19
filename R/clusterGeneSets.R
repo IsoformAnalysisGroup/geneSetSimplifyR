@@ -1,7 +1,9 @@
 #' Cluster gene sets
 #'
-#' @param geneSetsList 'gsList' object created with the 'initializeList()' function.
-#' @param resolution Vector with the desired clustering resolutions to use. Higher number usually results in more clusters.
+#' @param geneSetsList 'gsList' object created with the 'initializeList()'
+#'   function.
+#' @param resolution Vector with the desired clustering resolutions to use.
+#'   Higher number usually results in more clusters.
 #' @param algorithm Clustering method applied to the SNN graph. Either the name
 #'   of a registered method (see [listClusterMethods()]; e.g. 'louvain',
 #'   'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
@@ -21,7 +23,8 @@
 #'   the number of gene sets. Must be smaller than `N`.
 #' @param elbow_method Method for choosing the number of LSI dimensions from
 #'   the scree curve: 'distance' (default) or 'zscore'. See the Details.
-#' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
+#' @param verbose a logic indicating whether to print progress statements.
+#'   Defaults to TRUE.
 #'
 #' @details More than 50 gene sets are needed. The LSI uses up to 50
 #'   dimensions (fewer when there are fewer genes); the first one,
@@ -33,13 +36,14 @@
 #'   `labelClusters()` again afterwards.
 #'
 #' @return 'gsList' object with clustering stored. The best resolution (highest
-#'  silhouette score) is annotated and used throughout the rest of the workflow (unless
-#'  specified in subsequent functions).
+#'  silhouette score) is annotated and used throughout the rest of the
+#'  workflow (unless specified in subsequent functions).
 #' @export
 #'
 #' @seealso [clusterMethod()], [registerClusterMethod()], [listClusterMethods()]
 #'
 #' @examples
+#' data(exampleGeneSets, exampleEnrichment)
 #' geneSetsList <- initializeList(
 #'     geneSetsList = exampleGeneSets,
 #'     geneSetsDF = exampleEnrichment,
@@ -102,7 +106,8 @@ clusterGeneSets <-
         nGeneSets <- ncol(geneSetsList@genesetsDataframe)
         if (nGeneSets <= 50) {
             stop(
-                "More than 50 gene sets are needed for clustering; got ", nGeneSets, "."
+                "More than 50 gene sets are needed for clustering; got ",
+                nGeneSets, "."
             )
         }
 
@@ -112,8 +117,8 @@ clusterGeneSets <-
         if (!is.na(K)) {
             if (!is.numeric(K) || K != round(K) || K < 2 || K >= nGeneSets) {
                 stop(
-                    "'K' should be NA or a whole number between 2 and the number of ",
-                    "gene sets minus 1 (", nGeneSets - 1, ")."
+                    "'K' should be NA or a whole number between 2 and the ",
+                    "number of gene sets minus 1 (", nGeneSets - 1, ")."
                 )
             }
         }
@@ -121,12 +126,16 @@ clusterGeneSets <-
         # Resolve the method first so a bad one fails before the slow LSI/UMAP
         clusterMethodObj <- getClusterMethod(algorithm)
 
-        # Methods that choose their own k give the same result at every resolution
-        if (!isTRUE(clusterMethodObj$usesResolution) && length(resolution) > 1) {
+        # Methods that choose their own k give the same result at every
+        # resolution
+        if (!isTRUE(clusterMethodObj$usesResolution) &&
+            length(resolution) > 1) {
             if (verbose) {
                 message(
-                    "'", clusterMethodObj$name, "' determines the number of clusters ",
-                    "itself; ignoring all but the first resolution (", resolution[1], ")."
+                    "'", clusterMethodObj$name,
+                    "' determines the number of clusters ",
+                    "itself; ignoring all but the first resolution (",
+                    resolution[1], ")."
                 )
             }
             resolution <- resolution[1]
@@ -138,8 +147,10 @@ clusterGeneSets <-
 
         suppressWarnings(
             seuratObj <-
-                Seurat::CreateSeuratObject(counts = geneSetsList@genesetsDataframe,
-                    assay = "GSEA")
+                Seurat::CreateSeuratObject(
+                    counts = geneSetsList@genesetsDataframe,
+                    assay = "GSEA"
+                )
         )
 
         # TF-IDF + truncated SVD; the TF-IDF method was chosen by grid search
@@ -203,14 +214,15 @@ clusterGeneSets <-
                 failures[as.character(localRes)] <- conditionMessage(localIds)
                 if (verbose) {
                     message(
-                        "Resolution ", localRes, " failed (", conditionMessage(localIds),
-                        ") - skipping."
+                        "Resolution ", localRes, " failed (",
+                        conditionMessage(localIds), ") - skipping."
                     )
                 }
                 next
             }
 
-            # Ids start at 0 with numeric level order, whatever the backend returns
+            # Ids start at 0 with numeric level order, whatever the backend
+            # returns
             clusterResolution <- resolutionColumnName(localRes)
             seuratObj@meta.data[[clusterResolution]] <-
                 numericClusterFactor(localIds)
@@ -219,11 +231,13 @@ clusterGeneSets <-
         }
 
         if (!length(resolutionsTested)) {
+            failureLines <- paste0(
+                "  resolution ", names(failures), ": ", failures,
+                collapse = "\n"
+            )
             stop(
                 "Clustering failed for every resolution with method '",
-                clusterMethodObj$name, "':\n",
-                paste0("  resolution ", names(failures), ": ", failures,
-                    collapse = "\n")
+                clusterMethodObj$name, "':\n", failureLines
             )
         }
 
@@ -239,8 +253,8 @@ clusterGeneSets <-
         if (all(is.na(meanSil))) {
             bestRes <- resolutionsTested[1]
             warning(
-                "The silhouette score could not be computed for any resolution; ",
-                "using resolution ", bestRes, " as default.",
+                "The silhouette score could not be computed for any ",
+                "resolution; using resolution ", bestRes, " as default.",
                 call. = FALSE
             )
         } else {
@@ -255,7 +269,8 @@ clusterGeneSets <-
         geneSetsList@cluster <- seuratObj
         geneSetsList@labels <- list()
 
-        silhouetteScores <- stats::setNames(meanSil, as.character(resolutionsTested))
+        silhouetteScores <-
+            stats::setNames(meanSil, as.character(resolutionsTested))
         geneSetsList@metadata$k <- selectedK
         geneSetsList@metadata$lsi_elbow_cutoff <- elbowRes$elbow_cutoff
         geneSetsList@metadata$cluster_algorithm <- clusterMethodObj$name
@@ -273,10 +288,13 @@ clusterGeneSets <-
         if(verbose) {
             for (localRes in resolutionsTested) {
                 resolutionColumn <- resolutionColumnName(localRes)
-                clusterNumber <-
-                    length(levels(geneSetsList@cluster@meta.data[[resolutionColumn]]))
+                clusterNumber <- length(levels(
+                    geneSetsList@cluster@meta.data[[resolutionColumn]]
+                ))
 
-                message(clusterNumber, " clusters found for resolution ", localRes)
+                message(
+                    clusterNumber, " clusters found for resolution ", localRes
+                )
             }
         }
 

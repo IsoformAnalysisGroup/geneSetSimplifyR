@@ -52,6 +52,6 @@ scores.}
 }}
 
 \examples{
+data(exampleGsList)
 exampleGsList
-names(exampleGsList@metadata)
 }

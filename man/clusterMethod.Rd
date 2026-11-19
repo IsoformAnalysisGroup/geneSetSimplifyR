@@ -49,6 +49,7 @@ them to start at 0 and orders the factor levels numerically. If the
 returned ids are named, they are reordered to match \code{colnames(snn)}.
 }
 \examples{
+data(exampleGsList, exampleGeneSets, exampleEnrichment)
 # A backend built on igraph's fast-greedy modularity optimization
 fastGreedy <- clusterMethod(
     fn = function(snn, resolution, verbose = FALSE, ...) {
@@ -65,7 +66,7 @@ fastGreedy <- clusterMethod(
 fastGreedy
 
 # Try it on the SNN graph of the example data
-ids <- fastGreedy$fn(exampleGsList@cluster@graphs$GSEA_snn, resolution = 1)
+ids <- fastGreedy$fn(getSNN(exampleGsList), resolution = 1)
 table(ids)
 
 # Use it in the workflow

@@ -1,38 +1,48 @@
 #' Initialize gene sets list
 #'
-#' @description Initialize a 'gsList' object from a dataframe with gene sets and enrichment scores and a gene sets database.
+#' @description Initialize a 'gsList' object from a dataframe with gene sets and
+#'   enrichment scores and a gene sets database.
 #'
-#' @param geneSetsList A list containing the gene sets to be analyzed.
-#' The name of each element in the list should be a gene set and each element should contain
-#' the genes belonging to that gene set. Alternatively, the path to a GMT file
-#' with the gene sets (read with [fgsea::gmtPathways()]).
-#' @param geneSetsDF Optional data.frame with gene sets and enrichment scores that can be useful
-#' for downstream visualization (both for effect size and direction and if multiple conditions are analyzed).
-#' Should have a column named 'pathway' containing the gene sets and a column
-#' named 'enrichment_score' or 'NES' with the enrichment of each gene set.
-#' Optionally have a column named 'pval' or 'pvalue' with the p-value of each gene set; a
-#' 'nlog10pval' column with the -log10 transformed p-values is added automatically and is
-#' used by default by the plotting functions that summarize scores (e.g. 'plotHeatmap()').
-#' p-values must lie between 0 and 1. A p-value of 0 is transformed as the
-#' smallest positive double (giving about 307.7) rather than infinity.
-#' Optionally have a column named 'source' indicating the source of each gene set. This allows for
-#' analysis of multi-conditional data throughout the entire workflow and is also supported by many
-#' plotting functions. If a gene-set was found in multiple conditions there should be multiple rows
-#' for the same 'pathway' indicating its respective source and corresponding enrichment_score.
-#' Each combination of 'pathway' and 'source' may appear only once.
-#' Any other numeric column is kept and can be plotted via the 'plotFrom' argument of the
-#' plotting functions. List columns (e.g. 'leadingEdge' from fgsea) are dropped.
-#' See the vignette for examples.
-#' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
+#' @param geneSetsList A list containing the gene sets to be analyzed. The name
+#'   of each element in the list should be a gene set and each element should
+#'   contain the genes belonging to that gene set. Alternatively, the path to a
+#'   GMT file with the gene sets (read with [fgsea::gmtPathways()]).
+#' @param geneSetsDF Optional data.frame with gene sets and enrichment scores
+#'   that can be useful for downstream visualization (both for effect size and
+#'   direction and if multiple conditions are analyzed). Should have a column
+#'   named 'pathway' containing the gene sets and a column named
+#'   'enrichment_score' or 'NES' with the enrichment of each gene set.
+#'   Optionally have a column named 'pval' or 'pvalue' with the p-value of each
+#'   gene set; a 'nlog10pval' column with the -log10 transformed p-values is
+#'   added automatically and is used by default by the plotting functions that
+#'   summarize scores (e.g. 'plotHeatmap()'). p-values must lie between 0 and 1.
+#'   A p-value of 0 is transformed as the smallest positive double (giving about
+#'   307.7) rather than infinity. Optionally have a column named 'source'
+#'   indicating the source of each gene set. This allows for analysis of
+#'   multi-conditional data throughout the entire workflow and is also supported
+#'   by many plotting functions. If a gene-set was found in multiple conditions
+#'   there should be multiple rows for the same 'pathway' indicating its
+#'   respective source and corresponding enrichment_score. Each combination of
+#'   'pathway' and 'source' may appear only once. Any other numeric column is
+#'   kept and can be plotted via the 'plotFrom' argument of the plotting
+#'   functions. List columns (e.g. 'leadingEdge' from fgsea) are dropped. See
+#'   the vignette for examples.
+#' @param verbose a logic indicating whether to print progress statements.
+#'   Defaults to TRUE.
 #'
 #' @details Gene sets without any gene are removed with a warning. Missing gene
 #'   ids (`NA` or empty strings) are ignored.
 #'
-#' @return 'gsList' object with a gene sets dataframe and enrichment scores for each gene set.
+#' @return 'gsList' object with a gene sets dataframe and enrichment scores for
+#'   each gene set.
 #' @export
 #'
 #' @examples
-#' gsListObject <- initializeList(geneSetsList = exampleGeneSets, geneSetsDF = exampleEnrichment)
+#' data(exampleGeneSets, exampleEnrichment)
+#' gsListObject <- initializeList(
+#'     geneSetsList = exampleGeneSets,
+#'     geneSetsDF = exampleEnrichment
+#' )
 #' gsListObject
 #'
 #' # Gene sets can also be read from a GMT file
@@ -58,8 +68,8 @@ initializeList <- function(
     if (is.character(geneSetsList) && length(geneSetsList) == 1L) {
         if (!file.exists(geneSetsList)) {
             stop(
-                "'geneSetsList' should be a named list of gene sets or the path to a ",
-                "GMT file. File not found: ", geneSetsList
+                "'geneSetsList' should be a named list of gene sets or the ",
+                "path to a GMT file. File not found: ", geneSetsList
             )
         }
         geneSetsList <- fgsea::gmtPathways(geneSetsList)
@@ -74,8 +84,8 @@ initializeList <- function(
     if (is.null(geneSetNames) || anyNA(geneSetNames) ||
         any(!nzchar(geneSetNames))) {
         stop(
-            "Every element of 'geneSetsList' should be named with its gene set ",
-            "name."
+            "Every element of 'geneSetsList' should be named with its gene ",
+            "set name."
         )
     }
 
@@ -89,7 +99,10 @@ initializeList <- function(
     }
 
     if (!all(vapply(geneSetsList, is.character, logical(1)))) {
-        stop("each element in the 'geneSetsList' should contain a character vector")
+        stop(
+            "each element in the 'geneSetsList' should contain a character ",
+            "vector"
+        )
     }
 
     geneSetsList <- lapply(geneSetsList, function(genes) {
@@ -135,7 +148,10 @@ initializeList <- function(
     if(! 'enrichment_score' %in% colnames(geneSetsDF)) {
         if( 'NES' %in% colnames(geneSetsDF) ) {
             if (verbose) {
-                message("enrichment_score was not found in the dataframe. Use NES instead.")
+                message(
+                    "enrichment_score was not found in the dataframe. ",
+                    "Use NES instead."
+                )
             }
             geneSetsDF$enrichment_score <- geneSetsDF$NES
             geneSetsDF$NES <- NULL
@@ -151,7 +167,9 @@ initializeList <- function(
     if(! 'pval' %in% colnames(geneSetsDF)) {
         if( 'pvalue' %in% colnames(geneSetsDF) ) {
             if (verbose) {
-                message("pval was not found in the dataframe. Use pvalue instead.")
+                message(
+                    "pval was not found in the dataframe. Use pvalue instead."
+                )
             }
             geneSetsDF$pval <- geneSetsDF$pvalue
             geneSetsDF$pvalue <- NULL
@@ -162,10 +180,15 @@ initializeList <- function(
 
     if (!all(is.na(geneSetsDF$pval))) {
         if (!is.numeric(geneSetsDF$pval)) {
-            stop("Column 'pval' (or 'pvalue') of 'geneSetsDF' should be numeric.")
+            stop(
+                "Column 'pval' (or 'pvalue') of 'geneSetsDF' should be numeric."
+            )
         }
         if (any(geneSetsDF$pval < 0 | geneSetsDF$pval > 1, na.rm = TRUE)) {
-            stop("Column 'pval' (or 'pvalue') of 'geneSetsDF' should be between 0 and 1.")
+            stop(
+                "Column 'pval' (or 'pvalue') of 'geneSetsDF' should be ",
+                "between 0 and 1."
+            )
         }
     }
 
@@ -179,18 +202,16 @@ initializeList <- function(
 
     if( 'source' %in% colnames(geneSetsDF) ) {
         if (anyNA(geneSetsDF$source)) {
-            stop("Column 'source' of 'geneSetsDF' should not contain missing values.")
+            stop(
+                "Column 'source' of 'geneSetsDF' should not contain ",
+                "missing values."
+            )
         }
         geneSetsDF$source <- as.character(geneSetsDF$source)
         numberOfSources <- dplyr::n_distinct(geneSetsDF$source)
 
         if(verbose) {
-            message(
-                paste0(
-                    numberOfSources,
-                    " different sources found."
-                )
-            )
+            message(numberOfSources, " different sources found.")
         }
 
     }  else {
@@ -198,9 +219,8 @@ initializeList <- function(
 
         if(verbose) {
             message(
-                paste0(
-                    "Assuming all gene-sets are from same source (multiple sources are supported)"
-                )
+                "Assuming all gene-sets are from same source ",
+                "(multiple sources are supported)"
             )
         }
     }
@@ -208,9 +228,11 @@ initializeList <- function(
     duplicatedKeys <- duplicated(geneSetsDF[, c('pathway', 'source')])
     if (any(duplicatedKeys)) {
         stop(
-            "Each combination of 'pathway' and 'source' should appear only once in ",
-            "'geneSetsDF', but these have several (different) rows: ",
-            quoteAndCollapse(utils::head(unique(geneSetsDF$pathway[duplicatedKeys]), 5)),
+            "Each combination of 'pathway' and 'source' should appear only ",
+            "once in 'geneSetsDF', but these have several (different) rows: ",
+            quoteAndCollapse(
+                utils::head(unique(geneSetsDF$pathway[duplicatedKeys]), 5)
+            ),
             if (sum(duplicatedKeys) > 5) ", ..." else "", "."
         )
     }
@@ -221,7 +243,8 @@ initializeList <- function(
         missingPathways <- setdiff(pathways, names(geneSetsList))
         if (length(missingPathways)) {
             stop(
-                length(missingPathways), " pathway(s) of 'geneSetsDF' are not in ",
+                length(missingPathways),
+                " pathway(s) of 'geneSetsDF' are not in ",
                 "'geneSetsList', e.g. ",
                 quoteAndCollapse(utils::head(missingPathways, 5)), "."
             )
@@ -233,13 +256,15 @@ initializeList <- function(
     emptySets <- pathways[lengths(geneSetsList[pathways]) == 0]
     if (length(emptySets)) {
         warning(
-            length(emptySets), " gene set(s) contain no genes and were removed: ",
+            length(emptySets),
+            " gene set(s) contain no genes and were removed: ",
             quoteAndCollapse(utils::head(emptySets, 5)),
             if (length(emptySets) > 5) ", ..." else "", ".",
             call. = FALSE
         )
         pathways <- setdiff(pathways, emptySets)
-        geneSetsDF <- geneSetsDF[geneSetsDF$pathway %in% pathways, , drop = FALSE]
+        geneSetsDF <-
+            geneSetsDF[geneSetsDF$pathway %in% pathways, , drop = FALSE]
     }
 
     if (!length(pathways)) {
@@ -276,11 +301,11 @@ initializeList <- function(
         c('cluster', 'initial_cluster_label')
     )
     if( length(reservedColumns) ) {
-        warning(paste0(
-            "The following column(s) of 'geneSetsDF' are reserved for internal use ",
-            'and were removed: ',
-            paste0("'", reservedColumns, "'", collapse = ', '), '.'
-        ))
+        warning(
+            "The following column(s) of 'geneSetsDF' are reserved for ",
+            "internal use and were removed: ",
+            quoteAndCollapse(reservedColumns), "."
+        )
 
         geneSetsDF <- geneSetsDF[
             , setdiff(colnames(geneSetsDF), reservedColumns), drop = FALSE
@@ -306,15 +331,9 @@ initializeList <- function(
 
     if(verbose) {
         message(
-            paste(
-                "gsList object created with",
-                dim(res@genesetsDataframe)[1],
-                "genes and",
-                dim(res@genesetsDataframe)[2],
-                "gene sets",
-                'from', numberOfSources, 'sources',
-                sep = ' '
-            )
+            "gsList object created with ", nrow(res@genesetsDataframe),
+            " genes and ", ncol(res@genesetsDataframe), " gene sets from ",
+            numberOfSources, " sources"
         )
         message("Initialization of gsList object DONE")
     }

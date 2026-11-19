@@ -28,7 +28,8 @@ minimum and maximum point size of nodes, respectively}
 
 \item{node_text_angle}{Numeric value indicating the rotation of node labels}
 
-\item{resolutionsToPlot}{Resolutions to include in plot. Use NULL to plot all. Default is NULL}
+\item{resolutionsToPlot}{Resolutions to include in plot. Use NULL to plot
+all. Default is NULL}
 }
 \value{
 A ggplot2 object
@@ -40,5 +41,6 @@ consecutive resolutions relate to each other: each node is a cluster
 from a cluster at one resolution to a cluster at the next.
 }
 \examples{
+data(exampleGsList)
 plotClustree(exampleGsList)
 }

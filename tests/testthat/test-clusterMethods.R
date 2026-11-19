@@ -94,3 +94,11 @@ test_that("snn helpers convert the graph", {
     expect_equal(dim(m), dim(snn))
     expect_equal(rownames(m), colnames(snn))
 })
+
+test_that("getSNN returns the SNN graph", {
+    expect_identical(
+        getSNN(exampleGsList), exampleGsList@cluster@graphs$GSEA_snn
+    )
+    unclustered <- initializeList(exampleGeneSets, verbose = FALSE)
+    expect_error(getSNN(unclustered), "clusterGeneSets")
+})

@@ -44,9 +44,11 @@ Converts \code{pairedGSEA::paired_ora()} output into the two inputs
 \code{geneSetSimplifyR()} needs: \code{geneSetsList} and \code{geneSetsDF} (with \code{source},
 \code{pathway}, \code{enrichment_score}). Each of the three blocks (expression,
 splicing, paired) is filtered by its own padj cutoff and added as a
-separate \code{source}. Pathways passing multiple cutoffs appear once per source.
+separate \code{source}. Pathways passing multiple cutoffs appear once per
+source.
 }
 \examples{
+data(exampleGeneSets)
 # A small table in the format of pairedGSEA::paired_ora() output
 pathways <- names(exampleGeneSets)[1:90]
 oraResult <- data.frame(

@@ -19,11 +19,19 @@ plotViolin(
 active resolution: the optimal resolution found by \code{clusterGeneSets()}, or
 the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.}
 
-\item{plotFrom}{Name of the column of the 'enrichmentScore' slot to visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns that are annotated (i.e. not all NA) can be plotted - which columns are available depends on what was supplied to 'geneSetsDF' in 'initializeList()'. Only one column is plotted; if several are supplied the first plottable one is used (the default therefore falls back to 'enrichment_score' when no p-values were supplied).}
+\item{plotFrom}{Name of the column of the 'enrichmentScore' slot to
+visualize, e.g. 'nlog10pval' or 'enrichment_score'. Only numeric columns
+that are annotated (i.e. not all NA) can be plotted - which columns are
+available depends on what was supplied to 'geneSetsDF' in
+'initializeList()'. Only one column is plotted; if several are supplied the
+first plottable one is used (the default therefore falls back to
+'enrichment_score' when no p-values were supplied).}
 
-\item{removeClusterId}{Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.}
+\item{removeClusterId}{Logical, if TRUE the cluster number will be removed
+from each cluster label. Default: FALSE.}
 
-\item{highlightClusterNo}{A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.}
+\item{highlightClusterNo}{A vector with the cluster numbers of the clusters
+(at the resolution) to highlight (in bold) in the plot.}
 }
 \value{
 A ggplot object.
@@ -34,6 +42,11 @@ cluster, by default their -log10 p-values (or enrichment scores when no
 p-values were supplied). Clusters are ordered by their median value.
 }
 \examples{
+data(exampleGsList)
 plotViolin(exampleGsList, highlightClusterNo = c(0, 1))
-plotViolin(exampleGsList, plotFrom = 'enrichment_score', removeClusterId = TRUE)
+plotViolin(
+    exampleGsList,
+    plotFrom = 'enrichment_score',
+    removeClusterId = TRUE
+)
 }

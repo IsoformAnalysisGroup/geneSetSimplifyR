@@ -23,7 +23,8 @@ the one last set with \code{updateResolution()} or \code{updateClusterLabels()}.
 
 \item{nLabels}{The number of labels to plot. Default to 5}
 
-\item{maxChar}{The max number of characters of labels shown in plot. Longer labels will be truncated using "...". Defaults to 50}
+\item{maxChar}{The max number of characters of labels shown in plot. Longer
+labels will be truncated using "...". Defaults to 50}
 }
 \value{
 a ggplot2 object.
@@ -36,5 +37,6 @@ Labels are the original ones from \code{labelClusters()}, also after a rename
 with \code{updateClusterLabels()}.
 }
 \examples{
+data(exampleGsList)
 plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
 }

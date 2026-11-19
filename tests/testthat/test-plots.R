@@ -109,7 +109,9 @@ test_that("interactive UMAP works", {
 })
 
 test_that("plots give clear errors for unknown clusters and resolutions", {
-    expect_error(plotUMAP(twoSources, resolution = 0.25), "Available resolution")
+    expect_error(
+        plotUMAP(twoSources, resolution = 0.25), "Available resolution"
+    )
     expect_error(plotClusterLabels(twoSources, clusterNumber = 99),
         "clusterNumber")
     expect_warning(plotBarchart(twoSources, highlightClusterNo = 99),

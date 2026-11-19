@@ -7,13 +7,16 @@
 #' @param resolution The cluster resolution to plot. Default `NULL` uses the
 #'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
 #'   the one last set with `updateResolution()` or `updateClusterLabels()`.
-#' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.
+#' @param removeClusterId Logical, if TRUE the cluster number will be removed
+#'   from each cluster label. Default: FALSE.
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters
+#'   (at the resolution) to highlight (in bold) in the plot.
 #'
 #' @return A ggplot object.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotBarchart(exampleGsList)
 #' plotBarchart(exampleGsList, resolution = 0.6, highlightClusterNo = 1)
 plotBarchart <- function(
@@ -50,7 +53,10 @@ plotBarchart <- function(
         p1 <-
             plotData %>%
             ggplot(aes(x=cluster, y=genesets, fill=source)) +
-            geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
+            geom_bar(
+                stat="identity",
+                position=position_dodge2(preserve = "single")
+            ) +
             labs(
                 x = "Gene Set Cluster",
                 y = "Number of gene sets",
@@ -67,7 +73,10 @@ plotBarchart <- function(
         p1 <-
             plotData %>%
             ggplot(aes(x=cluster, y=genesets)) +
-            geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
+            geom_bar(
+                stat="identity",
+                position=position_dodge2(preserve = "single")
+            ) +
             labs(
                 x = "Gene Set Cluster",
                 y = "Number of gene sets"

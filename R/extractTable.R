@@ -20,6 +20,7 @@
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' extractTable(exampleGsList)
 #' head(extractTable(exampleGsList, resolution = 0.6, summarize = FALSE))
 extractTable <- function(

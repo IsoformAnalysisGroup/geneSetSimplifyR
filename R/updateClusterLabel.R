@@ -18,6 +18,7 @@
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' gsListObject <- updateClusterLabels(
 #'     geneSetsList = exampleGsList,
 #'     clusterNumber = 0,
@@ -48,8 +49,8 @@ updateClusterLabels <- function(
     if (!as.character(clusterNumber) %in% clusterIds) {
         stop(
             "Cluster ", clusterNumber, " does not exist at resolution ",
-            sub("^GSEA_snn_res\\.", "", resolutionColumn), ". Available clusters: ",
-            paste(clusterIds, collapse = ", "), "."
+            sub("^GSEA_snn_res\\.", "", resolutionColumn),
+            ". Available clusters: ", toString(clusterIds), "."
         )
     }
 
@@ -79,7 +80,8 @@ updateClusterLabels <- function(
         as.character(labelsDefault$cluster) == as.character(clusterNumber)
     )
     if (length(inCluster)) {
-        toModify <- inCluster[which.max(labelsDefault$weighted_score[inCluster])]
+        toModify <-
+            inCluster[which.max(labelsDefault$weighted_score[inCluster])]
         labelsDefault$label[toModify] <- newClusterName
     } else {
         ### Clusters without any label get one

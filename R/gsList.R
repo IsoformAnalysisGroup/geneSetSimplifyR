@@ -29,8 +29,8 @@
 #'
 #' @exportClass gsList
 #' @examples
+#' data(exampleGsList)
 #' exampleGsList
-#' names(exampleGsList@metadata)
 gsList <- setClass(
     "gsList",
     slots = c(

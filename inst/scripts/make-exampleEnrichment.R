@@ -22,7 +22,8 @@
 ## against the fgsea results.
 ##
 ## Run from the root of the package source:
-##   Rscript inst/scripts/make-exampleEnrichment.R path/to/20_1_tcga_paired_fgsea.Rdata
+##   Rscript inst/scripts/make-exampleEnrichment.R \
+##       path/to/20_1_tcga_paired_fgsea.Rdata
 ## and then inst/scripts/make-exampleGsList.R.
 
 fgseaFile <- commandArgs(trailingOnly = TRUE)[1]
@@ -33,8 +34,14 @@ load(file.path("data", "exampleEnrichment.rda"))
 load(file.path("data", "exampleGeneSets.rda"))
 
 fgseaCoad <- rbind(
-    data.frame(source = "Expression", as.data.frame(tcgaDgeFsc$COAD)[, c("gene_set", "pval", "padj", "NES")]),
-    data.frame(source = "Splicing", as.data.frame(tcgaDguFsc$COAD)[, c("gene_set", "pval", "padj", "NES")])
+    data.frame(
+        source = "Expression",
+        as.data.frame(tcgaDgeFsc$COAD)[, c("gene_set", "pval", "padj", "NES")]
+    ),
+    data.frame(
+        source = "Splicing",
+        as.data.frame(tcgaDguFsc$COAD)[, c("gene_set", "pval", "padj", "NES")]
+    )
 )
 
 ## The example is exactly the significant results for its gene sets
@@ -50,7 +57,9 @@ idx <- match(
     paste(fgseaCoad$source, fgseaCoad$gene_set)
 )
 stopifnot(!anyNA(idx))
-stopifnot(isTRUE(all.equal(exampleEnrichment$enrichment_score, fgseaCoad$NES[idx])))
+stopifnot(isTRUE(all.equal(
+    exampleEnrichment$enrichment_score, fgseaCoad$NES[idx]
+)))
 
 exampleEnrichment <- tibble::tibble(
     source = exampleEnrichment$source,

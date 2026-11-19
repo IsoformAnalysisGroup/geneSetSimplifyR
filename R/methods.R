@@ -33,10 +33,14 @@ setMethod("show", "gsList", function(object) {
             cat("  LSI elbow cutoff: ", meta$lsi_elbow_cutoff, "\n", sep = "")
         }
         if (!is.null(meta$selected_resolution)) {
-            cat("  selected resolution: ", meta$selected_resolution, "\n", sep = "")
+            cat(
+                "  selected resolution: ", meta$selected_resolution, "\n",
+                sep = ""
+            )
         }
         if (isClustered && !is.null(meta$active_resolution)) {
-            activeResolution <- sub("^GSEA_snn_res\\.", "", meta$active_resolution)
+            activeResolution <-
+                sub("^GSEA_snn_res\\.", "", meta$active_resolution)
             if (!identical(as.numeric(activeResolution),
                 as.numeric(meta$selected_resolution))) {
                 cat("  active resolution: ", activeResolution, "\n", sep = "")

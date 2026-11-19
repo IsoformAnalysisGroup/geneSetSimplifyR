@@ -21,6 +21,7 @@ when their \code{resolution} argument is \code{NULL}. It replaces the optimal
 resolution found by \code{clusterGeneSets()} as the default.
 }
 \examples{
+data(exampleGsList)
 gsListObject <- updateResolution(exampleGsList, 0.6)
 extractResolution(gsListObject)
 }

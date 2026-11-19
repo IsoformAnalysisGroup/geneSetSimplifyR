@@ -154,9 +154,10 @@ resolveResolutionColumn <- function(geneSetsList, resolution = NULL) {
         resolutionColumn <- resolutionColumnName(resolutionNumber)
         if (!resolutionColumn %in% available) {
             stop(
-                "Resolution ", resolution, " was not used in 'clusterGeneSets()'. ",
+                "Resolution ", resolution,
+                " was not used in 'clusterGeneSets()'. ",
                 "Available resolution(s): ",
-                paste(sub("^GSEA_snn_res\\.", "", available), collapse = ", "), "."
+                toString(sub("^GSEA_snn_res\\.", "", available)), "."
             )
         }
         return(resolutionColumn)
@@ -267,7 +268,7 @@ highlightedClusterNames <- function(
     unknown <- setdiff(highlightClusterNo, clusterIds)
     if (length(unknown)) {
         warning(
-            "Cluster(s) ", paste(unknown, collapse = ", "),
+            "Cluster(s) ", toString(unknown),
             " do not exist at this resolution and cannot be highlighted.",
             call. = FALSE
         )
@@ -296,6 +297,7 @@ highlightedClusterNames <- function(
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' gsListObject <- updateResolution(exampleGsList, 0.6)
 #' extractResolution(gsListObject)
 updateResolution <- function(
@@ -329,12 +331,14 @@ updateResolution <- function(
 #'   resolution found by `clusterGeneSets()`, unless it was changed with
 #'   `updateResolution()` or `updateClusterLabels(resolution = ...)`.
 #'
-#' @param geneSetsList 'gsList' object that has been clustered with the 'clusterGeneSets()' function.
+#' @param geneSetsList 'gsList' object that has been clustered with the
+#'   'clusterGeneSets()' function.
 #'
 #' @return The default resolution, as a number.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' extractResolution(exampleGsList)
 extractResolution <- function(
     geneSetsList
@@ -371,8 +375,8 @@ extractResolution <- function(
 validatePlotFrom <- function(geneSetsList, plotFrom) {
     if (!is.character(plotFrom) || !length(plotFrom) || anyNA(plotFrom)) {
         stop(
-            "'plotFrom' should be a character vector with the name of a column in ",
-            "the 'enrichmentScore' slot."
+            "'plotFrom' should be a character vector with the name of a ",
+            "column in the 'enrichmentScore' slot."
         )
     }
 
@@ -395,13 +399,13 @@ validatePlotFrom <- function(geneSetsList, plotFrom) {
     ### Nothing left - report why each candidate was rejected
     availableColumns <- setdiff(colnames(enrichmentDF), c('source', 'pathway'))
 
-    stop(paste0(
-        'Cannot plot ', quoteAndCollapse(plotFrom), ':\n',
-        paste0("  '", plotFrom, "' - ", problems, collapse = '\n'), '\n',
-        '  Available column(s): ', quoteAndCollapse(availableColumns), '.\n',
+    problemLines <- paste0("  '", plotFrom, "' - ", problems, collapse = "\n")
+    stop(
+        "Cannot plot ", quoteAndCollapse(plotFrom), ":\n", problemLines, "\n",
+        "  Available column(s): ", quoteAndCollapse(availableColumns), ".\n",
         "  Other scores need to be added via the 'geneSetsDF' argument of ",
         "'initializeList()' (which means redoing the workflow)."
-    ))
+    )
 }
 
 #' Why a column cannot be plotted
@@ -492,7 +496,10 @@ summarizeEnrichment <- function(
     )
 
     if (! scoreColumn %in% colnames(enrichmentTable)) {
-        stop("Column '", scoreColumn, "' was not found in the 'enrichmentScore' slot.")
+        stop(
+            "Column '", scoreColumn,
+            "' was not found in the 'enrichmentScore' slot."
+        )
     }
 
     # Copied to a fixed name so the summary below works for any requested column
@@ -685,40 +692,46 @@ getGeneSets <- function(
     )
 
     if (!nrow(tib)) {
-        stop(sprintf(
-            "No gene sets returned for species='%s', collection='%s', subcollection=%s.",
-            species, collection,
-            if (is.null(subcollection)) "NULL" else sprintf("'%s'", subcollection)
-        ))
+        stop(
+            "No gene sets returned for species='", species,
+            "', collection='", collection, "', subcollection=",
+            if (is.null(subcollection)) {
+                "NULL"
+            } else {
+                sprintf("'%s'", subcollection)
+            },
+            "."
+        )
     }
 
     # msigdbr >= 10 calls the Entrez gene id column 'ncbi_gene'
     idColumn <- if (gene_id_type == "entrez_gene") "ncbi_gene" else gene_id_type
     if (!idColumn %in% colnames(tib)) {
-        stop(sprintf(
-            "Column '%s' not found in msigdbr output. Available columns include: %s.",
-            idColumn,
-            paste(intersect(colnames(tib),
-                c("ensembl_gene", "gene_symbol", "ncbi_gene")),
-            collapse = ", ")
-        ))
+        stop(
+            "Column '", idColumn, "' not found in msigdbr output. ",
+            "Available columns include: ",
+            toString(intersect(colnames(tib),
+                c("ensembl_gene", "gene_symbol", "ncbi_gene"))),
+            "."
+        )
     }
 
     if (!is.null(pathway_names)) {
         keep <- tib$gs_name %in% pathway_names
         if (!any(keep)) {
             stop(
-                "None of the requested 'pathway_names' were found in the specified ",
-                "collection/subcollection."
+                "None of the requested 'pathway_names' were found in the ",
+                "specified collection/subcollection."
             )
         }
         missing <- setdiff(pathway_names, tib$gs_name[keep])
         if (length(missing)) {
-            warning(sprintf(
-                "%d pathway name(s) not found and will be skipped (first 5: %s).",
+            warning(
                 length(missing),
-                paste(utils::head(missing, 5), collapse = ", ")
-            ), call. = FALSE)
+                " pathway name(s) not found and will be skipped (first 5: ",
+                toString(utils::head(missing, 5)), ").",
+                call. = FALSE
+            )
         }
         tib <- tib[keep, , drop = FALSE]
     }

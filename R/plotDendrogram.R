@@ -10,14 +10,17 @@
 #' @param resolution The cluster resolution to plot. Default `NULL` uses the
 #'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
 #'   the one last set with `updateResolution()` or `updateClusterLabels()`.
-#' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight (in bold) in the plot.
+#' @param removeClusterId Logical, if TRUE the cluster number will be removed
+#'   from each cluster label. Default: FALSE.
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters
+#'   (at the resolution) to highlight (in bold) in the plot.
 #'
 #' @return A ggplot object. The underlying `hclust` object is stored in its
 #'   `hclust` attribute.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotDendrogram(exampleGsList)
 #' hc <- attr(plotDendrogram(exampleGsList), "hclust")
 plotDendrogram <- function(
@@ -46,7 +49,10 @@ plotDendrogram <- function(
     clusterVec <- levels(droplevels(clusterIdents))
 
     if (length(clusterVec) < 2) {
-        stop("A dendrogram needs at least two clusters; this resolution has one.")
+        stop(
+            "A dendrogram needs at least two clusters; ",
+            "this resolution has one."
+        )
     }
 
     ### Average distance between the gene sets of each pair of clusters
@@ -63,7 +69,10 @@ plotDendrogram <- function(
         for (j in seq_along(clusterVec)) {
             if (i != j) {
                 avgDist[i, j] <- mean(
-                    distMat[clusterOf == clusterVec[i], clusterOf == clusterVec[j]]
+                    distMat[
+                        clusterOf == clusterVec[i],
+                        clusterOf == clusterVec[j]
+                    ]
                 )
             }
         }
@@ -103,7 +112,9 @@ plotDendrogram <- function(
     if (length(clusterNameToHighlight)) {
         suppressWarnings(
             p1 <- p1 + theme(axis.text.y = element_text(
-                face = ifelse(leafLabels %in% clusterNameToHighlight, "bold", "plain")
+                face = ifelse(
+                    leafLabels %in% clusterNameToHighlight, "bold", "plain"
+                )
             ))
         )
     }

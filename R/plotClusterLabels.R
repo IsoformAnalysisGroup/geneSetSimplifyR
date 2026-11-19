@@ -12,12 +12,14 @@
 #'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
 #'   the one last set with `updateResolution()` or `updateClusterLabels()`.
 #' @param nLabels The number of labels to plot. Default to 5
-#' @param maxChar The max number of characters of labels shown in plot. Longer labels will be truncated using "...". Defaults to 50
+#' @param maxChar The max number of characters of labels shown in plot. Longer
+#'   labels will be truncated using "...". Defaults to 50
 #'
 #' @return a ggplot2 object.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
 plotClusterLabels <- function(
     geneSetsList,
@@ -36,20 +38,22 @@ plotClusterLabels <- function(
         stop(
             "'clusterNumber' should be one of the clusters at resolution ",
             sub("^GSEA_snn_res\\.", "", resolutionColumn), ": ",
-            paste(clusterIds, collapse = ", "), "."
+            toString(clusterIds), "."
         )
     }
 
     {
         ### The TF-IDF panel shows the automatic labels, not renamed ones
-        if( 'org_label' %in% colnames(geneSetsList@labels[[resolutionColumn]]$labelsDefault) ) {
+        if( 'org_label' %in%
+            colnames(geneSetsList@labels[[resolutionColumn]]$labelsDefault) ) {
             geneSetsList@labels[[resolutionColumn]]$labelsDefault$label <-
                 geneSetsList@labels[[resolutionColumn]]$labelsDefault$org_label
         }
 
         localIntegrated <-
             geneSetsList@labels[[resolutionColumn]]$labelsDefault %>%
-            # rows added by updateClusterLabels() have no automatic label or score
+            # rows added by updateClusterLabels() have no automatic label or
+            # score
             dplyr::filter(cluster == clusterNumber, !is.na(label)) %>%
             dplyr::rename(value = weighted_score) %>%
             dplyr::mutate(
@@ -101,11 +105,13 @@ plotClusterLabels <- function(
 
         clusterMeta <- geneSetsList@cluster@meta.data
         gsInCluster <- clusterMeta$gene_set[
-            as.character(clusterMeta[[resolutionColumn]]) == as.character(clusterNumber)
+            as.character(clusterMeta[[resolutionColumn]]) ==
+                as.character(clusterNumber)
         ]
 
-        # drop = FALSE keeps this a data.frame for a single-gene-set cluster, which
-        # would otherwise collapse to a plain vector and break colSums()/apply().
+        # drop = FALSE keeps this a data.frame for a single-gene-set cluster,
+        # which would otherwise collapse to a plain vector and break
+        # colSums()/apply().
         clusterMembership <-
             geneSetsList@genesetsDataframe[, gsInCluster, drop = FALSE]
 
@@ -226,7 +232,10 @@ plotClusterLabels <- function(
 
     p1 <-
         jointData %>%
-        ggplot(aes(x=tidytext::reorder_within(label, sortKey, measure), y=value)) +
+        ggplot(aes(
+            x=tidytext::reorder_within(label, sortKey, measure),
+            y=value
+        )) +
         geom_bar(stat="identity", position='dodge') +
         facet_wrap(~measure, ncol=3, scales = 'free') +
         tidytext::scale_x_reordered() +

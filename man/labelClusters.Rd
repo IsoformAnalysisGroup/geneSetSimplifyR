@@ -13,19 +13,23 @@ labelClusters(
 )
 }
 \arguments{
-\item{geneSetsList}{'gsList' object that has been clustered with the 'clusterGeneSets()' function.}
+\item{geneSetsList}{'gsList' object that has been clustered with the
+'clusterGeneSets()' function.}
 
-\item{stopWords}{Vector with stop words. The default vector can be viewed with data(stopWords).
-To add new stop words 'stopWords <- c(geneSetSimplifyR::stopWords, 'new word 1', 'new word 2', ...)}
+\item{stopWords}{Vector with stop words. The default vector can be viewed
+with data(stopWords). To add new stop words 'stopWords <-
+c(geneSetSimplifyR::stopWords, 'new word 1', 'new word 2', ...)}
 
 \item{nLabels}{Number of top labels to keep. Default to 10}
 
-\item{removeFirstWord}{Logical. If TRUE, strip the first word (everything before
-the first underscore) from each gene-set name before generating bigram tokens.
-Useful for MSigDB-style names where the first token is an author or database
-prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
+\item{removeFirstWord}{Logical. If TRUE, strip the first word (everything
+before the first underscore) from each gene-set name before generating
+bigram tokens. Useful for MSigDB-style names where the first token is an
+author or database prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default:
+FALSE.}
 
-\item{verbose}{a logic indicating whether to print progress statements. Defaults to TRUE.}
+\item{verbose}{a logic indicating whether to print progress statements.
+Defaults to TRUE.}
 }
 \value{
 'gsList' object with labeled clusters for all clustered resolutions.
@@ -34,6 +38,7 @@ prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.}
 Label clusters in clustered gene sets list object
 }
 \examples{
+data(exampleGsList)
 # Relabel the shipped example, e.g. with extra stop words
 gsListObject <- labelClusters(
     geneSetsList = exampleGsList,

@@ -39,6 +39,7 @@ into one multi-source analysis, call this function once per run with a
 distinct \code{source} label and \code{rbind()} the resulting \code{geneSetsDF}s.
 }
 \examples{
+data(exampleGeneSets)
 # A small table in the format of fgsea::fgsea() output
 pathways <- names(exampleGeneSets)[1:90]
 fgseaRes <- data.frame(

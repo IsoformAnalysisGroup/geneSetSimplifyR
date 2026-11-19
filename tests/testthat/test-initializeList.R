@@ -32,7 +32,9 @@ test_that("invalid p-values are rejected", {
     input <- smallInput(20)
     df <- input$df
     df$pval <- 2
-    expect_error(initializeList(input$sets, df, verbose = FALSE), "between 0 and 1")
+    expect_error(
+        initializeList(input$sets, df, verbose = FALSE), "between 0 and 1"
+    )
     df$pval <- "small"
     expect_error(initializeList(input$sets, df, verbose = FALSE), "numeric")
 })
@@ -60,7 +62,9 @@ test_that("missing pathways are named in the error", {
     input <- smallInput(20)
     df <- input$df
     df$pathway[1] <- "NOT_A_GENE_SET"
-    expect_error(initializeList(input$sets, df, verbose = FALSE), "NOT_A_GENE_SET")
+    expect_error(
+        initializeList(input$sets, df, verbose = FALSE), "NOT_A_GENE_SET"
+    )
 })
 
 test_that("empty gene sets are removed with a warning", {
@@ -71,7 +75,9 @@ test_that("empty gene sets are removed with a warning", {
         g <- initializeList(sets, verbose = FALSE),
         "contain no genes"
     )
-    expect_false(any(c("EMPTY_SET", "ONLY_NA") %in% colnames(g@genesetsDataframe)))
+    expect_false(
+        any(c("EMPTY_SET", "ONLY_NA") %in% colnames(g@genesetsDataframe))
+    )
     expect_false(any(c("EMPTY_SET", "ONLY_NA") %in% g@enrichmentScore$pathway))
 })
 

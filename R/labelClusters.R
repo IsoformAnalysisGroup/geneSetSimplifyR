@@ -1,19 +1,24 @@
 #' Label clusters in clustered gene sets list object
 #'
-#' @param geneSetsList 'gsList' object that has been clustered with the 'clusterGeneSets()' function.
-#' @param stopWords Vector with stop words. The default vector can be viewed with data(stopWords).
-#' To add new stop words 'stopWords <- c(geneSetSimplifyR::stopWords, 'new word 1', 'new word 2', ...)
+#' @param geneSetsList 'gsList' object that has been clustered with the
+#'   'clusterGeneSets()' function.
+#' @param stopWords Vector with stop words. The default vector can be viewed
+#'   with data(stopWords). To add new stop words 'stopWords <-
+#'   c(geneSetSimplifyR::stopWords, 'new word 1', 'new word 2', ...)
 #' @param nLabels Number of top labels to keep. Default to 10
-#' @param removeFirstWord Logical. If TRUE, strip the first word (everything before
-#'   the first underscore) from each gene-set name before generating bigram tokens.
-#'   Useful for MSigDB-style names where the first token is an author or database
-#'   prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default: FALSE.
-#' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
+#' @param removeFirstWord Logical. If TRUE, strip the first word (everything
+#'   before the first underscore) from each gene-set name before generating
+#'   bigram tokens. Useful for MSigDB-style names where the first token is an
+#'   author or database prefix (e.g. "GOBP", "GOMF", "HALLMARK"). Default:
+#'   FALSE.
+#' @param verbose a logic indicating whether to print progress statements.
+#'   Defaults to TRUE.
 #'
 #' @return 'gsList' object with labeled clusters for all clustered resolutions.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' # Relabel the shipped example, e.g. with extra stop words
 #' gsListObject <- labelClusters(
 #'     geneSetsList = exampleGsList,
@@ -60,7 +65,8 @@ labelClusters <-
         for (i in resolutions) {
             geneSetsList@labels[[i]] <- list()
 
-            Seurat::Idents(geneSetsList@cluster) <- geneSetsList@cluster@meta.data[[i]]
+            Seurat::Idents(geneSetsList@cluster) <-
+                geneSetsList@cluster@meta.data[[i]]
 
             geneSetsList <-
                 getLabels(
@@ -76,7 +82,8 @@ labelClusters <-
             }
         }
 
-        defaultResolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
+        defaultResolutionColumn <-
+            geneSetsList@cluster@meta.data$best_cluster_res[1]
 
         ### Read ids from meta.data so a labeled object can be labeled again
         Seurat::Idents(geneSetsList@cluster) <-
@@ -84,12 +91,18 @@ labelClusters <-
         currentClusters <- geneSetsList@cluster@active.ident
         currentClusterLabels <- levels(currentClusters)
 
-        ### Sanity check: every labeled cluster must exist in the active identity
+        ### Sanity check: every labeled cluster must exist in the active
+        ### identity
         labeledClusters <- as.character(unique(
-            geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]]$cluster
+            geneSetsList@labels[[defaultResolutionColumn]][[
+                "labelsDefault"
+            ]]$cluster
         ))
         if( ! all(labeledClusters %in% currentClusterLabels) ){
-            stop('something went wrong with the label transfer. Contact developer')
+            stop(
+                'something went wrong with the label transfer. ',
+                'Contact developer'
+            )
         }
 
         ### Aligned by cluster id; clusters without a label keep their bare id
@@ -105,7 +118,7 @@ labelClusters <-
         if( length(unlabeled) && verbose ) {
             message(
                 "No label could be generated for cluster(s) ",
-                paste(unlabeled, collapse = ", "),
+                toString(unlabeled),
                 "; they keep their cluster id as label."
             )
         }

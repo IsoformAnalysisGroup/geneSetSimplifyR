@@ -1,38 +1,45 @@
 #' Scatter plot of UMAP dimensionality reduction
 #'
-#' @description Graphs the output of the UMAP dimensionality reduction as a scatterplot
-#' using the 'DimPlot()' function from the Seurat package.
-#' Gene sets are colored and labeled by their cluster.
-#' When there is only one source in the data (default),
-#' each point will be shaped by the direction of the enrichment score of the gene set.
-#' When there are two sources in the data,
-#' each point will be shaped by the source indicating whether the gene set was found
-#' significant in either or both sources. With three or more sources, points
-#' are not shaped.
+#' @description Graphs the output of the UMAP dimensionality reduction as a
+#'   scatterplot using the 'DimPlot()' function from the Seurat package. Gene
+#'   sets are colored and labeled by their cluster. When there is only one
+#'   source in the data (default), each point will be shaped by the direction of
+#'   the enrichment score of the gene set. When there are two sources in the
+#'   data, each point will be shaped by the source indicating whether the gene
+#'   set was found significant in either or both sources. With three or more
+#'   sources, points are not shaped.
 #'
 #' @param geneSetsList 'gsList' object with clusters and labels.
 #' @param resolution The cluster resolution to plot. Default `NULL` uses the
 #'   active resolution: the optimal resolution found by `clusterGeneSets()`, or
 #'   the one last set with `updateResolution()` or `updateClusterLabels()`.
-#' @param removeClusterId Logical, if TRUE the cluster number will be removed from each cluster label. Default: FALSE.
-#' @param interactive Logical, indicating whether to plot an interactive UMAP plot. Default: FALSE.
-#' If TRUE, an interactive plot is made with 'HoverLocator()' from the Seurat
-#' package; hovering over a point shows its gene set and cluster.
-#' @param highlightClusterNo A vector with the cluster numbers of the clusters (at the resolution) to highlight in the plot.
+#' @param removeClusterId Logical, if TRUE the cluster number will be removed
+#'   from each cluster label. Default: FALSE.
+#' @param interactive Logical, indicating whether to plot an interactive UMAP
+#'   plot. Default: FALSE. If TRUE, an interactive plot is made with
+#'   'HoverLocator()' from the Seurat package; hovering over a point shows its
+#'   gene set and cluster.
+#' @param highlightClusterNo A vector with the cluster numbers of the clusters
+#'   (at the resolution) to highlight in the plot.
 #' @param pointSize Size of points. Default is 2.
 #' @param pointAlpha Transparency of points. Default is 1/3.
 #' @param labelSize Size of the cluster labels. Default is 3.
 #' @param labelAlpha Transparency of the cluster labels. Default is 1.
-#' @param highlightPointAlpha Transparency of the points of highlighted clusters. Default is 2/3.
-#' @param highlightPointSize Size of the points of highlighted clusters. Default is 4.
-#' @param highlightLabelAlpha Transparency of the labels of highlighted clusters. Default is 1.
-#' @param highlightLabelSize Size of the labels of highlighted clusters. Default is 5.
+#' @param highlightPointAlpha Transparency of the points of highlighted
+#'   clusters. Default is 2/3.
+#' @param highlightPointSize Size of the points of highlighted clusters. Default
+#'   is 4.
+#' @param highlightLabelAlpha Transparency of the labels of highlighted
+#'   clusters. Default is 1.
+#' @param highlightLabelSize Size of the labels of highlighted clusters. Default
+#'   is 5.
 #'
 #' @return A ggplot object (a patchwork from 'Seurat::DimPlot()'), or a
 #'   plotly object when `interactive = TRUE`.
 #' @export
 #'
 #' @examples
+#' data(exampleGsList)
 #' plotUMAP(exampleGsList)
 #' plotUMAP(exampleGsList, highlightClusterNo = 0, removeClusterId = TRUE)
 plotUMAP <- function(
@@ -85,7 +92,9 @@ plotUMAP <- function(
 
         geneSetsList@cluster <- SeuratObject::AddMetaData(
             object = geneSetsList@cluster,
-            metadata = stats::setNames(geneSetSource, colnames(geneSetsList@cluster)),
+            metadata = stats::setNames(
+                geneSetSource, colnames(geneSetsList@cluster)
+            ),
             col.name = 'source'
         )
         shapeBy <- 'source'
@@ -143,7 +152,8 @@ plotUMAP <- function(
     }
 
     pointIsHighlighted <- pUMAP[[1]]$data$ident %in% clusterNameToHighlight
-    labelIsHighlighted <- pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight
+    labelIsHighlighted <-
+        pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight
 
     pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
         ifelse(pointIsHighlighted, highlightPointAlpha, pointAlpha)
