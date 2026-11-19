@@ -53,8 +53,8 @@ specified in subsequent functions).
 Cluster gene sets
 }
 \details{
-At least 10 gene sets are needed. The LSI uses up to 50
-dimensions (fewer when there are 50 gene sets or less); the first one,
+More than 50 gene sets are needed. The LSI uses up to 50
+dimensions (fewer when there are fewer genes); the first one,
 which mostly reflects gene-set size, is always left out.
 
 Clustering does not change the random number stream of the R session:

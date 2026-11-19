@@ -23,8 +23,8 @@
 #'   the scree curve: 'distance' (default) or 'zscore'. See the Details.
 #' @param verbose a logic indicating whether to print progress statements. Defaults to TRUE.
 #'
-#' @details At least 10 gene sets are needed. The LSI uses up to 50
-#'   dimensions (fewer when there are 50 gene sets or less); the first one,
+#' @details More than 50 gene sets are needed. The LSI uses up to 50
+#'   dimensions (fewer when there are fewer genes); the first one,
 #'   which mostly reflects gene-set size, is always left out.
 #'
 #'   Clustering does not change the random number stream of the R session:
@@ -102,9 +102,9 @@ clusterGeneSets <-
     elbow_method <- match.arg(elbow_method, c("distance", "zscore"))
 
     nGeneSets <- ncol(geneSetsList@genesetsDataframe)
-    if (nGeneSets < 10) {
+    if (nGeneSets <= 50) {
       stop(
-        "At least 10 gene sets are needed for clustering; got ", nGeneSets, "."
+        "More than 50 gene sets are needed for clustering; got ", nGeneSets, "."
       )
     }
 

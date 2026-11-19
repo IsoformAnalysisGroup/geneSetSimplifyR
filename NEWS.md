@@ -58,7 +58,8 @@ First version submitted to Bioconductor.
   validates its input, and `extractTable(summarize = FALSE)` reports it as
   `initial_cluster_label`.
 * `plotViolin(removeClusterId = TRUE)` keeps the clusters ordered by median.
-* Inputs with 50 or fewer gene sets can be clustered (at least 10 needed).
+* `clusterGeneSets()` needs more than 50 gene sets and says so when it gets
+  fewer.
 * A resolution where the silhouette is undefined no longer stops
   `clusterGeneSets()`; if all resolutions fail, the error lists why.
 * The LSI falls back to another SVD solver when irlba does not converge.

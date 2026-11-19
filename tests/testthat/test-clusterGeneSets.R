@@ -16,27 +16,17 @@ test_that("the workflow reproduces the shipped example object", {
   )
 })
 
-test_that("small inputs (50 or fewer gene sets) can be clustered", {
-  input <- smallInput(30)
+test_that("50 or fewer gene sets give a clear error", {
+  input <- smallInput(50)
   g <- initializeList(input$sets, input$df, verbose = FALSE)
-  g <- clusterGeneSets(g, resolution = c(0.6, 1.1), verbose = FALSE)
-  expect_s4_class(g, "gsList")
-  expect_lte(g@metadata$lsi_elbow_cutoff, 29)
-  g <- labelClusters(g, verbose = FALSE)
-  expect_s3_class(plotUMAP(g), "ggplot")
-})
-
-test_that("too few gene sets give a clear error", {
-  input <- smallInput(8)
-  g <- initializeList(input$sets, input$df, verbose = FALSE)
-  expect_error(clusterGeneSets(g, verbose = FALSE), "At least 10 gene sets")
+  expect_error(clusterGeneSets(g, verbose = FALSE), "More than 50 gene sets")
 })
 
 test_that("arguments are validated", {
-  input <- smallInput(30)
+  input <- smallInput()
   g <- initializeList(input$sets, input$df, verbose = FALSE)
   expect_error(clusterGeneSets(g, K = 1, verbose = FALSE), "'K'")
-  expect_error(clusterGeneSets(g, K = 30, verbose = FALSE), "'K'")
+  expect_error(clusterGeneSets(g, K = 60, verbose = FALSE), "'K'")
   expect_error(clusterGeneSets(g, K = NULL, verbose = FALSE), "'K'")
   expect_error(clusterGeneSets(g, resolution = -1, verbose = FALSE), "positive")
   expect_error(
@@ -51,7 +41,7 @@ test_that("arguments are validated", {
 })
 
 test_that("clustering does not change the session's random numbers", {
-  input <- smallInput(30)
+  input <- smallInput()
   g <- initializeList(input$sets, input$df, verbose = FALSE)
   set.seed(1)
   expected <- stats::runif(3)
@@ -61,7 +51,7 @@ test_that("clustering does not change the session's random numbers", {
 })
 
 test_that("an error lists why every resolution failed", {
-  input <- smallInput(30)
+  input <- smallInput()
   g <- initializeList(input$sets, input$df, verbose = FALSE)
   failing <- function(snn, resolution) stop("backend exploded")
   expect_error(
@@ -72,7 +62,7 @@ test_that("an error lists why every resolution failed", {
 })
 
 test_that("re-clustering removes stale labels", {
-  input <- smallInput(30)
+  input <- smallInput()
   g <- initializeList(input$sets, input$df, verbose = FALSE)
   g <- labelClusters(clusterGeneSets(g, resolution = 1, verbose = FALSE),
                      verbose = FALSE)

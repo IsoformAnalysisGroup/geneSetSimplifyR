@@ -16,8 +16,8 @@
 #' @param zScoreCutoff Integer indicating the cut off value for the Z-score.
 #'   Only used when `method = "zscore"`.
 #'
-#' @details Short scree curves (fewer than 50 components, i.e. inputs with 50
-#'   or fewer gene sets) are supported. With fewer than four components after
+#' @details Short scree curves (fewer than 50 components, e.g. when there are
+#'   fewer than 50 genes) are supported. With fewer than four components after
 #'   dropping the first one, all components are used.
 #'
 #' @return A list with element `elbow_cutoff`: the index of the last LSI

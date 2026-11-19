@@ -33,8 +33,8 @@ component to use (at least 2).
 Determine the elbow cutoff to be used to run UMAP
 }
 \details{
-Short scree curves (fewer than 50 components, i.e. inputs with 50
-or fewer gene sets) are supported. With fewer than four components after
+Short scree curves (fewer than 50 components, e.g. when there are
+fewer than 50 genes) are supported. With fewer than four components after
 dropping the first one, all components are used.
 }
 \keyword{internal}
