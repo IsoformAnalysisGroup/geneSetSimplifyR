@@ -45,3 +45,11 @@ test_that("parsePairedGSEA makes one source per block", {
   expect_equal(nrow(parsed$geneSetsDF), 30)
   expect_error(parsePairedGSEA(ora, exampleGeneSets), "padj_paired")
 })
+
+test_that("getGeneSets returns Entrez ids", {
+  skip_on_cran()
+  skip_if_not_installed("msigdbr", "10.0.0")
+  sets <- getGeneSets(collection = "H", gene_id_type = "entrez_gene")
+  expect_type(sets[[1]], "character")
+  expect_true(all(grepl("^[0-9]+$", sets[[1]])))
+})

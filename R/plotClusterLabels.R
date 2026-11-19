@@ -51,7 +51,8 @@ plotClusterLabels <- function(
 
     localIntegrated <-
       geneSetsList@labels[[resolutionColumn]]$labelsDefault %>%
-      dplyr::filter(cluster == clusterNumber) %>%
+      # rows added by updateClusterLabels() have no automatic label or score
+      dplyr::filter(cluster == clusterNumber, !is.na(label)) %>%
       dplyr::rename(value = weighted_score) %>%
       dplyr::mutate(
         label = factor(label, levels=unique(label)),

@@ -127,10 +127,15 @@ getLabels <- function(geneSetsList,
   # keeps every bigram.
   stopWords <- stopWords[!is.na(stopWords) & nzchar(stopWords)]
   if (length(stopWords)) {
+    # Lookarounds instead of \b, which fails next to non-word characters
     wordListRegex <- paste0(
-      "\\b(?:", paste(stringr::str_escape(stopWords), collapse = "|"), ")\\b"
+      "(?<![[:alnum:]])(?:",
+      paste(stringr::str_escape(stopWords), collapse = "|"),
+      ")(?![[:alnum:]])"
     )
-    hasStopWord <- grepl(wordListRegex, wordsDataset$label, ignore.case = TRUE)
+    hasStopWord <- grepl(
+      wordListRegex, wordsDataset$label, ignore.case = TRUE, perl = TRUE
+    )
   } else {
     hasStopWord <- rep(FALSE, nrow(wordsDataset))
   }

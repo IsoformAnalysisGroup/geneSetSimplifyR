@@ -39,7 +39,7 @@
 #'
 #' @description Wraps a community-detection function into the object
 #'   `clusterGeneSets()` expects. The function receives the shared-nearest-
-#'   neighbour (SNN) graph built by `clusterGeneSets()` and a single resolution,
+#'   neighbor (SNN) graph built by `clusterGeneSets()` and a single resolution,
 #'   and returns one cluster id per gene set.
 #'
 #' @param fn A function with signature `function(snn, resolution, verbose, ...)`
@@ -417,7 +417,7 @@ snnToIgraph <- function(snn) {
 
   g <- igraph::graph_from_adjacency_matrix(
     adjmatrix = adjacency,
-    mode = "max",        # symmetrise defensively; SNN is already symmetric
+    mode = "max",        # symmetrize defensively; SNN is already symmetric
     weighted = TRUE,
     diag = FALSE
   )
@@ -586,9 +586,9 @@ kmeansBackend <- function(
     maxK <- max(2, min(round(n / 5), 100))
   }
   maxK <- min(maxK, n - 1L)
-  if (maxK <= 2) {
+  if (maxK < 2) {
     stop(
-      "'maxK' should be larger than 2; got ", maxK,
+      "'maxK' should be at least 2; got ", maxK,
       " (too few gene sets for automatic k selection)."
     )
   }

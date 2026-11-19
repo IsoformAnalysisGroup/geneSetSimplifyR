@@ -724,12 +724,14 @@ getGeneSets <- function(
     ))
   }
 
-  if (!gene_id_type %in% colnames(tib)) {
+  # msigdbr >= 10 calls the Entrez gene id column 'ncbi_gene'
+  idColumn <- if (gene_id_type == "entrez_gene") "ncbi_gene" else gene_id_type
+  if (!idColumn %in% colnames(tib)) {
     stop(sprintf(
       "Column '%s' not found in msigdbr output. Available columns include: %s.",
-      gene_id_type,
+      idColumn,
       paste(intersect(colnames(tib),
-                      c("ensembl_gene", "gene_symbol", "entrez_gene")),
+                      c("ensembl_gene", "gene_symbol", "ncbi_gene")),
             collapse = ", ")
     ))
   }
@@ -753,5 +755,5 @@ getGeneSets <- function(
     tib <- tib[keep, , drop = FALSE]
   }
 
-  split(tib[[gene_id_type]], tib$gs_name)
+  split(as.character(tib[[idColumn]]), tib$gs_name)
 }

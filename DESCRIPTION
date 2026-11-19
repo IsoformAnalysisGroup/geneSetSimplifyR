@@ -69,7 +69,7 @@ Suggests:
     BiocStyle,
     knitr,
     leiden,
-    msigdbr,
+    msigdbr (>= 10.0.0),
     rmarkdown,
     RSpectra,
     simplifyEnrichment,

@@ -40,7 +40,7 @@ runLSI <- function(object, n = 50, verbose = TRUE) {
   SeuratObject::VariableFeatures(object, assay = assay) <- features
 
   dataUse <- normData[features, , drop = FALSE]
-  n <- min(n, ncol(dataUse) - 1)
+  n <- min(n, min(dim(dataUse)) - 1)
 
   components <- truncatedSVD(Matrix::t(dataUse), n = n, verbose = verbose)
 
@@ -115,7 +115,10 @@ truncatedSVD <- function(A, n, verbose = TRUE) {
   ### that as a failure so the fallback runs, and drop other warnings.
   result <- tryCatch(
     withCallingHandlers(
-      irlba::irlba(A = A, nv = n, work = n * 3, tol = 1e-05),
+      # irlba draws a random start vector; keep the user's RNG stream intact
+      withr::with_preserve_seed(
+        irlba::irlba(A = A, nv = n, work = n * 3, tol = 1e-05)
+      ),
       warning = function(w) {
         if (grepl("converge", conditionMessage(w), ignore.case = TRUE)) {
           stop(conditionMessage(w), call. = FALSE)

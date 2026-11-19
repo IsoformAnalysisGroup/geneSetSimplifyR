@@ -115,3 +115,12 @@ test_that("objects without a metadata slot are upgraded", {
   g <- upgradeGsList(exampleGsList)
   expect_identical(g, exampleGsList)
 })
+
+test_that("a renamed cluster without automatic labels plots cleanly", {
+  g <- exampleGsList
+  col <- g@metadata$active_resolution
+  labels <- g@labels[[col]]$labelsDefault
+  g@labels[[col]]$labelsDefault <- labels[as.character(labels$cluster) != "0", ]
+  g <- updateClusterLabels(g, clusterNumber = 0, newClusterName = "Foo")
+  expect_no_warning(renderPlot(plotClusterLabels(g, clusterNumber = 0)))
+})

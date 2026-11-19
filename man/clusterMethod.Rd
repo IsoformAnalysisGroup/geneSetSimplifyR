@@ -38,7 +38,7 @@ An object of class \code{gsClusterMethod}.
 \description{
 Wraps a community-detection function into the object
 \code{clusterGeneSets()} expects. The function receives the shared-nearest-
-neighbour (SNN) graph built by \code{clusterGeneSets()} and a single resolution,
+neighbor (SNN) graph built by \code{clusterGeneSets()} and a single resolution,
 and returns one cluster id per gene set.
 }
 \details{

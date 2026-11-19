@@ -97,3 +97,21 @@ test_that("the elbow works on short and flat scree curves", {
   )
   expect_error(kvsElbow(c(1, 2, 3)), "decreasing")
 })
+
+test_that("fewer genes than gene sets can be clustered", {
+  set.seed(3)
+  genes <- paste0("G", 1:12)
+  sets <- lapply(1:60, function(i) sample(genes, sample(3:6, 1)))
+  names(sets) <- paste0("SET_", 1:60)
+  g <- initializeList(sets, verbose = FALSE)
+  expect_s4_class(clusterGeneSets(g, resolution = 1, verbose = FALSE), "gsList")
+})
+
+test_that("the truncated SVD does not change the session's random numbers", {
+  A <- matrix(stats::runif(200 * 150), 200)
+  set.seed(1)
+  expected <- stats::runif(3)
+  set.seed(1)
+  invisible(truncatedSVD(A, n = 10, verbose = FALSE))
+  expect_equal(stats::runif(3), expected)
+})

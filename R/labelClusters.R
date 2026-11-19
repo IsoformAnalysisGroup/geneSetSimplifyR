@@ -91,7 +91,7 @@ labelClusters <-
     currentClusters <- geneSetsList@cluster@active.ident
     currentClusterLabels <- levels(currentClusters)
 
-    ### Sanity check: every labelled cluster must exist in the active identity
+    ### Sanity check: every labeled cluster must exist in the active identity
     labeledClusters <- as.character(unique(
       geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]]$cluster
     ))
