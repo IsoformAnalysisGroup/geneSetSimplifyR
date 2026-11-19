@@ -24,31 +24,6 @@ numericClusterFactor <- function(x) {
   factor(ids, levels = seq_along(uniqueIds) - 1L)
 }
 
-#' Normalize cluster factor level order in a clustered gsList
-#'
-#' @description Rebuilds every `GSEA_snn_res.<res>` metadata column so its
-#'   factor levels are in numeric order (0, 1, 2, ...), starting at 0. Newer
-#'   objects get this automatically inside `clusterGeneSets()`; use this to
-#'   migrate objects clustered before that fix without re-clustering. Cluster
-#'   assignments are unchanged -- only the level order is corrected.
-#'
-#' @param geneSetsList A clustered 'gsList' object.
-#' @return The 'gsList' with normalized cluster factor level order.
-#' @export
-#'
-#' @examples
-#' gsListObject <- normalizeClusterLevels(exampleGsList)
-#' levels(gsListObject@cluster$GSEA_snn_res.1.1)
-normalizeClusterLevels <- function(geneSetsList) {
-  checkGsList(geneSetsList, needLabels = FALSE)
-  resCols <- availableResolutionColumns(geneSetsList)
-  for (col in resCols) {
-    geneSetsList@cluster@meta.data[[col]] <-
-      numericClusterFactor(geneSetsList@cluster@meta.data[[col]])
-  }
-  return(geneSetsList)
-}
-
 #' Build display labels aligned to a set of cluster ids
 #'
 #' Internal helper. Takes the `labelsDefault` table for one resolution, keeps
@@ -187,10 +162,7 @@ resolveResolutionColumn <- function(geneSetsList, resolution = NULL) {
     return(resolutionColumn)
   }
 
-  activeColumn <- NULL
-  if (.hasSlot(geneSetsList, "metadata")) {
-    activeColumn <- geneSetsList@metadata$active_resolution
-  }
+  activeColumn <- geneSetsList@metadata$active_resolution
   if (!is.null(activeColumn) && activeColumn %in% available) {
     return(activeColumn)
   }
@@ -333,7 +305,6 @@ updateResolution <- function(
     resolution
 ) {
   checkGsList(geneSetsList)
-  geneSetsList <- upgradeGsList(geneSetsList)
   if (missing(resolution) || is.null(resolution)) {
     stop("'resolution' should be a single number.")
   }

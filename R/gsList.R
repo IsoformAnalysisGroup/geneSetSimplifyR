@@ -45,21 +45,3 @@ gsList <- setClass(
   )
 )
 
-#' Add slots missing from objects created by older package versions
-#'
-#' @param geneSetsList A 'gsList' object.
-#' @return The object, with an empty `metadata` slot added if it had none.
-#' @keywords internal
-upgradeGsList <- function(geneSetsList) {
-  if (.hasSlot(geneSetsList, "metadata")) {
-    return(geneSetsList)
-  }
-  methods::new(
-    "gsList",
-    genesetsDataframe = geneSetsList@genesetsDataframe,
-    enrichmentScore = geneSetsList@enrichmentScore,
-    cluster = geneSetsList@cluster,
-    labels = geneSetsList@labels,
-    metadata = list()
-  )
-}

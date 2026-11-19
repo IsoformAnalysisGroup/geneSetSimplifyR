@@ -20,7 +20,7 @@ setMethod("show", "gsList", function(object) {
   }
   cat(summaryLine, "\n", sep = "")
 
-  meta <- if (.hasSlot(object, "metadata")) object@metadata else list()
+  meta <- object@metadata
   if (length(meta)) {
     cat("Metadata:\n")
     if (!is.null(meta$cluster_algorithm)) {

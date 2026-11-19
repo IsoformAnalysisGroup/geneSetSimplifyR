@@ -111,11 +111,6 @@ test_that("show prints a summary", {
   expect_output(show(exampleGsList), "gsList object with 197 gene sets")
 })
 
-test_that("objects without a metadata slot are upgraded", {
-  g <- upgradeGsList(exampleGsList)
-  expect_identical(g, exampleGsList)
-})
-
 test_that("a renamed cluster without automatic labels plots cleanly", {
   g <- exampleGsList
   col <- g@metadata$active_resolution

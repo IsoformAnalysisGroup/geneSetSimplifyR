@@ -246,11 +246,10 @@ plotClusterLabels <- function(
 #' Settings used by labelClusters()
 #'
 #' @param geneSetsList A labeled 'gsList' object.
-#' @return A list with `removeFirstWord` and `stopWords`. Objects labeled by
-#'   older versions, which did not record them, get the defaults.
+#' @return A list with `removeFirstWord` and `stopWords`.
 #' @keywords internal
 labelingSettings <- function(geneSetsList) {
-  meta <- if (.hasSlot(geneSetsList, "metadata")) geneSetsList@metadata else list()
+  meta <- geneSetsList@metadata
   list(
     removeFirstWord = isTRUE(meta$remove_first_word),
     stopWords = if (is.null(meta$stop_words)) {

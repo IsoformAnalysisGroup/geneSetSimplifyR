@@ -1,5 +1,5 @@
 #' @import ggplot2
-#' @importFrom methods .hasSlot new
+#' @importFrom methods new
 #' @importFrom stats as.dendrogram as.dist hclust mad median reorder sd
 #' @importFrom utils head tail
 #' @importFrom grDevices colorRampPalette

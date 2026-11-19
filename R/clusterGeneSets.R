@@ -73,7 +73,6 @@ clusterGeneSets <-
     if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
-    geneSetsList <- upgradeGsList(geneSetsList)
 
     if (!is.numeric(resolution) || !length(resolution) ||
         anyNA(resolution) || any(!is.finite(resolution)) ||

@@ -29,7 +29,6 @@ First version submitted to Bioconductor.
 * `geneSetSimplifyR()` passes `K`, `stopWords` and `nLabels` on.
 * The example data `exampleEnrichment` (and `exampleGsList`) include the
   fgsea p-values and adjusted p-values (`pval`, `padj`).
-* `normalizeClusterLevels()` updates objects clustered by earlier versions.
 * The `gsList` class has a `metadata` slot recording parameters and results.
 
 ## Changes in behavior

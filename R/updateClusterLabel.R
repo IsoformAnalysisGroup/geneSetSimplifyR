@@ -31,7 +31,6 @@ updateClusterLabels <- function(
     newClusterName
 ) {
   checkGsList(geneSetsList)
-  geneSetsList <- upgradeGsList(geneSetsList)
 
   if (missing(clusterNumber) || length(clusterNumber) != 1L ||
       is.na(clusterNumber)) {

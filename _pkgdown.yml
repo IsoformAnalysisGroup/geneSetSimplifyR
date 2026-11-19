@@ -30,7 +30,6 @@ reference:
       - extractResolution
       - updateResolution
       - updateClusterLabels
-      - normalizeClusterLevels
   - title: Input helpers
     desc: Convert enrichment results and fetch gene sets.
     contents:

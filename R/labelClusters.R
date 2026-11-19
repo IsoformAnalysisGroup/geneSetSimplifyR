@@ -32,7 +32,6 @@ labelClusters <-
     if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
-    geneSetsList <- upgradeGsList(geneSetsList)
 
     if (length(geneSetsList@cluster) == 0) {
       stop("No clustering performed for 'geneSetsList'. ",
