@@ -56,3 +56,37 @@ jobs:
             `quit-with-status` = TRUE,
             `no-check-bioc-help` = TRUE
           )
+
+  # Bioconductor checks new submissions against its devel branch
+  check-devel:
+    runs-on: ubuntu-latest
+    name: Bioconductor devel
+    container: bioconductor/bioconductor_docker:devel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The container installs Bioconductor's prebuilt binaries
+      - name: Install dependencies
+        shell: Rscript {0}
+        run: |
+          BiocManager::install(c("remotes", "rcmdcheck", "BiocCheck"), ask = FALSE, update = FALSE)
+          deps <- remotes::local_package_deps(dependencies = TRUE)
+          BiocManager::install(deps, ask = FALSE, update = FALSE)
+
+      - name: R CMD check
+        shell: Rscript {0}
+        run: |
+          rcmdcheck::rcmdcheck(
+            args = "--no-manual", error_on = "warning", check_dir = "check"
+          )
+
+      - name: BiocCheck
+        shell: Rscript {0}
+        run: |
+          BiocCheck::BiocCheck(
+            ".",
+            `new-package` = TRUE,
+            `quit-with-status` = TRUE,
+            `no-check-bioc-help` = TRUE
+          )
