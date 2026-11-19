@@ -40,12 +40,12 @@ distinct \code{source} label and \code{rbind()} the resulting \code{geneSetsDF}s
 }
 \examples{
 # A small table in the format of fgsea::fgsea() output
-pathways <- names(exampleGeneSets)[1:60]
+pathways <- names(exampleGeneSets)[1:90]
 fgseaRes <- data.frame(
     pathway = pathways,
-    pval = rep(c(0.001, 0.01, 0.3), 20),
-    padj = rep(c(0.004, 0.03, 0.5), 20),
-    NES = seq(-2.5, 2.5, length.out = 60)
+    pval = rep(c(0.001, 0.01, 0.3), 30),
+    padj = rep(c(0.004, 0.03, 0.5), 30),
+    NES = seq(-2.5, 2.5, length.out = 90)
 )
 parsed <- parseFgsea(
     fgseaResult = fgseaRes,

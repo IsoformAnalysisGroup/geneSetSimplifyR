@@ -29,13 +29,13 @@
 #'
 #' @examples
 #' # A small table in the format of pairedGSEA::paired_ora() output
-#' pathways <- names(exampleGeneSets)[1:60]
+#' pathways <- names(exampleGeneSets)[1:90]
 #' oraResult <- data.frame(
 #'     pathway = pathways,
-#'     padj_expression = rep(c(0.01, 0.2), 30),
-#'     enrichment_score_expression = seq(-2, 2, length.out = 60),
-#'     padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
-#'     enrichment_score_splicing = seq(2, -2, length.out = 60),
+#'     padj_expression = rep(c(0.01, 0.2), 45),
+#'     enrichment_score_expression = seq(-2, 2, length.out = 90),
+#'     padj_splicing = rep(c(0.2, 0.01, 0.01), 30),
+#'     enrichment_score_splicing = seq(2, -2, length.out = 90),
 #'     padj_paired = 1,
 #'     enrichment_score_paired = 0
 #' )
@@ -185,12 +185,12 @@ parsePairedGSEA <- function(
 #'
 #' @examples
 #' # A small table in the format of fgsea::fgsea() output
-#' pathways <- names(exampleGeneSets)[1:60]
+#' pathways <- names(exampleGeneSets)[1:90]
 #' fgseaRes <- data.frame(
 #'     pathway = pathways,
-#'     pval = rep(c(0.001, 0.01, 0.3), 20),
-#'     padj = rep(c(0.004, 0.03, 0.5), 20),
-#'     NES = seq(-2.5, 2.5, length.out = 60)
+#'     pval = rep(c(0.001, 0.01, 0.3), 30),
+#'     padj = rep(c(0.004, 0.03, 0.5), 30),
+#'     NES = seq(-2.5, 2.5, length.out = 90)
 #' )
 #' parsed <- parseFgsea(
 #'     fgseaResult = fgseaRes,
