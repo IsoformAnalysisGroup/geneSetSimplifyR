@@ -23,7 +23,6 @@ plotProportions <- function(
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 )  {
-  # Check input
   checkGsList(geneSetsList)
 
   nCond <- countConditions(geneSetsList)
@@ -41,7 +40,6 @@ plotProportions <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Set the cluster resolution and labels to plot
   geneSetsList <- changeUsedResolution(
     geneSetsList = geneSetsList,
     resolution = resolution,

@@ -105,8 +105,7 @@ tfidfTransform <- function(counts, scaleFactor = 1e4) {
 #' @keywords internal
 #' @noRd
 truncatedSVD <- function(A, n, verbose = TRUE) {
-  ### Small problems: a full SVD is exact and cheap. irlba is not designed
-  ### for computing most of the singular values.
+  ### Small problems: a full SVD is exact and cheap (irlba suits few vectors)
   if (2 * n >= min(dim(A))) {
     return(denseSVD(A, n))
   }

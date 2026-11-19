@@ -45,7 +45,6 @@ plotHeatmap <- function(
     drawPlot = TRUE,
     scaleCols = "auto"
 ) {
-  # Check input
   checkGsList(geneSetsList)
 
   summaryStat <- match.arg(summaryStat)
@@ -69,7 +68,6 @@ plotHeatmap <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Extract plot data
   plotData <-
     summarizeEnrichment(
       geneSetsList = geneSetsList,
@@ -82,7 +80,7 @@ plotHeatmap <- function(
   # Data without a 'source' column has a single, unnamed source
   plotData$source[is.na(plotData$source)] <- 'All gene sets'
 
-  ### Massage into matrix (sources x clusters)
+  ### Matrix of sources x clusters
   clusterOrder <- unique(plotData$cluster)
   plotMatrix <-
     plotData %>%
@@ -93,16 +91,13 @@ plotHeatmap <- function(
     as.matrix()
   plotMatrix <- plotMatrix[, clusterOrder, drop = FALSE]
 
-  ### Normalize each cluster across sources
-  # Done here rather than through pheatmap's own 'scale' argument because the
-  # colors, breaks and legend below are all derived from 'plotMatrix' -- if
-  # pheatmap scaled internally those would stay on the raw scale.
+  ### Scale here, not with pheatmap's 'scale', so the colors, breaks and
+  ### legend below are computed on the scaled values
   if(scaleCols) {
     isMissing <- is.na(plotMatrix)
     plotMatrix <- scale(plotMatrix, center = TRUE, scale = TRUE)
 
-    # Clusters without any variation across sources become NaN - they are
-    # flat, so 0 is the sensible z-score for every one of their cells
+    # Clusters with no variation across sources become NaN; use 0
     plotMatrix[is.nan(plotMatrix) & !isMissing] <- 0
 
     attr(plotMatrix, 'scaled:center') <- NULL
@@ -113,9 +108,7 @@ plotHeatmap <- function(
     plotMatrix <- t(plotMatrix)
   }
 
-  ### Hierarchical clustering of rows and columns
-  # Done on a copy where absent cells are 0, so the heatmap itself can show
-  # them as missing.
+  ### Cluster on a copy with absent cells as 0, so the heatmap shows them as NA
   clusteringMatrix <- plotMatrix
   clusteringMatrix[is.na(clusteringMatrix)] <- 0
   doHCluster <- countConditions(geneSetsList) != '1'
@@ -128,10 +121,8 @@ plotHeatmap <- function(
     clusterCols <- stats::hclust(stats::dist(t(clusteringMatrix)))
   }
 
-  ### Determine colors
   if(any(!is.na(plotMatrix) & plotMatrix < 0)) {
-    # Signed values (e.g. NES, or anything z-scored) get a diverging palette
-    # centered on zero
+    # Signed values (e.g. NES, z-scores) get a diverging palette centered on 0
     myColors <- colorRampPalette(c('royalblue','white',"#e34632"))( 100 )
     breakRange <- c(-1, 1) * max(abs(plotMatrix), na.rm = TRUE)
   } else {
@@ -140,17 +131,14 @@ plotHeatmap <- function(
     breakRange <- range(plotMatrix, na.rm = TRUE)
   }
 
-  # A constant matrix gives a zero-width range; widen it so the breaks are
-  # unique
+  # A constant matrix has a zero-width range; widen it so breaks are unique
   if (diff(breakRange) == 0) {
     breakRange <- breakRange + c(-1, 1) * max(abs(breakRange[1]), 1)
   }
 
   myBreaks <- seq(breakRange[1], breakRange[2], length.out = 101)
 
-  ### Add legend title
-  # Taken from the same range as 'myBreaks' - otherwise a matrix without
-  # negative values gets a legend spanning values its colors never cover
+  ### The legend range matches 'myBreaks', so it never shows uncolored values
   myLegendBreaks <- seq(breakRange[1], breakRange[2], length.out = 7)
   myLegendLabels <- round(myLegendBreaks, digits = 2)
   myLegendLabels[length(myLegendLabels)] <- paste0(
@@ -160,19 +148,16 @@ plotHeatmap <- function(
     '\n'
   )
 
-  ### Title naming the value shown
-  # Uses the column 'validatePlotFrom()' settled on, so it also tells the user
-  # when the default fell back from 'nlog10pval' to 'enrichment_score'. The
-  # scaling is left to the legend title, which already says 'Z-score'/'Raw'.
+  ### The title names the column validatePlotFrom() chose, which may be a
+  ### fallback from 'nlog10pval' to 'enrichment_score'
   plotTitle <- enrichmentSummaryLabel(summaryStat, plotFrom)
 
-  ### Make plot
   tmp <- pheatmap::pheatmap(
     mat = plotMatrix,
     cluster_rows = clusterRows,
     cluster_cols = clusterCols,
     scale = 'none', # 'scaleCols' is already applied to 'plotMatrix' above
-    kmeans_k = NA,     # When NA no aggregation is done
+    kmeans_k = NA,
     show_rownames = TRUE,
     show_colnames = TRUE,
     color = myColors,
@@ -180,8 +165,8 @@ plotHeatmap <- function(
     na_col = 'grey85',
     legend_breaks = myLegendBreaks,
     legend_labels = myLegendLabels,
-    cutree_rows = cutree_rows, # set to NA to turn off
-    cutree_cols = cutree_cols, # set to NA to turn off
+    cutree_rows = cutree_rows,
+    cutree_cols = cutree_cols,
     labels_row = boldNames(rownames(plotMatrix), clusterNameToHighlight),
     labels_col = boldNames(colnames(plotMatrix), clusterNameToHighlight),
     angle_col = 315,

@@ -21,7 +21,6 @@ getLabels <- function(geneSetsList,
                       ) {
   seuratObj <- geneSetsList@cluster
 
-  # Initialize variables
   wordsDataset <- tibble::tibble()
   centralGenesets <- tibble::tibble()
   matrix <- as.matrix(seuratObj@graphs[["GSEA_snn"]])
@@ -29,24 +28,11 @@ getLabels <- function(geneSetsList,
   # Cluster ids are consecutive and start at 0 (see numericClusterFactor())
   clusterIds <- as.numeric(levels(seuratObj@meta.data[[clusterResolution]]))
 
-  # Get info for each cluster
   for (i in clusterIds + 1) {
-    # GET TOKENS
-    # example:
-      # geneset
-      # NUTT_GBM_VS_AO_GLIOMA_UP
-      # KAAB_FAILED_HEART_ATRIUM_DN
     genesetsCluster <-
       tibble::as_tibble_col(Seurat::WhichCells(object = seuratObj, ident = i - 1),
                             column_name = "geneset")
 
-    # example:
-      #  cluster, label
-      #  1, NUTT GBM
-      #  1, GBM VS
-      #  1, VS A0
-      #  1, A0 GLIOMA
-      # ...
     wordsCluster <- genesetsCluster %>%
       # Keep 'geneset' as the original name (with its underscores) so it still
       # matches the centrality table; tokenize a space-delimited copy instead.
@@ -74,16 +60,11 @@ getLabels <- function(geneSetsList,
 
     wordsDataset <- dplyr::bind_rows(wordsDataset, wordsCluster)
 
-    # GET GENESETS
     clusterGenesets <-
       Seurat::WhichCells(object = seuratObj, ident = i - 1)
-    # drop = FALSE is essential: a singleton cluster would otherwise collapse to
-    # a bare scalar, losing the dimnames, and the resulting one-vertex graph has
-    # no vertex name -- so betweenness() returns an unnamed value, the gene set
-    # is recorded as NA, and the cluster silently disappears in the join below.
+    # drop = FALSE: a singleton cluster would otherwise lose its gene-set name
     clusterMatrix <- matrix[clusterGenesets, clusterGenesets, drop = FALSE]
 
-    # central gene set
     g <-
       igraph::graph_from_adjacency_matrix(
         clusterMatrix,
@@ -95,8 +76,7 @@ getLabels <- function(geneSetsList,
     igraph::E(g)$distance <- 1 / igraph::E(g)$weight
     c <- igraph::betweenness(g, weights=igraph::E(g)$distance)
 
-    # Belt and braces: keep the gene set names attached even if the graph came
-    # back without vertex names.
+    # Keep the gene-set names even if the graph has no vertex names
     if (is.null(names(c))) {
       names(c) <- clusterGenesets
     }
@@ -121,10 +101,7 @@ getLabels <- function(geneSetsList,
     dplyr::slice_max(centrality_score, n = nLabels, with_ties = FALSE) %>%
     dplyr::ungroup()
 
-  # GET TFIDF
-  # Drop bigrams containing a stop word. Words are escaped so stop words with
-  # regex symbols (e.g. "c++") are matched literally; an empty stop-word list
-  # keeps every bigram.
+  # Drop bigrams containing a stop word; an empty list keeps every bigram
   stopWords <- stopWords[!is.na(stopWords) & nzchar(stopWords)]
   if (length(stopWords)) {
     # Lookarounds instead of \b, which fails next to non-word characters
@@ -166,7 +143,6 @@ getLabels <- function(geneSetsList,
     dplyr::mutate(cluster = as.character(cluster)) %>%
     dplyr::right_join(clustersTFIDF, by = c("label", "cluster"))
 
-  # SCALE CENTRALITY
   centralGenesets <- centralGenesets %>%
     dplyr::mutate(centrality_score_transformed = log10(centrality_score + 1)) %>%
     dplyr::group_by(cluster) %>%
@@ -179,7 +155,7 @@ getLabels <- function(geneSetsList,
     dplyr::mutate(cluster = as.character(cluster)) %>%
     dplyr::ungroup()
 
-  # SCALE TF-IDF (per cluster, to [0, 1] — matches centrality range)
+  # Scale TF-IDF per cluster to [0, 1], the range of the centrality score
   clustersTFIDFGenesets <- clustersTFIDFGenesets %>%
     dplyr::group_by(cluster) %>%
     dplyr::mutate(tf_idf_scaled = if (max(tf_idf, na.rm = TRUE) > 0) tf_idf / max(tf_idf, na.rm = TRUE) else 0) %>%
@@ -201,15 +177,8 @@ getLabels <- function(geneSetsList,
     dplyr::ungroup() %>%
     dplyr::select(label, cluster, weighted_score)
 
-  # DISAMBIGUATE SHARED TOP LABELS
-  # The top-ranked bigram per cluster is used as the cluster's displayed name.
-  # When several clusters share the same top bigram, append each cluster's
-  # second-ranked bigram so the names become unique, e.g. two clusters both
-  # labeled "Metabolic Process" become "Metabolic Process; Mrna Splicing" and
-  # "Metabolic Process; Catabolic Process". If names are still not unique (e.g.
-  # the second labels are shared too, or a cluster has no second label), the
-  # cluster id is appended as a last resort, so every cluster keeps a distinct
-  # name even when plots drop the "<id>: " prefix.
+  # Clusters sharing a top label get their second label appended, then their
+  # id if still not unique, so every cluster name is distinct
   labelsDefault <- labelsDefault %>%
     dplyr::group_by(cluster) %>%
     dplyr::arrange(dplyr::desc(weighted_score), .by_group = TRUE) %>%

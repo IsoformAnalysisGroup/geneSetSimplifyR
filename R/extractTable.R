@@ -39,7 +39,6 @@ extractTable <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Get cluster labels
   df_cluster <- data.frame(
     pathway = names(geneSetsList@cluster@active.ident),
     cluster = as.character(geneSetsList@cluster@active.ident),
@@ -68,7 +67,6 @@ extractTable <- function(
   ### Keep the cluster order of the plots (numeric cluster id)
   clusterOrder <- levels(geneSetsList@cluster@active.ident)
 
-  ### Extract info
   clusterScores <-
     geneSetsList@enrichmentScore %>%
     dplyr::inner_join(
@@ -77,7 +75,6 @@ extractTable <- function(
     ) %>%
     dplyr::arrange(match(cluster, clusterOrder))
 
-  ### Summarize
   if( summarize ) {
     clusterScores <-
       clusterScores %>%

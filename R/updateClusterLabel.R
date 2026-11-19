@@ -60,7 +60,6 @@ updateClusterLabels <- function(
     labelsDefault$org_label <- labelsDefault$label
   }
 
-  ### Warn if the new name is already used by another cluster
   otherLabels <- alignedClusterLabels(
     geneSetsList = geneSetsList,
     resolutionColumn = resolutionColumn,

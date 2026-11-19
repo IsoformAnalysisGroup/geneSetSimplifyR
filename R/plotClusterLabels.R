@@ -41,9 +41,8 @@ plotClusterLabels <- function(
     )
   }
 
-  ### Extract plot data
   {
-    ### Overwrite with original labels if necessary
+    ### The TF-IDF panel shows the automatic labels, not renamed ones
     if( 'org_label' %in% colnames(geneSetsList@labels[[resolutionColumn]]$labelsDefault) ) {
       geneSetsList@labels[[resolutionColumn]]$labelsDefault$label <-
         geneSetsList@labels[[resolutionColumn]]$labelsDefault$org_label
@@ -201,7 +200,7 @@ plotClusterLabels <- function(
         )
       )
 
-    ### Cut to long gene names while preserving factor order
+    ### Shorten long gene-set names, keeping the factor order
     factorOrder <- match(
       levels(jointData$label), jointData$label
     )
@@ -226,7 +225,6 @@ plotClusterLabels <- function(
     dplyr::mutate(sortKey = -seq_len(dplyr::n())) %>%
     dplyr::ungroup()
 
-  ### Plot
   p1 <-
     jointData %>%
     ggplot(aes(x=tidytext::reorder_within(label, sortKey, measure), y=value)) +

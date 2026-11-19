@@ -223,9 +223,7 @@ changeUsedResolution <- function(
   currentClusterLabels <-
     levels(geneSetsList@cluster@active.ident)
 
-  # Match labels to the active.ident levels by cluster id (see
-  # alignedClusterLabels()) -- a positional pairing breaks whenever a cluster
-  # has no label or the level order is not numeric.
+  # Match labels to levels by cluster id (see alignedClusterLabels())
   defaultLabels <- alignedClusterLabels(
     geneSetsList = geneSetsList,
     resolutionColumn = resolutionColumn,
@@ -599,7 +597,6 @@ cutGeneSetName <- function(aVec, maxChar = 60) {
     regexpr(directionPattern, aVec[hasDirection], ignore.case = TRUE)
   )
 
-  ### Only names longer than 'maxChar' are shortened
   toModify <- nchar(aVec) > maxChar
   if (any(toModify)) {
     keepChar <- pmax(maxChar - 3 - nchar(suffix[toModify]), 1) # 3 for "..."

@@ -28,7 +28,6 @@ labelClusters <-
            verbose = TRUE
     ) {
 
-    # Check input
     if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
@@ -53,12 +52,10 @@ labelClusters <-
       message("Generating labels for clusters...")
     }
 
-    # Initialize list
     geneSetsList@labels <- list()
 
     resolutions <- availableResolutionColumns(geneSetsList)
 
-    ### For each resolution extract label info
     for (i in resolutions) {
       geneSetsList@labels[[i]] <- list()
 
@@ -78,13 +75,9 @@ labelClusters <-
       }
     }
 
-    ### Extract default labels
     defaultResolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
 
-    ### Reset the identities to the raw cluster ids of the default resolution.
-    ### Reading them back from meta.data instead of trusting whatever
-    ### active.ident happens to hold keeps labelClusters() re-runnable on an
-    ### object that was already labelled.
+    ### Read ids from meta.data so a labeled object can be labeled again
     Seurat::Idents(geneSetsList@cluster) <-
       geneSetsList@cluster@meta.data[[defaultResolutionColumn]]
     currentClusters <- geneSetsList@cluster@active.ident
@@ -122,7 +115,6 @@ labelClusters <-
       to = defaultLabels
     )
 
-    ### Record labeling metadata
     geneSetsList@metadata$active_resolution <- defaultResolutionColumn
     geneSetsList@metadata$n_labels <- nLabels
     geneSetsList@metadata$remove_first_word <- removeFirstWord

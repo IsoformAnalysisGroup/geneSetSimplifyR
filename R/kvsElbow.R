@@ -30,7 +30,6 @@ kvsElbow <- function(
 ) {
   method <- match.arg(method)
 
-  ### Test input
   if (is.unsorted(-variance)) {
     stop("'variance' should be sorted in decreasing order")
   }
@@ -44,15 +43,12 @@ kvsElbow <- function(
   }
 
   if (method == "zscore") {
-    ### Scale
     varianceScaled <- scale(variance, center = TRUE, scale = TRUE)
 
-    ### Calculate stepwise change (1st order derivative)
     stepwiseDecrease <-
       varianceScaled[-length(varianceScaled)] -
       varianceScaled[-1]
 
-    ### Calculate z-score from stepwise change
     stepwiseMad <- mad(stepwiseDecrease)
     if (!is.finite(stepwiseMad) || stepwiseMad == 0) {
       stepwiseZ <- rep(0, length(stepwiseDecrease))
@@ -67,10 +63,8 @@ kvsElbow <- function(
       cutoffIndex <- max(max(which(stepwiseZ > zScoreCutoff)) + 1L, 2L)
     }
   } else {
-    ### Distance-to-chord (Kneedle-style).
-    ### LSI_1 typically captures technical variation (depth) and dominates the
-    ### scree curve, so drop it before locating the knee; its inflated stdev
-    ### would otherwise distort the [0, 1] normalization and the chord.
+    ### Kneedle-style distance to the chord. LSI_1 mostly reflects gene-set
+    ### size and dominates the curve, so it is left out.
     varianceElbow <- variance[-1]
 
     n <- length(varianceElbow)
@@ -88,15 +82,12 @@ kvsElbow <- function(
     }
     yNorm <- (y - min(y)) / yRange
 
-    ### Endpoints of the scree curve
     p1 <- c(xNorm[1], yNorm[1])
     pN <- c(xNorm[n], yNorm[n])
 
-    ### Unit direction of the chord from first to last endpoint
     chord <- pN - p1
     chord <- chord / sqrt(sum(chord^2))
 
-    ### Perpendicular distance of every point to that chord
     vecFromP1 <- cbind(xNorm - p1[1], yNorm - p1[2])
     proj <- as.vector(vecFromP1 %*% chord)
     perp <- vecFromP1 - outer(proj, chord)

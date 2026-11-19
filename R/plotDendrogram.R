@@ -26,7 +26,6 @@ plotDendrogram <- function(
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 )  {
-  # Check input
   checkGsList(geneSetsList)
 
   clusterNameToHighlight <- highlightedClusterNames(
@@ -36,14 +35,12 @@ plotDendrogram <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Set the cluster resolution and labels to plot
   geneSetsList <- changeUsedResolution(
     geneSetsList = geneSetsList,
     resolution = resolution,
     removeClusterId = removeClusterId
   )
 
-  ### Extract clusters
   clusterIdents <- geneSetsList@cluster@active.ident
   clusterOf <- as.character(clusterIdents)
   clusterVec <- levels(droplevels(clusterIdents))
@@ -72,12 +69,10 @@ plotDendrogram <- function(
     }
   }
 
-  # Perform hierarchical clustering using the complete linkage method
   hcAvg <- hclust(as.dist(avgDist), method = "complete")
 
-  ### Draw the dendrogram as line segments, leaves on the y axis. The
-  ### average distances between clusters are often all close to 1, so the
-  ### axis starts just below the lowest merge instead of at 0.
+  ### Leaves on the y axis. Average distances are often all close to 1, so
+  ### the axis starts just below the lowest merge instead of at 0.
   heightRange <- range(hcAvg$height)
   leafHeight <- heightRange[1] -
     max(diff(heightRange), 0.05 * heightRange[2], 1e-3)

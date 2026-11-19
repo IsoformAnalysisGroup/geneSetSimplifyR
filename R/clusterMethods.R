@@ -1,35 +1,5 @@
-### ---------------------------------------------------------------------------
-### Pluggable clustering backends
-###
-### `clusterGeneSets()` always builds the same SNN graph (LSI -> cosine KNN ->
-### shared-nearest-neighbor). Everything after that point -- turning the graph
-### into cluster assignments -- is delegated to a *cluster method*, so the
-### community-detection step can be swapped for another implementation (another
-### package, a tuned variant, an in-house algorithm) without touching the rest
-### of the workflow.
-###
-### A cluster method is a function with the contract
-###
-###     function(snn, resolution, verbose = FALSE, ...) -> cluster ids
-###
-###   snn        Shared-nearest-neighbour graph as a sparse symmetric matrix
-###              (a Seurat 'Graph'); rows/columns are gene sets, values are SNN
-###              similarities in [0, 1].
-###   resolution A single numeric resolution.
-###   verbose    Whether the backend may print progress.
-###   ...        Extra arguments forwarded from `clusterGeneSets(clusterArgs=)`.
-###
-### The return value must be one cluster id per column of `snn`: a vector,
-### factor, or single-column data.frame/matrix. Ids may be 0- or 1-based and in
-### any order -- `clusterGeneSets()` renumbers them to start at 0. If the result
-### is named, it is reordered to match `colnames(snn)`.
-###
-### Not every algorithm has a resolution knob. Methods that pick their own
-### number of clusters (kmeans, apcluster, binary_cut) declare
-### `usesResolution = FALSE`, and `clusterGeneSets()` then runs them once
-### instead of sweeping a resolution vector that would produce identical
-### results.
-### ---------------------------------------------------------------------------
+### Clustering backends for clusterGeneSets(). The contract a method must
+### follow is documented in ?clusterMethod.
 
 # Registry of available cluster methods, keyed by name. Populated in .onLoad().
 .clusterMethodRegistry <- new.env(parent = emptyenv())
@@ -332,8 +302,7 @@ runClusterMethod <- function(
     )
   }
 
-  # 'verbose' is only passed to methods that can take it, so a method with
-  # the minimal signature function(snn, resolution) also works.
+  # 'verbose' only goes to methods that take it
   fnArgs <- names(formals(method$fn))
   callArgs <- list(snn = snn, resolution = resolution)
   if (any(c("verbose", "...") %in% fnArgs)) {
@@ -366,9 +335,7 @@ runClusterMethod <- function(
     )
   }
 
-  # Reorder by name when the backend names its output after the gene sets.
-  # Names that only partly match the gene sets point to a bug in the backend,
-  # so they are rejected rather than silently assigned by position.
+  # Reorder by name; names that only partly match point to a backend bug
   idNames <- names(ids)
   if (!is.null(idNames) && any(idNames %in% colnames(snn))) {
     if (anyDuplicated(idNames) || !setequal(idNames, colnames(snn))) {
@@ -470,8 +437,7 @@ snnToMatrix <- function(snn, warnAbove = 5000) {
 
 ### --- Built-in backends -----------------------------------------------------
 
-# Seurat's FindClusters has a method for graphs, so the backend can hand it the
-# SNN matrix directly rather than the whole Seurat object.
+# FindClusters() takes the SNN graph directly, not just a Seurat object
 seuratBackend <- function(algo) {
   function(snn, resolution, verbose = FALSE, ...) {
     res <- tryCatch(
@@ -498,8 +464,7 @@ seuratBackend <- function(algo) {
   }
 }
 
-# igraph's community detection is randomized; 'seed' (default 42, NA for no
-# seeding) makes it reproducible without changing the user's RNG stream.
+# 'seed' (NA: none) makes igraph reproducible; the user's RNG is untouched
 igraphBackend <- function(fun, defaults = list()) {
   function(snn, resolution, verbose = FALSE, seed = 42, ...) {
     g <- snnToIgraph(snn)
@@ -509,8 +474,7 @@ igraphBackend <- function(fun, defaults = list()) {
       list(weights = igraph::E(g)$weight, ...)
     )
 
-    # igraph renamed the resolution argument across versions
-    # (resolution_parameter -> resolution); support both.
+    # igraph renamed resolution_parameter to resolution; support both
     argNames <- names(formals(fun))
     if ("resolution" %in% argNames) {
       args$resolution <- resolution
@@ -524,9 +488,7 @@ igraphBackend <- function(fun, defaults = list()) {
   }
 }
 
-# Evaluate an expression under a fixed RNG seed without leaving the user's
-# random stream perturbed. k-means initialization is random, so a seed is the
-# difference between reproducible and non-reproducible cluster assignments.
+# Run under a fixed seed, then restore the user's RNG stream
 withSeed <- function(seed, expr) {
   if (is.null(seed) || is.na(seed)) {
     return(force(expr))
@@ -534,19 +496,14 @@ withSeed <- function(seed, expr) {
   withr::with_seed(seed, expr)
 }
 
-# Kneedle-style knee detection on the within-cluster-sum-of-squares curve,
-# matching simplifyEnrichment::cluster_by_kmeans(). `elbowFinder` measures the
-# perpendicular distance to the line joining the highest-WSS point and the
-# largest-k point; `kneeFinder` measures the vertical gap below the chord
-# spanning the whole curve. cluster_by_kmeans() takes the smaller of the two,
-# which biases the choice toward fewer clusters.
+# Elbow and knee of the WSS curve as in simplifyEnrichment::cluster_by_kmeans(),
+# which takes the smaller k of the two.
 elbowFinder <- function(x, y) {
   maxXx <- max(x)
   maxXy <- y[which.max(x)]
   maxYy <- max(y)
   maxYx <- x[which.max(y)]
 
-  # A least-squares fit through two points is just the line through them.
   if (maxXx == maxYx) {
     return(x[1])
   }
@@ -566,10 +523,7 @@ kneeFinder <- function(x, y) {
   return(x[which.max(slope * x - y)])
 }
 
-# k-means over the rows of the SNN similarity matrix, i.e. gene sets are
-# compared by their similarity profiles. k is chosen automatically the way
-# simplifyEnrichment does it: sweep k, then take the more conservative of the
-# elbow and knee estimates on the WSS curve.
+# k-means on the rows of the SNN matrix; k is chosen as in simplifyEnrichment
 kmeansBackend <- function(
     snn,
     resolution,
@@ -618,19 +572,8 @@ kmeansBackend <- function(
   return(ids)
 }
 
-# Affinity propagation. Unlike simplifyEnrichment, which turns the input into
-# points and derives similarities with negDistMat(), the SNN graph already IS a
-# similarity matrix, so it is handed to apcluster() directly -- keeping the
-# "always cluster on SNN similarity" promise of the workflow.
-#
-# Granularity note: apcluster's usual `q` knob (the quantile of the input
-# similarities used as the self-preference) is degenerate on an SNN graph.
-# Roughly 80% of SNN entries are exactly 0, so every q below that quantile
-# yields the same preference and the same clustering. Tune `p` instead --
-# `clusterArgs = list(p = -1)` -- where lower (more negative) values relative to
-# the [0, 1] similarity scale give fewer, larger clusters. Note that affinity
-# propagation is invariant to adding a constant to all similarities and the
-# preference together, so rescaling the matrix on its own changes nothing.
+# Affinity propagation on the SNN similarity. Tune 'p' rather than 'q': about
+# 80% of SNN entries are 0, so most quantiles give the same preference.
 apclusterBackend <- function(
     snn,
     resolution,
@@ -662,9 +605,7 @@ apclusterBackend <- function(
   return(ids)
 }
 
-# simplifyEnrichment's binary cut: recursively split the similarity matrix in
-# two and stop when a node's similarity profile looks like a single coherent
-# group. Operates on the similarity matrix, which the SNN graph already is.
+# simplifyEnrichment's binary cut on the SNN similarity matrix
 binaryCutBackend <- function(
     snn,
     resolution,
@@ -735,9 +676,7 @@ binaryCutBackend <- function(
     "igraph::cluster_leiden on the SNN graph (modularity objective)", "igraph"
   )
 
-  ### Methods that determine the number of clusters themselves. They operate on
-  ### the dense SNN similarity matrix rather than the graph, and ignore
-  ### 'resolution' -- clusterGeneSets() runs them once.
+  ### Methods that choose k themselves; clusterGeneSets() runs them once
   register(
     "kmeans", kmeansBackend,
     paste(

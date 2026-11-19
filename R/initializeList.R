@@ -92,12 +92,10 @@ initializeList <- function(
     stop("each element in the 'geneSetsList' should contain a character vector")
   }
 
-  ### Drop missing gene ids and duplicated genes within a set
   geneSetsList <- lapply(geneSetsList, function(genes) {
     unique(genes[!is.na(genes) & nzchar(genes)])
   })
 
-  ### Enrichment table
   no_table <- FALSE
   if (is.null(geneSetsDF)) {
     geneSetsDF <- data.frame(
@@ -115,7 +113,6 @@ initializeList <- function(
   # Plain data.frame: avoids data.table/tibble specific subsetting rules
   geneSetsDF <- as.data.frame(geneSetsDF, stringsAsFactors = FALSE)
 
-  # Check pathway
   if(! 'pathway' %in% colnames(geneSetsDF)) {
     stop("Column 'pathway' was not found in geneSetsDF.")
   }
@@ -133,10 +130,8 @@ initializeList <- function(
     geneSetsDF <- geneSetsDF[, !isListColumn, drop = FALSE]
   }
 
-  # make unique
   geneSetsDF <- unique(geneSetsDF)
 
-  # Check enrichment_score
   if(! 'enrichment_score' %in% colnames(geneSetsDF)) {
     if( 'NES' %in% colnames(geneSetsDF) ) {
       if (verbose) {
@@ -153,7 +148,6 @@ initializeList <- function(
     stop("Column 'enrichment_score' of 'geneSetsDF' should be numeric.")
   }
 
-  # Check pvalues
   if(! 'pval' %in% colnames(geneSetsDF)) {
     if( 'pvalue' %in% colnames(geneSetsDF) ) {
       if (verbose) {
@@ -175,17 +169,14 @@ initializeList <- function(
     }
   }
 
-  # Add the -log10 transformed p-values used by the plotting functions.
-  # p-values of 0 are floored at the smallest representable double instead of
-  # becoming Inf; an absent p-value column gives an all-NA column, which the
-  # plotting functions skip when choosing what to plot.
+  # p-values of 0 are floored to avoid Inf; without p-values the column is NA,
+  # which the plotting functions skip
   if(! 'nlog10pval' %in% colnames(geneSetsDF)) {
     geneSetsDF$nlog10pval <- -log10(
       pmax(as.numeric(geneSetsDF$pval), .Machine$double.xmin)
     )
   }
 
-  ### Source
   if( 'source' %in% colnames(geneSetsDF) ) {
     if (anyNA(geneSetsDF$source)) {
       stop("Column 'source' of 'geneSetsDF' should not contain missing values.")
@@ -214,7 +205,6 @@ initializeList <- function(
     }
   }
 
-  ### Each gene set may appear once per source
   duplicatedKeys <- duplicated(geneSetsDF[, c('pathway', 'source')])
   if (any(duplicatedKeys)) {
     stop(
@@ -225,7 +215,6 @@ initializeList <- function(
     )
   }
 
-  ### Gene sets to analyze
   if(!no_table){
     pathways <- unique(geneSetsDF$pathway)
 
@@ -241,7 +230,6 @@ initializeList <- function(
     pathways <- names(geneSetsList)
   }
 
-  ### Remove gene sets without genes
   emptySets <- pathways[lengths(geneSetsList[pathways]) == 0]
   if (length(emptySets)) {
     warning(
@@ -282,9 +270,7 @@ initializeList <- function(
   res <- new("gsList", genesetsDataframe = genesetsMatrix)
 
 
-  ### Drop the columns that would collide with those added downstream
-  # Any other column is kept so it can be plotted via the 'plotFrom' argument
-  # of e.g. 'plotEnrichments()' and 'plotHeatmap()'
+  ### Drop columns added downstream; the rest stay available to 'plotFrom'
   reservedColumns <- intersect(
     colnames(geneSetsDF),
     c('cluster', 'initial_cluster_label')
@@ -306,7 +292,6 @@ initializeList <- function(
 
   numberOfSources <- dplyr::n_distinct(geneSetsDF$source)
 
-  ### Record initialization metadata
   pkgVersion <- tryCatch(
     as.character(utils::packageVersion("geneSetSimplifyR")),
     error = function(e) NA_character_

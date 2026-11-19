@@ -69,7 +69,6 @@ clusterGeneSets <-
     verbose = TRUE
 ) {
 
-    # Check input
     if (!inherits(geneSetsList, "gsList")) {
       stop("'geneSetsList' should be a gsList object.")
     }
@@ -119,13 +118,10 @@ clusterGeneSets <-
       }
     }
 
-    # Resolve the clustering backend up front so a bad spec fails before the
-    # expensive LSI/UMAP steps run.
+    # Resolve the method first so a bad one fails before the slow LSI/UMAP
     clusterMethodObj <- getClusterMethod(algorithm)
 
-    # Some backends (kmeans, apcluster, binary_cut) pick the number of clusters
-    # themselves. Sweeping resolutions there would just repeat identical work,
-    # so collapse to a single run.
+    # Methods that choose their own k give the same result at every resolution
     if (!isTRUE(clusterMethodObj$usesResolution) && length(resolution) > 1) {
       if (verbose) {
         message(
@@ -140,29 +136,25 @@ clusterGeneSets <-
       message("Clustering gene sets...")
     }
 
-    # Create seurat object
     suppressWarnings(
       seuratObj <-
         Seurat::CreateSeuratObject(counts = geneSetsList@genesetsDataframe,
                                    assay = "GSEA")
     )
 
-    # LSI: TF-IDF (method 1, verified by grid search) followed by a truncated
-    # SVD. runLSI() falls back to RSpectra::svds() if the SVD does not converge.
+    # TF-IDF + truncated SVD; the TF-IDF method was chosen by grid search
     seuratObj <- runLSI(seuratObj, verbose = verbose)
 
-    # get max dim
     elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev,
                           method = elbow_method)
 
-    # Seurat::RunUMAP() seeds the global RNG itself (seed.use = 42); keep the
-    # user's random number stream as it was.
+    # RunUMAP() reseeds the global RNG; keep the user's random number stream
     seuratObj <- withr::with_preserve_seed(
       suppressWarnings(
         Seurat::RunUMAP(
           seuratObj,
           reduction = "lsi",
-          dims = 2:elbowRes$elbow_cutoff, # verified by new grid search
+          dims = 2:elbowRes$elbow_cutoff,
           verbose = FALSE
         )
       )
@@ -177,21 +169,18 @@ clusterGeneSets <-
       message("Using K = ", selectedK, " nearest neighbors.")
     }
 
+    # dims, cosine metric and K were chosen by grid search
     seuratObj <- Seurat::FindNeighbors(
       object = seuratObj,
       reduction = 'lsi',
-      dims = 2:elbowRes$elbow_cutoff, # verified by new grid search
-      annoy.metric = "cosine",        # verified by new grid search
-      k.param = selectedK,            # updated by new grid search
+      dims = 2:elbowRes$elbow_cutoff,
+      annoy.metric = "cosine",
+      k.param = selectedK,
       compute.SNN = TRUE,
       verbose = FALSE
     )
 
-    ### Find clusters
-    ### The SNN graph is the hand-off point to the clustering backend: every
-    ### method sees the same graph and returns one cluster id per gene set.
-    ### Resolutions are run one at a time so a single failing resolution is
-    ### dropped instead of taking the whole run with it.
+    # One resolution at a time, so a failing one is skipped instead of fatal
     snnGraph <- seuratObj@graphs$GSEA_snn
 
     resolutionsTested <- c()
@@ -221,17 +210,7 @@ clusterGeneSets <-
         next
       }
 
-      ### Make sure the cluster number starts from 0
-
-      ### Normalize every resolution's cluster factor once, at the source:
-      ### renumber so ids start at 0 AND force numeric level order (0,1,2,...).
-      ### Backends differ here -- Seurat is 0-based, igraph is 1-based, and
-      ### Seurat sometimes stores the levels lexicographically ("10" sorts
-      ### before "2"), which silently breaks any downstream code that pairs
-      ### labels to factor levels by position. Fixing it here keeps every
-      ### consumer correct without per-function guards.
-      ### `normalizeClusterLevels()` is the same implementation, exported for
-      ### migrating objects clustered earlier.
+      # Ids start at 0 with numeric level order, whatever the backend returns
       clusterResolution <- resolutionColumnName(localRes)
       seuratObj@meta.data[[clusterResolution]] <-
         numericClusterFactor(localIds)
@@ -248,11 +227,7 @@ clusterGeneSets <-
       )
     }
 
-    ### Set optimal clustering as default
-    # Mean silhouette width per resolution on the SNN distance (1 - SNN).
-    # A single cluster scores 0. A resolution where the silhouette is not
-    # defined (e.g. every gene set in its own cluster) scores NA and is never
-    # chosen.
+    # Mean silhouette width on 1 - SNN; NA (undefined) is never chosen
     distMatrix <- as.matrix(1 - seuratObj@graphs$GSEA_snn)
     meanSil <- vapply(resolutionsTested, function(localRes) {
       localClust <- as.integer(as.character(
@@ -261,7 +236,6 @@ clusterGeneSets <-
       silhouetteScore(localClust, distMatrix)
     }, numeric(1))
 
-    ### Extract best resolution
     if (all(is.na(meanSil))) {
       bestRes <- resolutionsTested[1]
       warning(
@@ -273,17 +247,14 @@ clusterGeneSets <-
       bestRes <- resolutionsTested[which.max(meanSil)]
     }
 
-    ### Set as default
     Seurat::Idents(seuratObj) <-
       seuratObj@meta.data[[resolutionColumnName(bestRes)]]
     seuratObj@meta.data$best_cluster_res <- resolutionColumnName(bestRes)
 
-    # Save seurat object to list. Labels of an earlier clustering no longer
-    # match the new clusters, so they are removed.
+    # Labels of an earlier clustering no longer match the new clusters
     geneSetsList@cluster <- seuratObj
     geneSetsList@labels <- list()
 
-    ### Record clustering metadata
     silhouetteScores <- stats::setNames(meanSil, as.character(resolutionsTested))
     geneSetsList@metadata$k <- selectedK
     geneSetsList@metadata$lsi_elbow_cutoff <- elbowRes$elbow_cutoff
@@ -294,7 +265,6 @@ clusterGeneSets <-
     geneSetsList@metadata$silhouette_scores <- silhouetteScores
     geneSetsList@metadata$clustered_at <- Sys.time()
 
-    # Add meta data column with gene set names
     geneSetsList@cluster <-
       Seurat::AddMetaData(geneSetsList@cluster,
                           geneSetsList@cluster@assays[["GSEA"]]$counts@Dimnames[[2]],

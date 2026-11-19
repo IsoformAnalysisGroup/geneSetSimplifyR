@@ -36,13 +36,11 @@
 #' plotUMAP(exampleGsList)
 #' plotUMAP(exampleGsList, highlightClusterNo = 0, removeClusterId = TRUE)
 plotUMAP <- function(
-    ### High level
     geneSetsList,
     resolution = NULL,
     removeClusterId = FALSE,
     interactive = FALSE,
     highlightClusterNo = NULL,
-    ### Detailed
     pointSize = 2,
     pointAlpha = 1/3,
     labelSize = 3,
@@ -52,7 +50,6 @@ plotUMAP <- function(
     highlightLabelAlpha = 1,
     highlightLabelSize = 5
 ) {
-  # Check input
   checkGsList(geneSetsList)
 
   clusterNameToHighlight <- highlightedClusterNames(
@@ -62,7 +59,6 @@ plotUMAP <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Set the cluster resolution and labels to plot
   geneSetsList <- changeUsedResolution(
     geneSetsList = geneSetsList,
     resolution = resolution,
@@ -126,7 +122,6 @@ plotUMAP <- function(
     hoverVars <- c("ident", "enrichment_score", "nCount_GSEA")
   }
 
-  ### Make plot
   pUMAP <- Seurat::DimPlot(
     geneSetsList@cluster,
     label = TRUE,
@@ -147,23 +142,19 @@ plotUMAP <- function(
       labs(shape = shapeTitle)
   }
 
-  ### Set transparency and size
   pointIsHighlighted <- pUMAP[[1]]$data$ident %in% clusterNameToHighlight
   labelIsHighlighted <- pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight
 
-  # points
   pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
     ifelse(pointIsHighlighted, highlightPointAlpha, pointAlpha)
   pUMAP[[1]]$layers[[1]]$aes_params$size <-
     ifelse(pointIsHighlighted, highlightPointSize, pointSize)
 
-  # labels
   pUMAP[[1]]$layers[[2]]$aes_params$alpha <-
     ifelse(labelIsHighlighted, highlightLabelAlpha, labelAlpha)
   pUMAP[[1]]$layers[[2]]$aes_params$size <-
     ifelse(labelIsHighlighted, highlightLabelSize, labelSize)
 
-  ### Add title
   pUMAP <-
     pUMAP +
     labs(title = 'Gene Set Clustering')

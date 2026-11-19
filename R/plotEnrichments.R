@@ -25,7 +25,6 @@ plotEnrichments <- function(
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 ) {
-  # Check input
   checkGsList(geneSetsList)
 
   summaryStat <- match.arg(summaryStat)
@@ -42,7 +41,6 @@ plotEnrichments <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Extract plot data
   plotData <-
     summarizeEnrichment(
       geneSetsList = geneSetsList,

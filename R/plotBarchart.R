@@ -22,7 +22,6 @@ plotBarchart <- function(
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 ) {
-  # Check input
   checkGsList(geneSetsList)
 
   clusterNameToHighlight <- highlightedClusterNames(
@@ -32,7 +31,6 @@ plotBarchart <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Extract plot data
   plotData <-
     extractTable(
       geneSetsList,

@@ -28,12 +28,10 @@ plotClustree <- function(
     node_text_angle = 30,
     resolutionsToPlot = NULL
 ) {
-  # Check input
   checkGsList(geneSetsList)
 
   resolutions <- availableResolutionColumns(geneSetsList)
 
-  ### Subset to resolutions
   if(!is.null(resolutionsToPlot)) {
     resolutionsToUse <- resolutionColumnName(resolutionsToPlot)
 
@@ -48,7 +46,6 @@ plotClustree <- function(
 
     resolutions <- intersect(resolutions, resolutionsToUse)
 
-    ### Remove from seurat object
     geneSetsList@cluster@meta.data[,notToAnalyze] <-list(NULL)
 
   }
@@ -63,10 +60,7 @@ plotClustree <- function(
       dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
       dplyr::select(cluster, label)
 
-    ### Match labels to the factor's levels BY cluster id, not by position.
-    ### The label vector's order (e.g. numeric group order) need not match the
-    ### factor's level order, so a positional `levels<-` can attach a label to
-    ### the wrong cluster's node. Matching on the id keeps them aligned.
+    ### Match labels to levels by cluster id; level order need not be numeric
     clusterFactor <- geneSetsList@cluster@meta.data[[resolution]]
     matchedLabels <- labelMap$label[
       match(as.character(levels(clusterFactor)),

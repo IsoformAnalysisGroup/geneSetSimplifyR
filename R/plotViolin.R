@@ -25,7 +25,6 @@ plotViolin <- function(
     removeClusterId = FALSE,
     highlightClusterNo = NULL
 ) {
-  # Check input
   checkGsList(geneSetsList)
 
   plotFrom <- validatePlotFrom(
@@ -40,7 +39,6 @@ plotViolin <- function(
     removeClusterId = removeClusterId
   )
 
-  ### Set the cluster resolution and labels to plot
   geneSetsList <- changeUsedResolution(
     geneSetsList = geneSetsList,
     resolution = resolution,
@@ -60,8 +58,7 @@ plotViolin <- function(
 
   valueLabel <- sub("^ ", "", enrichmentSummaryLabel('', plotFrom))
 
-  # A violin needs at least two values; single gene sets are still drawn as
-  # points
+  # A violin needs at least two values; single gene sets are drawn as points
   violinData <- df %>%
     dplyr::group_by(clusterLabel, source) %>%
     dplyr::filter(dplyr::n() > 1) %>%
