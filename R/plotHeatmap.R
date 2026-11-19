@@ -44,137 +44,137 @@ plotHeatmap <- function(
     cutree_cols = NA,
     drawPlot = TRUE,
     scaleCols = "auto"
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  summaryStat <- match.arg(summaryStat)
+    summaryStat <- match.arg(summaryStat)
 
-  plotFrom <- validatePlotFrom(
-    geneSetsList = geneSetsList,
-    plotFrom = plotFrom
-  )
-
-  if (identical(scaleCols, "auto")) {
-    scaleCols <- countConditions(geneSetsList) == '3+'
-  }
-  if (!is.logical(scaleCols) || length(scaleCols) != 1L || is.na(scaleCols)) {
-    stop("'scaleCols' should be \"auto\", TRUE or FALSE.")
-  }
-
-  clusterNameToHighlight <- highlightedClusterNames(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    highlightClusterNo = highlightClusterNo,
-    removeClusterId = removeClusterId
-  )
-
-  plotData <-
-    summarizeEnrichment(
-      geneSetsList = geneSetsList,
-      resolution = resolution,
-      scoreColumn = plotFrom,
-      summaryStat = summaryStat,
-      removeClusterId = removeClusterId
+    plotFrom <- validatePlotFrom(
+        geneSetsList = geneSetsList,
+        plotFrom = plotFrom
     )
 
-  # Data without a 'source' column has a single, unnamed source
-  plotData$source[is.na(plotData$source)] <- 'All gene sets'
+    if (identical(scaleCols, "auto")) {
+        scaleCols <- countConditions(geneSetsList) == '3+'
+    }
+    if (!is.logical(scaleCols) || length(scaleCols) != 1L || is.na(scaleCols)) {
+        stop("'scaleCols' should be \"auto\", TRUE or FALSE.")
+    }
 
-  ### Matrix of sources x clusters
-  clusterOrder <- unique(plotData$cluster)
-  plotMatrix <-
-    plotData %>%
-    dplyr::select(source, cluster, enrichmentSummary) %>%
-    tidyr::pivot_wider(names_from = cluster, values_from = enrichmentSummary) %>%
-    as.data.frame() %>%
-    tibble::column_to_rownames('source') %>%
-    as.matrix()
-  plotMatrix <- plotMatrix[, clusterOrder, drop = FALSE]
+    clusterNameToHighlight <- highlightedClusterNames(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        highlightClusterNo = highlightClusterNo,
+        removeClusterId = removeClusterId
+    )
 
-  ### Scale here, not with pheatmap's 'scale', so the colors, breaks and
-  ### legend below are computed on the scaled values
-  if(scaleCols) {
-    isMissing <- is.na(plotMatrix)
-    plotMatrix <- scale(plotMatrix, center = TRUE, scale = TRUE)
+    plotData <-
+        summarizeEnrichment(
+            geneSetsList = geneSetsList,
+            resolution = resolution,
+            scoreColumn = plotFrom,
+            summaryStat = summaryStat,
+            removeClusterId = removeClusterId
+        )
 
-    # Clusters with no variation across sources become NaN; use 0
-    plotMatrix[is.nan(plotMatrix) & !isMissing] <- 0
+    # Data without a 'source' column has a single, unnamed source
+    plotData$source[is.na(plotData$source)] <- 'All gene sets'
 
-    attr(plotMatrix, 'scaled:center') <- NULL
-    attr(plotMatrix, 'scaled:scale')  <- NULL
-  }
+    ### Matrix of sources x clusters
+    clusterOrder <- unique(plotData$cluster)
+    plotMatrix <-
+        plotData %>%
+        dplyr::select(source, cluster, enrichmentSummary) %>%
+        tidyr::pivot_wider(names_from = cluster, values_from = enrichmentSummary) %>%
+        as.data.frame() %>%
+        tibble::column_to_rownames('source') %>%
+        as.matrix()
+    plotMatrix <- plotMatrix[, clusterOrder, drop = FALSE]
 
-  if(transpose) {
-    plotMatrix <- t(plotMatrix)
-  }
+    ### Scale here, not with pheatmap's 'scale', so the colors, breaks and
+    ### legend below are computed on the scaled values
+    if(scaleCols) {
+        isMissing <- is.na(plotMatrix)
+        plotMatrix <- scale(plotMatrix, center = TRUE, scale = TRUE)
 
-  ### Cluster on a copy with absent cells as 0, so the heatmap shows them as NA
-  clusteringMatrix <- plotMatrix
-  clusteringMatrix[is.na(clusteringMatrix)] <- 0
-  doHCluster <- countConditions(geneSetsList) != '1'
-  clusterRows <- FALSE
-  clusterCols <- FALSE
-  if (doHCluster && nrow(plotMatrix) > 1) {
-    clusterRows <- stats::hclust(stats::dist(clusteringMatrix))
-  }
-  if (doHCluster && ncol(plotMatrix) > 1) {
-    clusterCols <- stats::hclust(stats::dist(t(clusteringMatrix)))
-  }
+        # Clusters with no variation across sources become NaN; use 0
+        plotMatrix[is.nan(plotMatrix) & !isMissing] <- 0
 
-  if(any(!is.na(plotMatrix) & plotMatrix < 0)) {
-    # Signed values (e.g. NES, z-scores) get a diverging palette centered on 0
-    myColors <- colorRampPalette(c('royalblue','white',"#e34632"))( 100 )
-    breakRange <- c(-1, 1) * max(abs(plotMatrix), na.rm = TRUE)
-  } else {
-    # Non-negative values (e.g. unscaled nlog10pval) get a sequential palette
-    myColors <- colorRampPalette(c('white',"black"))( 100 )
-    breakRange <- range(plotMatrix, na.rm = TRUE)
-  }
+        attr(plotMatrix, 'scaled:center') <- NULL
+        attr(plotMatrix, 'scaled:scale')  <- NULL
+    }
 
-  # A constant matrix has a zero-width range; widen it so breaks are unique
-  if (diff(breakRange) == 0) {
-    breakRange <- breakRange + c(-1, 1) * max(abs(breakRange[1]), 1)
-  }
+    if(transpose) {
+        plotMatrix <- t(plotMatrix)
+    }
 
-  myBreaks <- seq(breakRange[1], breakRange[2], length.out = 101)
+    ### Cluster on a copy with absent cells as 0, so the heatmap shows them as NA
+    clusteringMatrix <- plotMatrix
+    clusteringMatrix[is.na(clusteringMatrix)] <- 0
+    doHCluster <- countConditions(geneSetsList) != '1'
+    clusterRows <- FALSE
+    clusterCols <- FALSE
+    if (doHCluster && nrow(plotMatrix) > 1) {
+        clusterRows <- stats::hclust(stats::dist(clusteringMatrix))
+    }
+    if (doHCluster && ncol(plotMatrix) > 1) {
+        clusterCols <- stats::hclust(stats::dist(t(clusteringMatrix)))
+    }
 
-  ### The legend range matches 'myBreaks', so it never shows uncolored values
-  myLegendBreaks <- seq(breakRange[1], breakRange[2], length.out = 7)
-  myLegendLabels <- round(myLegendBreaks, digits = 2)
-  myLegendLabels[length(myLegendLabels)] <- paste0(
-    ifelse(scaleCols, 'Z-score', 'Raw'),
-    '\n',
-    myLegendLabels[length(myLegendLabels)],
-    '\n'
-  )
+    if(any(!is.na(plotMatrix) & plotMatrix < 0)) {
+        # Signed values (e.g. NES, z-scores) get a diverging palette centered on 0
+        myColors <- colorRampPalette(c('royalblue','white',"#e34632"))( 100 )
+        breakRange <- c(-1, 1) * max(abs(plotMatrix), na.rm = TRUE)
+    } else {
+        # Non-negative values (e.g. unscaled nlog10pval) get a sequential palette
+        myColors <- colorRampPalette(c('white',"black"))( 100 )
+        breakRange <- range(plotMatrix, na.rm = TRUE)
+    }
 
-  ### The title names the column validatePlotFrom() chose, which may be a
-  ### fallback from 'nlog10pval' to 'enrichment_score'
-  plotTitle <- enrichmentSummaryLabel(summaryStat, plotFrom)
+    # A constant matrix has a zero-width range; widen it so breaks are unique
+    if (diff(breakRange) == 0) {
+        breakRange <- breakRange + c(-1, 1) * max(abs(breakRange[1]), 1)
+    }
 
-  tmp <- pheatmap::pheatmap(
-    mat = plotMatrix,
-    cluster_rows = clusterRows,
-    cluster_cols = clusterCols,
-    scale = 'none', # 'scaleCols' is already applied to 'plotMatrix' above
-    kmeans_k = NA,
-    show_rownames = TRUE,
-    show_colnames = TRUE,
-    color = myColors,
-    breaks = myBreaks,
-    na_col = 'grey85',
-    legend_breaks = myLegendBreaks,
-    legend_labels = myLegendLabels,
-    cutree_rows = cutree_rows,
-    cutree_cols = cutree_cols,
-    labels_row = boldNames(rownames(plotMatrix), clusterNameToHighlight),
-    labels_col = boldNames(colnames(plotMatrix), clusterNameToHighlight),
-    angle_col = 315,
-    main = plotTitle,
-    silent = ! drawPlot
-  )
+    myBreaks <- seq(breakRange[1], breakRange[2], length.out = 101)
 
-  return(invisible(tmp))
+    ### The legend range matches 'myBreaks', so it never shows uncolored values
+    myLegendBreaks <- seq(breakRange[1], breakRange[2], length.out = 7)
+    myLegendLabels <- round(myLegendBreaks, digits = 2)
+    myLegendLabels[length(myLegendLabels)] <- paste0(
+        ifelse(scaleCols, 'Z-score', 'Raw'),
+        '\n',
+        myLegendLabels[length(myLegendLabels)],
+        '\n'
+    )
+
+    ### The title names the column validatePlotFrom() chose, which may be a
+    ### fallback from 'nlog10pval' to 'enrichment_score'
+    plotTitle <- enrichmentSummaryLabel(summaryStat, plotFrom)
+
+    tmp <- pheatmap::pheatmap(
+        mat = plotMatrix,
+        cluster_rows = clusterRows,
+        cluster_cols = clusterCols,
+        scale = 'none', # 'scaleCols' is already applied to 'plotMatrix' above
+        kmeans_k = NA,
+        show_rownames = TRUE,
+        show_colnames = TRUE,
+        color = myColors,
+        breaks = myBreaks,
+        na_col = 'grey85',
+        legend_breaks = myLegendBreaks,
+        legend_labels = myLegendLabels,
+        cutree_rows = cutree_rows,
+        cutree_cols = cutree_cols,
+        labels_row = boldNames(rownames(plotMatrix), clusterNameToHighlight),
+        labels_col = boldNames(colnames(plotMatrix), clusterNameToHighlight),
+        angle_col = 315,
+        main = plotTitle,
+        silent = ! drawPlot
+    )
+
+    return(invisible(tmp))
 }
 
 #' Plotmath labels with selected names in bold
@@ -184,12 +184,12 @@ plotHeatmap <- function(
 #' @return An expression vector usable as pheatmap labels.
 #' @keywords internal
 boldNames <- function(names, toBold) {
-  labels <- lapply(names, function(name) {
-    if (name %in% toBold) {
-      bquote(bold(.(name)))
-    } else {
-      bquote(.(name))
-    }
-  })
-  as.expression(labels)
+    labels <- lapply(names, function(name) {
+        if (name %in% toBold) {
+            bquote(bold(.(name)))
+        } else {
+            bquote(.(name))
+        }
+    })
+    as.expression(labels)
 }

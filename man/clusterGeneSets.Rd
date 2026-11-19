@@ -64,22 +64,22 @@ Re-clustering an object removes its existing labels, so run
 }
 \examples{
 geneSetsList <- initializeList(
-  geneSetsList = exampleGeneSets,
-  geneSetsDF = exampleEnrichment,
-  verbose = FALSE
+    geneSetsList = exampleGeneSets,
+    geneSetsDF = exampleEnrichment,
+    verbose = FALSE
 )
 gsListObject <- clusterGeneSets(
-  geneSetsList = geneSetsList,
-  resolution = c(0.6, 1.1),
-  verbose = FALSE
+    geneSetsList = geneSetsList,
+    resolution = c(0.6, 1.1),
+    verbose = FALSE
 )
 
 # Swap in a different community-detection implementation
 gsListObject <- clusterGeneSets(
-  geneSetsList,
-  algorithm = "igraph_leiden",
-  resolution = 1,
-  verbose = FALSE
+    geneSetsList,
+    algorithm = "igraph_leiden",
+    resolution = 1,
+    verbose = FALSE
 )
 }
 \seealso{

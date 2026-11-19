@@ -50,27 +50,27 @@ separate \code{source}. Pathways passing multiple cutoffs appear once per source
 # A small table in the format of pairedGSEA::paired_ora() output
 pathways <- names(exampleGeneSets)[1:60]
 oraResult <- data.frame(
-  pathway = pathways,
-  padj_expression = rep(c(0.01, 0.2), 30),
-  enrichment_score_expression = seq(-2, 2, length.out = 60),
-  padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
-  enrichment_score_splicing = seq(2, -2, length.out = 60),
-  padj_paired = 1,
-  enrichment_score_paired = 0
+    pathway = pathways,
+    padj_expression = rep(c(0.01, 0.2), 30),
+    enrichment_score_expression = seq(-2, 2, length.out = 60),
+    padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
+    enrichment_score_splicing = seq(2, -2, length.out = 60),
+    padj_paired = 1,
+    enrichment_score_paired = 0
 )
 parsed <- parsePairedGSEA(
-  oraResult       = oraResult,
-  geneSets        = exampleGeneSets,
-  cutoff_exp      = 0.05,
-  cutoff_splicing = 0.05,
-  cutoff_paired   = NULL
+    oraResult       = oraResult,
+    geneSets        = exampleGeneSets,
+    cutoff_exp      = 0.05,
+    cutoff_splicing = 0.05,
+    cutoff_paired   = NULL
 )
 table(parsed$geneSetsDF$source)
 gss <- geneSetSimplifyR(
-  geneSetsList = parsed$geneSetsList,
-  geneSetsDF   = parsed$geneSetsDF,
-  resolution   = 1.1,
-  verbose      = FALSE
+    geneSetsList = parsed$geneSetsList,
+    geneSetsDF   = parsed$geneSetsDF,
+    resolution   = 1.1,
+    verbose      = FALSE
 )
 
 }

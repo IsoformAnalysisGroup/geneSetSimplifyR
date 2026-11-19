@@ -9,17 +9,17 @@
 ## "Expression" and "Splicing", a subset of a colorectal cancer data set).
 
 if (!"geneSetSimplifyR" %in% loadedNamespaces()) {
-  library(geneSetSimplifyR)
+    library(geneSetSimplifyR)
 }
 
 set.seed(42)
 exampleGsList <- geneSetSimplifyR(
-  geneSetsList = exampleGeneSets,
-  geneSetsDF = exampleEnrichment,
-  verbose = FALSE,
-  # The gene-set names start with the name of their author, e.g.
-  # SCHLOSSER_SERUM_RESPONSE_DN; leave it out of the labels
-  removeFirstWord = TRUE
+    geneSetsList = exampleGeneSets,
+    geneSetsDF = exampleEnrichment,
+    verbose = FALSE,
+    # The gene-set names start with the name of their author, e.g.
+    # SCHLOSSER_SERUM_RESPONSE_DN; leave it out of the labels
+    removeFirstWord = TRUE
 )
 
 ## Keep the shipped object small: the LSI feature loadings and the raw SVD
@@ -28,7 +28,7 @@ exampleGsList@cluster@reductions$lsi@feature.loadings <- matrix(numeric(0), 0, 0
 exampleGsList@cluster@reductions$lsi@misc <- list()
 
 save(
-  exampleGsList,
-  file = file.path("data", "exampleGsList.rda"),
-  compress = "xz"
+    exampleGsList,
+    file = file.path("data", "exampleGsList.rda"),
+    compress = "xz"
 )

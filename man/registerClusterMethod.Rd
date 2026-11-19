@@ -42,26 +42,26 @@ straight to \code{clusterGeneSets()}.
 }
 \examples{
 registerClusterMethod(
-  "leiden_cpm",
-  function(snn, resolution, verbose = FALSE, ...) {
-    g <- snnToIgraph(snn)
-    igraph::membership(igraph::cluster_leiden(
-      g,
-      objective_function = "CPM",
-      resolution = resolution,
-      weights = igraph::E(g)$weight
-    ))
-  },
-  description = "igraph Leiden with the CPM objective",
-  packages = "igraph",
-  overwrite = TRUE
+    "leiden_cpm",
+    function(snn, resolution, verbose = FALSE, ...) {
+        g <- snnToIgraph(snn)
+        igraph::membership(igraph::cluster_leiden(
+            g,
+            objective_function = "CPM",
+            resolution = resolution,
+            weights = igraph::E(g)$weight
+        ))
+    },
+    description = "igraph Leiden with the CPM objective",
+    packages = "igraph",
+    overwrite = TRUE
 )
 listClusterMethods()
 
 geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
-                               verbose = FALSE)
+    verbose = FALSE)
 gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm",
-                                resolution = 0.05, verbose = FALSE)
+    resolution = 0.05, verbose = FALSE)
 }
 \seealso{
 \code{\link[=clusterMethod]{clusterMethod()}}, \code{\link[=listClusterMethods]{listClusterMethods()}}

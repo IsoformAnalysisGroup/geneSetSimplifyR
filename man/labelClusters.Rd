@@ -36,8 +36,8 @@ Label clusters in clustered gene sets list object
 \examples{
 # Relabel the shipped example, e.g. with extra stop words
 gsListObject <- labelClusters(
-  geneSetsList = exampleGsList,
-  stopWords = c(stopWords, "regulation"),
-  verbose = FALSE
+    geneSetsList = exampleGsList,
+    stopWords = c(stopWords, "regulation"),
+    verbose = FALSE
 )
 }

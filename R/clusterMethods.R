@@ -42,16 +42,16 @@
 #' @examples
 #' # A backend built on igraph's fast-greedy modularity optimization
 #' fastGreedy <- clusterMethod(
-#'   fn = function(snn, resolution, verbose = FALSE, ...) {
-#'     g <- snnToIgraph(snn)
-#'     igraph::membership(
-#'       igraph::cluster_fast_greedy(g, weights = igraph::E(g)$weight)
-#'     )
-#'   },
-#'   name = "fast_greedy",
-#'   description = "igraph fast-greedy modularity (ignores resolution)",
-#'   packages = "igraph",
-#'   usesResolution = FALSE
+#'     fn = function(snn, resolution, verbose = FALSE, ...) {
+#'         g <- snnToIgraph(snn)
+#'         igraph::membership(
+#'             igraph::cluster_fast_greedy(g, weights = igraph::E(g)$weight)
+#'         )
+#'     },
+#'     name = "fast_greedy",
+#'     description = "igraph fast-greedy modularity (ignores resolution)",
+#'     packages = "igraph",
+#'     usesResolution = FALSE
 #' )
 #' fastGreedy
 #'
@@ -61,54 +61,54 @@
 #'
 #' # Use it in the workflow
 #' geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
-#'                                verbose = FALSE)
+#'     verbose = FALSE)
 #' gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy,
-#'                                 verbose = FALSE)
+#'     verbose = FALSE)
 clusterMethod <- function(
     fn,
     name,
     description = NA_character_,
     packages = character(0),
     usesResolution = TRUE
-) {
-  if (!is.function(fn)) {
-    stop("'fn' should be a function.")
-  }
-  if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
-    stop("'name' should be a single non-empty string.")
-  }
-  if (length(formals(fn)) < 2L && !"..." %in% names(formals(fn))) {
-    stop(
-      "'fn' should accept at least the arguments 'snn' and 'resolution' ",
-      "(signature: function(snn, resolution, verbose = FALSE, ...))."
-    )
-  }
+    ) {
+    if (!is.function(fn)) {
+        stop("'fn' should be a function.")
+    }
+    if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
+        stop("'name' should be a single non-empty string.")
+    }
+    if (length(formals(fn)) < 2L && !"..." %in% names(formals(fn))) {
+        stop(
+            "'fn' should accept at least the arguments 'snn' and 'resolution' ",
+            "(signature: function(snn, resolution, verbose = FALSE, ...))."
+        )
+    }
 
-  structure(
-    list(
-      fn = fn,
-      name = name,
-      description = as.character(description)[1],
-      packages = as.character(packages),
-      usesResolution = isTRUE(usesResolution)
-    ),
-    class = "gsClusterMethod"
-  )
+    structure(
+        list(
+            fn = fn,
+            name = name,
+            description = as.character(description)[1],
+            packages = as.character(packages),
+            usesResolution = isTRUE(usesResolution)
+        ),
+        class = "gsClusterMethod"
+    )
 }
 
 #' @export
 print.gsClusterMethod <- function(x, ...) {
-  cat("<gsClusterMethod> ", x$name, "\n", sep = "")
-  if (!is.na(x$description) && nzchar(x$description)) {
-    cat("  ", x$description, "\n", sep = "")
-  }
-  if (length(x$packages)) {
-    cat("  requires: ", paste(x$packages, collapse = ", "), "\n", sep = "")
-  }
-  if (!isTRUE(x$usesResolution)) {
-    cat("  picks the number of clusters itself (resolution is ignored)\n")
-  }
-  invisible(x)
+    cat("<gsClusterMethod> ", x$name, "\n", sep = "")
+    if (!is.na(x$description) && nzchar(x$description)) {
+        cat("  ", x$description, "\n", sep = "")
+    }
+    if (length(x$packages)) {
+        cat("  requires: ", paste(x$packages, collapse = ", "), "\n", sep = "")
+    }
+    if (!isTRUE(x$usesResolution)) {
+        cat("  picks the number of clusters itself (resolution is ignored)\n")
+    }
+    invisible(x)
 }
 
 
@@ -138,26 +138,26 @@ print.gsClusterMethod <- function(x, ...) {
 #'
 #' @examples
 #' registerClusterMethod(
-#'   "leiden_cpm",
-#'   function(snn, resolution, verbose = FALSE, ...) {
-#'     g <- snnToIgraph(snn)
-#'     igraph::membership(igraph::cluster_leiden(
-#'       g,
-#'       objective_function = "CPM",
-#'       resolution = resolution,
-#'       weights = igraph::E(g)$weight
-#'     ))
-#'   },
-#'   description = "igraph Leiden with the CPM objective",
-#'   packages = "igraph",
-#'   overwrite = TRUE
+#'     "leiden_cpm",
+#'     function(snn, resolution, verbose = FALSE, ...) {
+#'         g <- snnToIgraph(snn)
+#'         igraph::membership(igraph::cluster_leiden(
+#'             g,
+#'             objective_function = "CPM",
+#'             resolution = resolution,
+#'             weights = igraph::E(g)$weight
+#'         ))
+#'     },
+#'     description = "igraph Leiden with the CPM objective",
+#'     packages = "igraph",
+#'     overwrite = TRUE
 #' )
 #' listClusterMethods()
 #'
 #' geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
-#'                                verbose = FALSE)
+#'     verbose = FALSE)
 #' gsListObject <- clusterGeneSets(geneSetsList, algorithm = "leiden_cpm",
-#'                                 resolution = 0.05, verbose = FALSE)
+#'     resolution = 0.05, verbose = FALSE)
 registerClusterMethod <- function(
     name,
     fn,
@@ -165,32 +165,32 @@ registerClusterMethod <- function(
     packages = character(0),
     usesResolution = TRUE,
     overwrite = FALSE
-) {
-  if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
-    stop("'name' should be a single non-empty string.")
-  }
-  if (!overwrite && exists(name, envir = .clusterMethodRegistry, inherits = FALSE)) {
-    stop(
-      "A clustering method named '", name, "' is already registered. ",
-      "Use overwrite = TRUE to replace it."
-    )
-  }
+    ) {
+    if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
+        stop("'name' should be a single non-empty string.")
+    }
+    if (!overwrite && exists(name, envir = .clusterMethodRegistry, inherits = FALSE)) {
+        stop(
+            "A clustering method named '", name, "' is already registered. ",
+            "Use overwrite = TRUE to replace it."
+        )
+    }
 
-  method <- if (inherits(fn, "gsClusterMethod")) {
-    fn$name <- name
-    fn
-  } else {
-    clusterMethod(
-      fn = fn,
-      name = name,
-      description = description,
-      packages = packages,
-      usesResolution = usesResolution
-    )
-  }
+    method <- if (inherits(fn, "gsClusterMethod")) {
+        fn$name <- name
+        fn
+    } else {
+        clusterMethod(
+            fn = fn,
+            name = name,
+            description = description,
+            packages = packages,
+            usesResolution = usesResolution
+        )
+    }
 
-  assign(name, method, envir = .clusterMethodRegistry)
-  invisible(method)
+    assign(name, method, envir = .clusterMethodRegistry)
+    invisible(method)
 }
 
 
@@ -209,25 +209,25 @@ registerClusterMethod <- function(
 #' @examples
 #' listClusterMethods()
 listClusterMethods <- function() {
-  names_ <- sort(ls(envir = .clusterMethodRegistry))
-  methods_ <- lapply(names_, get, envir = .clusterMethodRegistry)
+    names_ <- sort(ls(envir = .clusterMethodRegistry))
+    methods_ <- lapply(names_, get, envir = .clusterMethodRegistry)
 
-  data.frame(
-    name = names_,
-    description = vapply(methods_, function(m) m$description, character(1)),
-    packages = vapply(
-      methods_,
-      function(m) paste(m$packages, collapse = ", "),
-      character(1)
-    ),
-    uses_resolution = vapply(
-      methods_,
-      function(m) isTRUE(m$usesResolution),
-      logical(1)
-    ),
-    stringsAsFactors = FALSE,
-    row.names = NULL
-  )
+    data.frame(
+        name = names_,
+        description = vapply(methods_, function(m) m$description, character(1)),
+        packages = vapply(
+            methods_,
+            function(m) paste(m$packages, collapse = ", "),
+            character(1)
+        ),
+        uses_resolution = vapply(
+            methods_,
+            function(m) isTRUE(m$usesResolution),
+            logical(1)
+        ),
+        stringsAsFactors = FALSE,
+        row.names = NULL
+    )
 }
 
 
@@ -246,29 +246,29 @@ listClusterMethods <- function() {
 #' @examples
 #' getClusterMethod("louvain")
 getClusterMethod <- function(algorithm) {
-  if (inherits(algorithm, "gsClusterMethod")) {
-    return(algorithm)
-  }
-
-  if (is.function(algorithm)) {
-    return(clusterMethod(fn = algorithm, name = "custom"))
-  }
-
-  if (is.character(algorithm) && length(algorithm) == 1L) {
-    if (exists(algorithm, envir = .clusterMethodRegistry, inherits = FALSE)) {
-      return(get(algorithm, envir = .clusterMethodRegistry))
+    if (inherits(algorithm, "gsClusterMethod")) {
+        return(algorithm)
     }
-    stop(
-      "Unknown clustering method '", algorithm, "'. Valid options: ",
-      paste(sort(ls(envir = .clusterMethodRegistry)), collapse = ", "),
-      ". You can add your own with registerClusterMethod()."
-    )
-  }
 
-  stop(
-    "'algorithm' should be a method name, a gsClusterMethod object ",
-    "(see clusterMethod()), or a function."
-  )
+    if (is.function(algorithm)) {
+        return(clusterMethod(fn = algorithm, name = "custom"))
+    }
+
+    if (is.character(algorithm) && length(algorithm) == 1L) {
+        if (exists(algorithm, envir = .clusterMethodRegistry, inherits = FALSE)) {
+            return(get(algorithm, envir = .clusterMethodRegistry))
+        }
+        stop(
+            "Unknown clustering method '", algorithm, "'. Valid options: ",
+            paste(sort(ls(envir = .clusterMethodRegistry)), collapse = ", "),
+            ". You can add your own with registerClusterMethod()."
+        )
+    }
+
+    stop(
+        "'algorithm' should be a method name, a gsClusterMethod object ",
+        "(see clusterMethod()), or a function."
+    )
 }
 
 
@@ -291,74 +291,74 @@ runClusterMethod <- function(
     resolution,
     verbose = FALSE,
     clusterArgs = list()
-) {
-  missingPkgs <- method$packages[
-    !vapply(method$packages, requireNamespace, logical(1), quietly = TRUE)
-  ]
-  if (length(missingPkgs)) {
-    stop(
-      "Clustering method '", method$name, "' requires the package(s): ",
-      paste(missingPkgs, collapse = ", "), ". Please install them."
-    )
-  }
-
-  # 'verbose' only goes to methods that take it
-  fnArgs <- names(formals(method$fn))
-  callArgs <- list(snn = snn, resolution = resolution)
-  if (any(c("verbose", "...") %in% fnArgs)) {
-    callArgs$verbose <- verbose
-  }
-
-  ids <- do.call(method$fn, c(callArgs, clusterArgs))
-
-  # Accept the shapes community-detection functions commonly return.
-  if (is.data.frame(ids) || is.matrix(ids)) {
-    if (ncol(ids) != 1L) {
-      stop(
-        "Clustering method '", method$name, "' returned ", ncol(ids),
-        " columns; expected one cluster id per gene set."
-      )
+    ) {
+    missingPkgs <- method$packages[
+        !vapply(method$packages, requireNamespace, logical(1), quietly = TRUE)
+    ]
+    if (length(missingPkgs)) {
+        stop(
+            "Clustering method '", method$name, "' requires the package(s): ",
+            paste(missingPkgs, collapse = ", "), ". Please install them."
+        )
     }
-    rn <- rownames(ids)
-    ids <- if (is.data.frame(ids)) ids[[1]] else ids[, 1]
-    if (!is.null(rn)) names(ids) <- rn
-  }
-  if (inherits(ids, "communities")) {
-    ids <- igraph::membership(ids)
-  }
 
-  if (is.null(ids) || length(ids) != ncol(snn)) {
-    stop(
-      "Clustering method '", method$name, "' returned ",
-      if (is.null(ids)) "NULL" else paste(length(ids), "cluster ids"),
-      "; expected ", ncol(snn), " (one per gene set)."
-    )
-  }
-
-  # Reorder by name; names that only partly match point to a backend bug
-  idNames <- names(ids)
-  if (!is.null(idNames) && any(idNames %in% colnames(snn))) {
-    if (anyDuplicated(idNames) || !setequal(idNames, colnames(snn))) {
-      stop(
-        "Clustering method '", method$name, "' returned names that do not ",
-        "match the gene sets one-to-one."
-      )
+    # 'verbose' only goes to methods that take it
+    fnArgs <- names(formals(method$fn))
+    callArgs <- list(snn = snn, resolution = resolution)
+    if (any(c("verbose", "...") %in% fnArgs)) {
+        callArgs$verbose <- verbose
     }
-    ids <- ids[colnames(snn)]
-  }
 
-  ids <- as.vector(ids)
-  if (is.list(ids)) {
-    stop(
-      "Clustering method '", method$name, "' returned a list; expected one ",
-      "cluster id per gene set."
-    )
-  }
-  if (anyNA(ids)) {
-    stop("Clustering method '", method$name, "' returned NA cluster ids.")
-  }
+    ids <- do.call(method$fn, c(callArgs, clusterArgs))
 
-  return(unname(ids))
+    # Accept the shapes community-detection functions commonly return.
+    if (is.data.frame(ids) || is.matrix(ids)) {
+        if (ncol(ids) != 1L) {
+            stop(
+                "Clustering method '", method$name, "' returned ", ncol(ids),
+                " columns; expected one cluster id per gene set."
+            )
+        }
+        rn <- rownames(ids)
+        ids <- if (is.data.frame(ids)) ids[[1]] else ids[, 1]
+        if (!is.null(rn)) names(ids) <- rn
+    }
+    if (inherits(ids, "communities")) {
+        ids <- igraph::membership(ids)
+    }
+
+    if (is.null(ids) || length(ids) != ncol(snn)) {
+        stop(
+            "Clustering method '", method$name, "' returned ",
+            if (is.null(ids)) "NULL" else paste(length(ids), "cluster ids"),
+            "; expected ", ncol(snn), " (one per gene set)."
+        )
+    }
+
+    # Reorder by name; names that only partly match point to a backend bug
+    idNames <- names(ids)
+    if (!is.null(idNames) && any(idNames %in% colnames(snn))) {
+        if (anyDuplicated(idNames) || !setequal(idNames, colnames(snn))) {
+            stop(
+                "Clustering method '", method$name, "' returned names that do not ",
+                "match the gene sets one-to-one."
+            )
+        }
+        ids <- ids[colnames(snn)]
+    }
+
+    ids <- as.vector(ids)
+    if (is.list(ids)) {
+        stop(
+            "Clustering method '", method$name, "' returned a list; expected one ",
+            "cluster id per gene set."
+        )
+    }
+    if (anyNA(ids)) {
+        stop("Clustering method '", method$name, "' returned NA cluster ids.")
+    }
+
+    return(unname(ids))
 }
 
 
@@ -380,20 +380,20 @@ runClusterMethod <- function(
 #' g <- snnToIgraph(exampleGsList@cluster@graphs$GSEA_snn)
 #' g
 snnToIgraph <- function(snn) {
-  adjacency <- methods::as(snn, "dgCMatrix")
+    adjacency <- methods::as(snn, "dgCMatrix")
 
-  g <- igraph::graph_from_adjacency_matrix(
-    adjmatrix = adjacency,
-    mode = "max",        # symmetrize defensively; SNN is already symmetric
-    weighted = TRUE,
-    diag = FALSE
-  )
+    g <- igraph::graph_from_adjacency_matrix(
+        adjmatrix = adjacency,
+        mode = "max",        # symmetrize defensively; SNN is already symmetric
+        weighted = TRUE,
+        diag = FALSE
+    )
 
-  if (is.null(igraph::V(g)$name)) {
-    igraph::V(g)$name <- colnames(snn)
-  }
+    if (is.null(igraph::V(g)$name)) {
+        igraph::V(g)$name <- colnames(snn)
+    }
 
-  return(g)
+    return(g)
 }
 
 
@@ -419,19 +419,19 @@ snnToIgraph <- function(snn) {
 #' simMat <- snnToMatrix(exampleGsList@cluster@graphs$GSEA_snn)
 #' simMat[1:3, 1:3]
 snnToMatrix <- function(snn, warnAbove = 5000) {
-  n <- ncol(snn)
-  if (n > warnAbove) {
-    warning(
-      "Densifying the SNN graph for ", n, " gene sets needs about ",
-      round(8 * n^2 / 1024^3, 1),
-      " GB. Consider a graph-based clustering method instead."
-    )
-  }
+    n <- ncol(snn)
+    if (n > warnAbove) {
+        warning(
+            "Densifying the SNN graph for ", n, " gene sets needs about ",
+            round(8 * n^2 / 1024^3, 1),
+            " GB. Consider a graph-based clustering method instead."
+        )
+    }
 
-  simMatrix <- as.matrix(snn)
-  dimnames(simMatrix) <- list(colnames(snn), colnames(snn))
+    simMatrix <- as.matrix(snn)
+    dimnames(simMatrix) <- list(colnames(snn), colnames(snn))
 
-  return(simMatrix)
+    return(simMatrix)
 }
 
 
@@ -439,88 +439,88 @@ snnToMatrix <- function(snn, warnAbove = 5000) {
 
 # FindClusters() takes the SNN graph directly, not just a Seurat object
 seuratBackend <- function(algo) {
-  function(snn, resolution, verbose = FALSE, ...) {
-    res <- tryCatch(
-      Seurat::FindClusters(
-        object = snn,
-        resolution = resolution,
-        algorithm = algo,
-        verbose = verbose,
-        ...
-      ),
-      error = function(e) {
-        if (algo == 4) {
-          stop(
-            conditionMessage(e), " Seurat's Leiden algorithm may need extra ",
-            "software (the Python package 'leidenalg' for older Seurat ",
-            "versions). The 'igraph_leiden' method needs no extra software.",
-            call. = FALSE
-          )
-        }
-        stop(e)
-      }
-    )
-    return(res)
-  }
+    function(snn, resolution, verbose = FALSE, ...) {
+        res <- tryCatch(
+            Seurat::FindClusters(
+                object = snn,
+                resolution = resolution,
+                algorithm = algo,
+                verbose = verbose,
+                ...
+            ),
+            error = function(e) {
+                if (algo == 4) {
+                    stop(
+                        conditionMessage(e), " Seurat's Leiden algorithm may need extra ",
+                        "software (the Python package 'leidenalg' for older Seurat ",
+                        "versions). The 'igraph_leiden' method needs no extra software.",
+                        call. = FALSE
+                    )
+                }
+                stop(e)
+            }
+        )
+        return(res)
+    }
 }
 
 # 'seed' (NA: none) makes igraph reproducible; the user's RNG is untouched
 igraphBackend <- function(fun, defaults = list()) {
-  function(snn, resolution, verbose = FALSE, seed = 42, ...) {
-    g <- snnToIgraph(snn)
+    function(snn, resolution, verbose = FALSE, seed = 42, ...) {
+        g <- snnToIgraph(snn)
 
-    args <- utils::modifyList(
-      defaults,
-      list(weights = igraph::E(g)$weight, ...)
-    )
+        args <- utils::modifyList(
+            defaults,
+            list(weights = igraph::E(g)$weight, ...)
+        )
 
-    # igraph renamed resolution_parameter to resolution; support both
-    argNames <- names(formals(fun))
-    if ("resolution" %in% argNames) {
-      args$resolution <- resolution
-    } else if ("resolution_parameter" %in% argNames) {
-      args$resolution_parameter <- resolution
-    } else {
-      stop("The igraph clustering function has no resolution argument.")
+        # igraph renamed resolution_parameter to resolution; support both
+        argNames <- names(formals(fun))
+        if ("resolution" %in% argNames) {
+            args$resolution <- resolution
+        } else if ("resolution_parameter" %in% argNames) {
+            args$resolution_parameter <- resolution
+        } else {
+            stop("The igraph clustering function has no resolution argument.")
+        }
+
+        withSeed(seed, igraph::membership(do.call(fun, c(list(g), args))))
     }
-
-    withSeed(seed, igraph::membership(do.call(fun, c(list(g), args))))
-  }
 }
 
 # Run under a fixed seed, then restore the user's RNG stream
 withSeed <- function(seed, expr) {
-  if (is.null(seed) || is.na(seed)) {
-    return(force(expr))
-  }
-  withr::with_seed(seed, expr)
+    if (is.null(seed) || is.na(seed)) {
+        return(force(expr))
+    }
+    withr::with_seed(seed, expr)
 }
 
 # Elbow and knee of the WSS curve as in simplifyEnrichment::cluster_by_kmeans(),
 # which takes the smaller k of the two.
 elbowFinder <- function(x, y) {
-  maxXx <- max(x)
-  maxXy <- y[which.max(x)]
-  maxYy <- max(y)
-  maxYx <- x[which.max(y)]
+    maxXx <- max(x)
+    maxXy <- y[which.max(x)]
+    maxYy <- max(y)
+    maxYx <- x[which.max(y)]
 
-  if (maxXx == maxYx) {
-    return(x[1])
-  }
-  slope <- (maxXy - maxYy) / (maxXx - maxYx)
-  intercept <- maxYy - slope * maxYx
+    if (maxXx == maxYx) {
+        return(x[1])
+    }
+    slope <- (maxXy - maxYy) / (maxXx - maxYx)
+    intercept <- maxYy - slope * maxYx
 
-  distances <- abs(slope * x - y + intercept) / sqrt(slope^2 + 1)
-  return(x[which.max(distances)])
+    distances <- abs(slope * x - y + intercept) / sqrt(slope^2 + 1)
+    return(x[which.max(distances)])
 }
 
 kneeFinder <- function(x, y) {
-  n <- length(x)
-  if (n < 2L || x[n] == x[1]) {
-    return(x[1])
-  }
-  slope <- (y[n] - y[1]) / (x[n] - x[1])
-  return(x[which.max(slope * x - y)])
+    n <- length(x)
+    if (n < 2L || x[n] == x[1]) {
+        return(x[1])
+    }
+    slope <- (y[n] - y[1]) / (x[n] - x[1])
+    return(x[which.max(slope * x - y)])
 }
 
 # k-means on the rows of the SNN matrix; k is chosen as in simplifyEnrichment
@@ -532,44 +532,44 @@ kmeansBackend <- function(
     iterMax = 50,
     seed = 42,
     ...
-) {
-  simMatrix <- snnToMatrix(snn)
-  n <- nrow(simMatrix)
+    ) {
+    simMatrix <- snnToMatrix(snn)
+    n <- nrow(simMatrix)
 
-  if (is.null(maxK)) {
-    maxK <- max(2, min(round(n / 5), 100))
-  }
-  maxK <- min(maxK, n - 1L)
-  if (maxK < 2) {
-    stop(
-      "'maxK' should be at least 2; got ", maxK,
-      " (too few gene sets for automatic k selection)."
-    )
-  }
-
-  ks <- 2:maxK
-  clusterings <- vector("list", length(ks))
-  wss <- numeric(length(ks))
-
-  withSeed(seed, {
-    for (i in seq_along(ks)) {
-      km <- suppressWarnings(
-        stats::kmeans(simMatrix, centers = ks[i], iter.max = iterMax, ...)
-      )
-      clusterings[[i]] <- km$cluster
-      wss[i] <- sum(km$withinss)
+    if (is.null(maxK)) {
+        maxK <- max(2, min(round(n / 5), 100))
     }
-  })
+    maxK <- min(maxK, n - 1L)
+    if (maxK < 2) {
+        stop(
+            "'maxK' should be at least 2; got ", maxK,
+            " (too few gene sets for automatic k selection)."
+        )
+    }
 
-  bestK <- min(elbowFinder(ks, wss), kneeFinder(ks, wss))
+    ks <- 2:maxK
+    clusterings <- vector("list", length(ks))
+    wss <- numeric(length(ks))
 
-  if (verbose) {
-    message("kmeans: selected k = ", bestK, " (searched k = 2 to ", maxK, ")")
-  }
+    withSeed(seed, {
+        for (i in seq_along(ks)) {
+            km <- suppressWarnings(
+                stats::kmeans(simMatrix, centers = ks[i], iter.max = iterMax, ...)
+            )
+            clusterings[[i]] <- km$cluster
+            wss[i] <- sum(km$withinss)
+        }
+    })
 
-  ids <- clusterings[[which(ks == bestK)]]
-  names(ids) <- rownames(simMatrix)
-  return(ids)
+    bestK <- min(elbowFinder(ks, wss), kneeFinder(ks, wss))
+
+    if (verbose) {
+        message("kmeans: selected k = ", bestK, " (searched k = 2 to ", maxK, ")")
+    }
+
+    ids <- clusterings[[which(ks == bestK)]]
+    names(ids) <- rownames(simMatrix)
+    return(ids)
 }
 
 # Affinity propagation on the SNN similarity. Tune 'p' rather than 'q': about
@@ -579,30 +579,30 @@ apclusterBackend <- function(
     resolution,
     verbose = FALSE,
     ...
-) {
-  simMatrix <- snnToMatrix(snn)
+    ) {
+    simMatrix <- snnToMatrix(snn)
 
-  apRes <- apcluster::apcluster(
-    s = simMatrix,
-    details = FALSE,
-    ...
-  )
+    apRes <- apcluster::apcluster(
+        s = simMatrix,
+        details = FALSE,
+        ...
+    )
 
-  if (!length(apRes@clusters)) {
-    stop("apcluster() did not converge on any exemplars.")
-  }
+    if (!length(apRes@clusters)) {
+        stop("apcluster() did not converge on any exemplars.")
+    }
 
-  ids <- integer(nrow(simMatrix))
-  for (i in seq_along(apRes@clusters)) {
-    ids[apRes@clusters[[i]]] <- i
-  }
-  names(ids) <- rownames(simMatrix)
+    ids <- integer(nrow(simMatrix))
+    for (i in seq_along(apRes@clusters)) {
+        ids[apRes@clusters[[i]]] <- i
+    }
+    names(ids) <- rownames(simMatrix)
 
-  if (verbose) {
-    message("apcluster: found ", length(apRes@clusters), " clusters")
-  }
+    if (verbose) {
+        message("apcluster: found ", length(apRes@clusters), " clusters")
+    }
 
-  return(ids)
+    return(ids)
 }
 
 # simplifyEnrichment's binary cut on the SNN similarity matrix
@@ -612,89 +612,89 @@ binaryCutBackend <- function(
     verbose = FALSE,
     cutoff = 0.85,
     ...
-) {
-  simMatrix <- snnToMatrix(snn)
+    ) {
+    simMatrix <- snnToMatrix(snn)
 
-  ids <- simplifyEnrichment::binary_cut(
-    simMatrix,
-    cutoff = cutoff,
-    ...
-  )
-  names(ids) <- rownames(simMatrix)
+    ids <- simplifyEnrichment::binary_cut(
+        simMatrix,
+        cutoff = cutoff,
+        ...
+    )
+    names(ids) <- rownames(simMatrix)
 
-  if (verbose) {
-    message("binary_cut: found ", length(unique(ids)), " clusters")
-  }
+    if (verbose) {
+        message("binary_cut: found ", length(unique(ids)), " clusters")
+    }
 
-  return(ids)
+    return(ids)
 }
 
 .onLoad <- function(libname, pkgname) {
-  register <- function(name, fn, description, packages, usesResolution = TRUE) {
-    assign(
-      name,
-      clusterMethod(
-        fn = fn,
-        name = name,
-        description = description,
-        packages = packages,
-        usesResolution = usesResolution
-      ),
-      envir = .clusterMethodRegistry
+    register <- function(name, fn, description, packages, usesResolution = TRUE) {
+        assign(
+            name,
+            clusterMethod(
+                fn = fn,
+                name = name,
+                description = description,
+                packages = packages,
+                usesResolution = usesResolution
+            ),
+            envir = .clusterMethodRegistry
+        )
+    }
+
+    register(
+        "louvain", seuratBackend(1),
+        "Seurat::FindClusters, original Louvain (algorithm 1)", "Seurat"
     )
-  }
+    register(
+        "louvain.multilevel", seuratBackend(2),
+        "Seurat::FindClusters, Louvain with multilevel refinement (algorithm 2)",
+        "Seurat"
+    )
+    register(
+        "slm", seuratBackend(3),
+        "Seurat::FindClusters, smart local moving (algorithm 3)", "Seurat"
+    )
+    register(
+        "leiden", seuratBackend(4),
+        "Seurat::FindClusters, Leiden via leidenalg (algorithm 4)",
+        c("Seurat", "leiden")
+    )
+    register(
+        "igraph_louvain",
+        igraphBackend(igraph::cluster_louvain),
+        "igraph::cluster_louvain on the SNN graph", "igraph"
+    )
+    register(
+        "igraph_leiden",
+        igraphBackend(
+            igraph::cluster_leiden,
+            defaults = list(objective_function = "modularity", n_iterations = 5)
+        ),
+        "igraph::cluster_leiden on the SNN graph (modularity objective)", "igraph"
+    )
 
-  register(
-    "louvain", seuratBackend(1),
-    "Seurat::FindClusters, original Louvain (algorithm 1)", "Seurat"
-  )
-  register(
-    "louvain.multilevel", seuratBackend(2),
-    "Seurat::FindClusters, Louvain with multilevel refinement (algorithm 2)",
-    "Seurat"
-  )
-  register(
-    "slm", seuratBackend(3),
-    "Seurat::FindClusters, smart local moving (algorithm 3)", "Seurat"
-  )
-  register(
-    "leiden", seuratBackend(4),
-    "Seurat::FindClusters, Leiden via leidenalg (algorithm 4)",
-    c("Seurat", "leiden")
-  )
-  register(
-    "igraph_louvain",
-    igraphBackend(igraph::cluster_louvain),
-    "igraph::cluster_louvain on the SNN graph", "igraph"
-  )
-  register(
-    "igraph_leiden",
-    igraphBackend(
-      igraph::cluster_leiden,
-      defaults = list(objective_function = "modularity", n_iterations = 5)
-    ),
-    "igraph::cluster_leiden on the SNN graph (modularity objective)", "igraph"
-  )
+    ### Methods that choose k themselves; clusterGeneSets() runs them once
+    register(
+        "kmeans", kmeansBackend,
+        paste(
+            "k-means on SNN similarity profiles; k chosen by elbow/knee on the WSS",
+            "curve (as in simplifyEnrichment)"
+        ),
+        packages = character(0), usesResolution = FALSE
+    )
+    register(
+        "apcluster", apclusterBackend,
+        "Affinity propagation (apcluster::apcluster) on the SNN similarity matrix",
+        packages = "apcluster", usesResolution = FALSE
+    )
+    register(
+        "binary_cut", binaryCutBackend,
+        "simplifyEnrichment::binary_cut on the SNN similarity matrix",
+        packages = "simplifyEnrichment", usesResolution = FALSE
+    )
 
-  ### Methods that choose k themselves; clusterGeneSets() runs them once
-  register(
-    "kmeans", kmeansBackend,
-    paste(
-      "k-means on SNN similarity profiles; k chosen by elbow/knee on the WSS",
-      "curve (as in simplifyEnrichment)"
-    ),
-    packages = character(0), usesResolution = FALSE
-  )
-  register(
-    "apcluster", apclusterBackend,
-    "Affinity propagation (apcluster::apcluster) on the SNN similarity matrix",
-    packages = "apcluster", usesResolution = FALSE
-  )
-  register(
-    "binary_cut", binaryCutBackend,
-    "simplifyEnrichment::binary_cut on the SNN similarity matrix",
-    packages = "simplifyEnrichment", usesResolution = FALSE
-  )
-
-  invisible()
+    invisible()
 }

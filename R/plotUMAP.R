@@ -49,122 +49,122 @@ plotUMAP <- function(
     highlightPointSize = 4,
     highlightLabelAlpha = 1,
     highlightLabelSize = 5
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  clusterNameToHighlight <- highlightedClusterNames(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    highlightClusterNo = highlightClusterNo,
-    removeClusterId = removeClusterId
-  )
-
-  geneSetsList <- changeUsedResolution(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    removeClusterId = removeClusterId
-  )
-
-  ### Shape the points by source or by direction of enrichment
-  nCond <- countConditions(geneSetsList)
-  geneSetIds <- geneSetsList@cluster@meta.data$gene_set
-  shapeBy <- NULL
-  shapeTitle <- NULL
-  hoverVars <- c("ident", "nCount_GSEA")
-
-  if( nCond == '2' ) {
-    sourcesPerGeneSet <- table(geneSetsList@enrichmentScore$pathway)
-    firstSource <- geneSetsList@enrichmentScore$source[match(
-      geneSetIds, geneSetsList@enrichmentScore$pathway
-    )]
-    geneSetSource <- ifelse(
-      as.vector(sourcesPerGeneSet[geneSetIds]) > 1,
-      'Both',
-      firstSource
+    clusterNameToHighlight <- highlightedClusterNames(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        highlightClusterNo = highlightClusterNo,
+        removeClusterId = removeClusterId
     )
 
-    geneSetsList@cluster <- SeuratObject::AddMetaData(
-      object = geneSetsList@cluster,
-      metadata = stats::setNames(geneSetSource, colnames(geneSetsList@cluster)),
-      col.name = 'source'
-    )
-    shapeBy <- 'source'
-    shapeTitle <- 'Gene set source'
-    hoverVars <- c("ident", "source", "nCount_GSEA")
-  }
-
-  hasEnrichmentScore <-
-    ! all(is.na( geneSetsList@enrichmentScore$enrichment_score ))
-
-  if( nCond == '1' && hasEnrichmentScore ) {
-    # Matched by gene-set name; the rows of 'enrichmentScore' need not be in
-    # the same order as the gene sets in the Seurat object.
-    enrichmentScore <- geneSetsList@enrichmentScore$enrichment_score[match(
-      geneSetIds, geneSetsList@enrichmentScore$pathway
-    )]
-    enrichmentScoreSign <- dplyr::case_when(
-      enrichmentScore > 0 ~ 'Positive',
-      enrichmentScore < 0 ~ 'Negative',
-      enrichmentScore == 0 ~ 'Zero',
-      TRUE ~ 'Missing'
+    geneSetsList <- changeUsedResolution(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        removeClusterId = removeClusterId
     )
 
-    geneSetsList@cluster <- Seurat::AddMetaData(
-      object = geneSetsList@cluster,
-      metadata = data.frame(
-        enrichment_score_sign = enrichmentScoreSign,
-        enrichment_score = enrichmentScore,
-        row.names = colnames(geneSetsList@cluster)
-      )
-    )
-    shapeBy <- 'enrichment_score_sign'
-    shapeTitle <- 'Enrichment score'
-    hoverVars <- c("ident", "enrichment_score", "nCount_GSEA")
-  }
+    ### Shape the points by source or by direction of enrichment
+    nCond <- countConditions(geneSetsList)
+    geneSetIds <- geneSetsList@cluster@meta.data$gene_set
+    shapeBy <- NULL
+    shapeTitle <- NULL
+    hoverVars <- c("ident", "nCount_GSEA")
 
-  pUMAP <- Seurat::DimPlot(
-    geneSetsList@cluster,
-    label = TRUE,
-    label.box = TRUE,
-    repel = TRUE,
-    label.size = labelSize,
-    pt.size = pointSize,
-    shape.by = shapeBy,
-    group.by = 'ident'
-  ) +
-    theme_bw() +
-    guides(colour = "none") +
-    labs(title = NULL, x = 'UMAP1', y = 'UMAP2')
+    if( nCond == '2' ) {
+        sourcesPerGeneSet <- table(geneSetsList@enrichmentScore$pathway)
+        firstSource <- geneSetsList@enrichmentScore$source[match(
+            geneSetIds, geneSetsList@enrichmentScore$pathway
+        )]
+        geneSetSource <- ifelse(
+            as.vector(sourcesPerGeneSet[geneSetIds]) > 1,
+            'Both',
+            firstSource
+        )
 
-  if (!is.null(shapeBy)) {
-    pUMAP <- pUMAP +
-      theme(legend.position = "bottom") +
-      labs(shape = shapeTitle)
-  }
+        geneSetsList@cluster <- SeuratObject::AddMetaData(
+            object = geneSetsList@cluster,
+            metadata = stats::setNames(geneSetSource, colnames(geneSetsList@cluster)),
+            col.name = 'source'
+        )
+        shapeBy <- 'source'
+        shapeTitle <- 'Gene set source'
+        hoverVars <- c("ident", "source", "nCount_GSEA")
+    }
 
-  pointIsHighlighted <- pUMAP[[1]]$data$ident %in% clusterNameToHighlight
-  labelIsHighlighted <- pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight
+    hasEnrichmentScore <-
+        ! all(is.na( geneSetsList@enrichmentScore$enrichment_score ))
 
-  pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
-    ifelse(pointIsHighlighted, highlightPointAlpha, pointAlpha)
-  pUMAP[[1]]$layers[[1]]$aes_params$size <-
-    ifelse(pointIsHighlighted, highlightPointSize, pointSize)
+    if( nCond == '1' && hasEnrichmentScore ) {
+        # Matched by gene-set name; the rows of 'enrichmentScore' need not be in
+        # the same order as the gene sets in the Seurat object.
+        enrichmentScore <- geneSetsList@enrichmentScore$enrichment_score[match(
+            geneSetIds, geneSetsList@enrichmentScore$pathway
+        )]
+        enrichmentScoreSign <- dplyr::case_when(
+            enrichmentScore > 0 ~ 'Positive',
+            enrichmentScore < 0 ~ 'Negative',
+            enrichmentScore == 0 ~ 'Zero',
+            TRUE ~ 'Missing'
+        )
 
-  pUMAP[[1]]$layers[[2]]$aes_params$alpha <-
-    ifelse(labelIsHighlighted, highlightLabelAlpha, labelAlpha)
-  pUMAP[[1]]$layers[[2]]$aes_params$size <-
-    ifelse(labelIsHighlighted, highlightLabelSize, labelSize)
+        geneSetsList@cluster <- Seurat::AddMetaData(
+            object = geneSetsList@cluster,
+            metadata = data.frame(
+                enrichment_score_sign = enrichmentScoreSign,
+                enrichment_score = enrichmentScore,
+                row.names = colnames(geneSetsList@cluster)
+            )
+        )
+        shapeBy <- 'enrichment_score_sign'
+        shapeTitle <- 'Enrichment score'
+        hoverVars <- c("ident", "enrichment_score", "nCount_GSEA")
+    }
 
-  pUMAP <-
-    pUMAP +
-    labs(title = 'Gene Set Clustering')
+    pUMAP <- Seurat::DimPlot(
+        geneSetsList@cluster,
+        label = TRUE,
+        label.box = TRUE,
+        repel = TRUE,
+        label.size = labelSize,
+        pt.size = pointSize,
+        shape.by = shapeBy,
+        group.by = 'ident'
+    ) +
+        theme_bw() +
+        guides(colour = "none") +
+        labs(title = NULL, x = 'UMAP1', y = 'UMAP2')
 
-  if (interactive) {
-    hoverInfo <- Seurat::FetchData(geneSetsList@cluster, vars = hoverVars)
-    colnames(hoverInfo)[colnames(hoverInfo) == 'ident'] <- 'cluster'
-    colnames(hoverInfo)[colnames(hoverInfo) == 'nCount_GSEA'] <- 'genes'
-    return(Seurat::HoverLocator(plot = pUMAP[[1]], information = hoverInfo))
-  }
+    if (!is.null(shapeBy)) {
+        pUMAP <- pUMAP +
+            theme(legend.position = "bottom") +
+            labs(shape = shapeTitle)
+    }
 
-  return(pUMAP)
+    pointIsHighlighted <- pUMAP[[1]]$data$ident %in% clusterNameToHighlight
+    labelIsHighlighted <- pUMAP[[1]]$layers[[2]]$data$ident %in% clusterNameToHighlight
+
+    pUMAP[[1]]$layers[[1]]$aes_params$alpha <-
+        ifelse(pointIsHighlighted, highlightPointAlpha, pointAlpha)
+    pUMAP[[1]]$layers[[1]]$aes_params$size <-
+        ifelse(pointIsHighlighted, highlightPointSize, pointSize)
+
+    pUMAP[[1]]$layers[[2]]$aes_params$alpha <-
+        ifelse(labelIsHighlighted, highlightLabelAlpha, labelAlpha)
+    pUMAP[[1]]$layers[[2]]$aes_params$size <-
+        ifelse(labelIsHighlighted, highlightLabelSize, labelSize)
+
+    pUMAP <-
+        pUMAP +
+        labs(title = 'Gene Set Clustering')
+
+    if (interactive) {
+        hoverInfo <- Seurat::FetchData(geneSetsList@cluster, vars = hoverVars)
+        colnames(hoverInfo)[colnames(hoverInfo) == 'ident'] <- 'cluster'
+        colnames(hoverInfo)[colnames(hoverInfo) == 'nCount_GSEA'] <- 'genes'
+        return(Seurat::HoverLocator(plot = pUMAP[[1]], information = hoverInfo))
+    }
+
+    return(pUMAP)
 }

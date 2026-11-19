@@ -31,27 +31,27 @@
 #' # A small table in the format of pairedGSEA::paired_ora() output
 #' pathways <- names(exampleGeneSets)[1:60]
 #' oraResult <- data.frame(
-#'   pathway = pathways,
-#'   padj_expression = rep(c(0.01, 0.2), 30),
-#'   enrichment_score_expression = seq(-2, 2, length.out = 60),
-#'   padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
-#'   enrichment_score_splicing = seq(2, -2, length.out = 60),
-#'   padj_paired = 1,
-#'   enrichment_score_paired = 0
+#'     pathway = pathways,
+#'     padj_expression = rep(c(0.01, 0.2), 30),
+#'     enrichment_score_expression = seq(-2, 2, length.out = 60),
+#'     padj_splicing = rep(c(0.2, 0.01, 0.01), 20),
+#'     enrichment_score_splicing = seq(2, -2, length.out = 60),
+#'     padj_paired = 1,
+#'     enrichment_score_paired = 0
 #' )
 #' parsed <- parsePairedGSEA(
-#'   oraResult       = oraResult,
-#'   geneSets        = exampleGeneSets,
-#'   cutoff_exp      = 0.05,
-#'   cutoff_splicing = 0.05,
-#'   cutoff_paired   = NULL
+#'     oraResult       = oraResult,
+#'     geneSets        = exampleGeneSets,
+#'     cutoff_exp      = 0.05,
+#'     cutoff_splicing = 0.05,
+#'     cutoff_paired   = NULL
 #' )
 #' table(parsed$geneSetsDF$source)
 #' gss <- geneSetSimplifyR(
-#'   geneSetsList = parsed$geneSetsList,
-#'   geneSetsDF   = parsed$geneSetsDF,
-#'   resolution   = 1.1,
-#'   verbose      = FALSE
+#'     geneSetsList = parsed$geneSetsList,
+#'     geneSetsDF   = parsed$geneSetsDF,
+#'     resolution   = 1.1,
+#'     verbose      = FALSE
 #' )
 #'
 #' @export
@@ -61,97 +61,97 @@ parsePairedGSEA <- function(
     cutoff_exp      = 0.05,
     cutoff_splicing = 0.05,
     cutoff_paired   = 0.05
-) {
-  if (missing(oraResult) || is.null(oraResult)) {
-    stop("'oraResult' is required.")
-  }
-  if (missing(geneSets) || is.null(geneSets)) {
-    stop("'geneSets' is required -- pass the same gene_sets list you used when running pairedGSEA::paired_ora().")
-  }
-  if (!is.list(geneSets) || is.null(names(geneSets))) {
-    stop("'geneSets' should be a named list (pathway name -> character vector of gene IDs).")
-  }
-
-  oraDF <- as.data.frame(oraResult, stringsAsFactors = FALSE)
-
-  if (!"pathway" %in% colnames(oraDF)) {
-    stop("'oraResult' must contain a 'pathway' column.")
-  }
-
-  blocks <- list(
-    list(cutoff = cutoff_exp,      tag = "expression", source = "expression"),
-    list(cutoff = cutoff_splicing, tag = "splicing",   source = "splicing"),
-    list(cutoff = cutoff_paired,   tag = "paired",     source = "paired")
-  )
-
-  long_rows <- list()
-  for (b in blocks) {
-    if (is.null(b$cutoff)) next
-    if (!is.numeric(b$cutoff) || length(b$cutoff) != 1 || b$cutoff <= 0 || b$cutoff > 1) {
-      stop(sprintf("Cutoff for '%s' must be a single number in (0, 1] (got: %s).",
-                   b$source, paste(b$cutoff, collapse = ", ")))
+    ) {
+    if (missing(oraResult) || is.null(oraResult)) {
+        stop("'oraResult' is required.")
+    }
+    if (missing(geneSets) || is.null(geneSets)) {
+        stop("'geneSets' is required -- pass the same gene_sets list you used when running pairedGSEA::paired_ora().")
+    }
+    if (!is.list(geneSets) || is.null(names(geneSets))) {
+        stop("'geneSets' should be a named list (pathway name -> character vector of gene IDs).")
     }
 
-    padj_col <- paste0("padj_", b$tag)
-    es_col   <- paste0("enrichment_score_", b$tag)
+    oraDF <- as.data.frame(oraResult, stringsAsFactors = FALSE)
 
-    if (!padj_col %in% colnames(oraDF)) {
-      stop(sprintf(
-        "Column '%s' not found in oraResult -- cannot apply cutoff for '%s'. Set cutoff_%s = NULL to skip this block.",
-        padj_col, b$source, b$tag
-      ))
-    }
-    if (!es_col %in% colnames(oraDF)) {
-      stop(sprintf("Column '%s' not found in oraResult.", es_col))
+    if (!"pathway" %in% colnames(oraDF)) {
+        stop("'oraResult' must contain a 'pathway' column.")
     }
 
-    keep <- !is.na(oraDF[[padj_col]]) & oraDF[[padj_col]] < b$cutoff
-    if (any(keep)) {
-      blockRows <- data.frame(
-        source           = b$source,
-        pathway          = oraDF$pathway[keep],
-        enrichment_score = oraDF[[es_col]][keep],
-        padj             = oraDF[[padj_col]][keep],
-        stringsAsFactors = FALSE
-      )
-      pval_col <- paste0("pval_", b$tag)
-      blockRows$pval <- if (pval_col %in% colnames(oraDF)) {
-        oraDF[[pval_col]][keep]
-      } else {
-        NA_real_
-      }
-      long_rows[[b$source]] <- blockRows
+    blocks <- list(
+        list(cutoff = cutoff_exp,      tag = "expression", source = "expression"),
+        list(cutoff = cutoff_splicing, tag = "splicing",   source = "splicing"),
+        list(cutoff = cutoff_paired,   tag = "paired",     source = "paired")
+    )
+
+    long_rows <- list()
+    for (b in blocks) {
+        if (is.null(b$cutoff)) next
+        if (!is.numeric(b$cutoff) || length(b$cutoff) != 1 || b$cutoff <= 0 || b$cutoff > 1) {
+            stop(sprintf("Cutoff for '%s' must be a single number in (0, 1] (got: %s).",
+                b$source, paste(b$cutoff, collapse = ", ")))
+        }
+
+        padj_col <- paste0("padj_", b$tag)
+        es_col   <- paste0("enrichment_score_", b$tag)
+
+        if (!padj_col %in% colnames(oraDF)) {
+            stop(sprintf(
+                "Column '%s' not found in oraResult -- cannot apply cutoff for '%s'. Set cutoff_%s = NULL to skip this block.",
+                padj_col, b$source, b$tag
+            ))
+        }
+        if (!es_col %in% colnames(oraDF)) {
+            stop(sprintf("Column '%s' not found in oraResult.", es_col))
+        }
+
+        keep <- !is.na(oraDF[[padj_col]]) & oraDF[[padj_col]] < b$cutoff
+        if (any(keep)) {
+            blockRows <- data.frame(
+                source           = b$source,
+                pathway          = oraDF$pathway[keep],
+                enrichment_score = oraDF[[es_col]][keep],
+                padj             = oraDF[[padj_col]][keep],
+                stringsAsFactors = FALSE
+            )
+            pval_col <- paste0("pval_", b$tag)
+            blockRows$pval <- if (pval_col %in% colnames(oraDF)) {
+                oraDF[[pval_col]][keep]
+            } else {
+                NA_real_
+            }
+            long_rows[[b$source]] <- blockRows
+        }
     }
-  }
 
-  if (!length(long_rows)) {
-    stop("No pathways passed any of the enabled cutoffs. Try relaxing the cutoffs or check the input.")
-  }
+    if (!length(long_rows)) {
+        stop("No pathways passed any of the enabled cutoffs. Try relaxing the cutoffs or check the input.")
+    }
 
-  geneSetsDF <- do.call(rbind, long_rows)
-  rownames(geneSetsDF) <- NULL
+    geneSetsDF <- do.call(rbind, long_rows)
+    rownames(geneSetsDF) <- NULL
 
-  # Drop pathways not in geneSets (warn the user once with a sample)
-  uniquePaths   <- unique(geneSetsDF$pathway)
-  missingPaths  <- setdiff(uniquePaths, names(geneSets))
-  if (length(missingPaths)) {
-    warning(sprintf(
-      "%d pathway(s) in oraResult are not in 'geneSets' and will be dropped (first 5: %s).",
-      length(missingPaths),
-      paste(utils::head(missingPaths, 5), collapse = ", ")
-    ), call. = FALSE)
-    geneSetsDF  <- geneSetsDF[geneSetsDF$pathway %in% names(geneSets), , drop = FALSE]
-    uniquePaths <- unique(geneSetsDF$pathway)
-  }
+    # Drop pathways not in geneSets (warn the user once with a sample)
+    uniquePaths   <- unique(geneSetsDF$pathway)
+    missingPaths  <- setdiff(uniquePaths, names(geneSets))
+    if (length(missingPaths)) {
+        warning(sprintf(
+            "%d pathway(s) in oraResult are not in 'geneSets' and will be dropped (first 5: %s).",
+            length(missingPaths),
+            paste(utils::head(missingPaths, 5), collapse = ", ")
+        ), call. = FALSE)
+        geneSetsDF  <- geneSetsDF[geneSetsDF$pathway %in% names(geneSets), , drop = FALSE]
+        uniquePaths <- unique(geneSetsDF$pathway)
+    }
 
-  if (!length(uniquePaths)) {
-    stop("After dropping pathways not in 'geneSets', no pathways remain.")
-  }
+    if (!length(uniquePaths)) {
+        stop("After dropping pathways not in 'geneSets', no pathways remain.")
+    }
 
-  list(
-    geneSetsList = geneSets[uniquePaths],
-    geneSetsDF   = geneSetsDF
-  )
+    list(
+        geneSetsList = geneSets[uniquePaths],
+        geneSetsDF   = geneSetsDF
+    )
 }
 
 
@@ -187,23 +187,23 @@ parsePairedGSEA <- function(
 #' # A small table in the format of fgsea::fgsea() output
 #' pathways <- names(exampleGeneSets)[1:60]
 #' fgseaRes <- data.frame(
-#'   pathway = pathways,
-#'   pval = rep(c(0.001, 0.01, 0.3), 20),
-#'   padj = rep(c(0.004, 0.03, 0.5), 20),
-#'   NES = seq(-2.5, 2.5, length.out = 60)
+#'     pathway = pathways,
+#'     pval = rep(c(0.001, 0.01, 0.3), 20),
+#'     padj = rep(c(0.004, 0.03, 0.5), 20),
+#'     NES = seq(-2.5, 2.5, length.out = 60)
 #' )
 #' parsed <- parseFgsea(
-#'   fgseaResult = fgseaRes,
-#'   geneSets    = exampleGeneSets,
-#'   cutoff      = 0.05,
-#'   source      = "treatmentA"
+#'     fgseaResult = fgseaRes,
+#'     geneSets    = exampleGeneSets,
+#'     cutoff      = 0.05,
+#'     source      = "treatmentA"
 #' )
 #' head(parsed$geneSetsDF)
 #' gss <- geneSetSimplifyR(
-#'   geneSetsList = parsed$geneSetsList,
-#'   geneSetsDF   = parsed$geneSetsDF,
-#'   resolution   = 1.1,
-#'   verbose      = FALSE
+#'     geneSetsList = parsed$geneSetsList,
+#'     geneSetsDF   = parsed$geneSetsDF,
+#'     resolution   = 1.1,
+#'     verbose      = FALSE
 #' )
 #'
 #' @export
@@ -212,74 +212,74 @@ parseFgsea <- function(
     geneSets,
     cutoff = 0.05,
     source = "fgsea"
-) {
-  if (missing(fgseaResult) || is.null(fgseaResult)) {
-    stop("'fgseaResult' is required.")
-  }
-  if (missing(geneSets) || is.null(geneSets)) {
-    stop("'geneSets' is required -- pass the same pathways list you used when running fgsea::fgsea().")
-  }
-  if (!is.list(geneSets) || is.null(names(geneSets))) {
-    stop("'geneSets' should be a named list (pathway name -> character vector of gene IDs).")
-  }
-  if (!is.numeric(cutoff) || length(cutoff) != 1 || cutoff <= 0 || cutoff > 1) {
-    stop(sprintf("'cutoff' must be a single number in (0, 1] (got: %s).",
-                 paste(cutoff, collapse = ", ")))
-  }
-  if (!is.character(source) || length(source) != 1 || !nzchar(source)) {
-    stop("'source' must be a single non-empty character string.")
-  }
-
-  df <- as.data.frame(fgseaResult, stringsAsFactors = FALSE)
-
-  requiredCols <- c("pathway", "padj", "NES")
-  missingCols  <- setdiff(requiredCols, colnames(df))
-  if (length(missingCols)) {
-    if (length(missingCols) == 1 &&
-          missingCols == "NES" &&
-          "foldEnrichment" %in% colnames(df)){
-      df$NES <- log2(df$foldEnrichment + 1e-6)
-    } else {
-      stop(sprintf("'fgseaResult' is missing required column(s): %s.",
-           paste(missingCols, collapse = ", ")))
+    ) {
+    if (missing(fgseaResult) || is.null(fgseaResult)) {
+        stop("'fgseaResult' is required.")
     }
-  }
+    if (missing(geneSets) || is.null(geneSets)) {
+        stop("'geneSets' is required -- pass the same pathways list you used when running fgsea::fgsea().")
+    }
+    if (!is.list(geneSets) || is.null(names(geneSets))) {
+        stop("'geneSets' should be a named list (pathway name -> character vector of gene IDs).")
+    }
+    if (!is.numeric(cutoff) || length(cutoff) != 1 || cutoff <= 0 || cutoff > 1) {
+        stop(sprintf("'cutoff' must be a single number in (0, 1] (got: %s).",
+            paste(cutoff, collapse = ", ")))
+    }
+    if (!is.character(source) || length(source) != 1 || !nzchar(source)) {
+        stop("'source' must be a single non-empty character string.")
+    }
 
-  keep <- !is.na(df$padj) & df$padj < cutoff
-  if (!any(keep)) {
-    stop(sprintf("No pathways passed the cutoff (padj < %s).", cutoff))
-  }
+    df <- as.data.frame(fgseaResult, stringsAsFactors = FALSE)
 
-  geneSetsDF <- data.frame(
-    source           = source,
-    pathway          = df$pathway[keep],
-    enrichment_score = df$NES[keep],
-    stringsAsFactors = FALSE
-  )
-  if ("pval" %in% colnames(df)) {
-    geneSetsDF$pval <- df$pval[keep]
-  }
-  geneSetsDF$padj <- df$padj[keep]
+    requiredCols <- c("pathway", "padj", "NES")
+    missingCols  <- setdiff(requiredCols, colnames(df))
+    if (length(missingCols)) {
+        if (length(missingCols) == 1 &&
+            missingCols == "NES" &&
+            "foldEnrichment" %in% colnames(df)){
+            df$NES <- log2(df$foldEnrichment + 1e-6)
+        } else {
+            stop(sprintf("'fgseaResult' is missing required column(s): %s.",
+                paste(missingCols, collapse = ", ")))
+        }
+    }
 
-  # Drop pathways not in geneSets (warn once with a sample)
-  uniquePaths  <- unique(geneSetsDF$pathway)
-  missingPaths <- setdiff(uniquePaths, names(geneSets))
-  if (length(missingPaths)) {
-    warning(sprintf(
-      "%d pathway(s) in fgseaResult are not in 'geneSets' and will be dropped (first 5: %s).",
-      length(missingPaths),
-      paste(utils::head(missingPaths, 5), collapse = ", ")
-    ), call. = FALSE)
-    geneSetsDF  <- geneSetsDF[geneSetsDF$pathway %in% names(geneSets), , drop = FALSE]
-    uniquePaths <- unique(geneSetsDF$pathway)
-  }
+    keep <- !is.na(df$padj) & df$padj < cutoff
+    if (!any(keep)) {
+        stop(sprintf("No pathways passed the cutoff (padj < %s).", cutoff))
+    }
 
-  if (!length(uniquePaths)) {
-    stop("After dropping pathways not in 'geneSets', no pathways remain.")
-  }
+    geneSetsDF <- data.frame(
+        source           = source,
+        pathway          = df$pathway[keep],
+        enrichment_score = df$NES[keep],
+        stringsAsFactors = FALSE
+    )
+    if ("pval" %in% colnames(df)) {
+        geneSetsDF$pval <- df$pval[keep]
+    }
+    geneSetsDF$padj <- df$padj[keep]
 
-  list(
-    geneSetsList = geneSets[uniquePaths],
-    geneSetsDF   = geneSetsDF
-  )
+    # Drop pathways not in geneSets (warn once with a sample)
+    uniquePaths  <- unique(geneSetsDF$pathway)
+    missingPaths <- setdiff(uniquePaths, names(geneSets))
+    if (length(missingPaths)) {
+        warning(sprintf(
+            "%d pathway(s) in fgseaResult are not in 'geneSets' and will be dropped (first 5: %s).",
+            length(missingPaths),
+            paste(utils::head(missingPaths, 5), collapse = ", ")
+        ), call. = FALSE)
+        geneSetsDF  <- geneSetsDF[geneSetsDF$pathway %in% names(geneSets), , drop = FALSE]
+        uniquePaths <- unique(geneSetsDF$pathway)
+    }
+
+    if (!length(uniquePaths)) {
+        stop("After dropping pathways not in 'geneSets', no pathways remain.")
+    }
+
+    list(
+        geneSetsList = geneSets[uniquePaths],
+        geneSetsDF   = geneSetsDF
+    )
 }

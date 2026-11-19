@@ -44,9 +44,9 @@
 #'
 #' @examples
 #' gsListObject <- geneSetSimplifyR(
-#'   geneSetsList = exampleGeneSets,
-#'   geneSetsDF = exampleEnrichment,
-#'   verbose = FALSE
+#'     geneSetsList = exampleGeneSets,
+#'     geneSetsDF = exampleEnrichment,
+#'     verbose = FALSE
 #' )
 #' gsListObject
 geneSetSimplifyR <- function(
@@ -61,30 +61,30 @@ geneSetSimplifyR <- function(
     removeFirstWord = FALSE,
     stopWords = geneSetSimplifyR::stopWords,
     nLabels = 10
-) {
-  geneSetsList <- initializeList(
-    geneSetsList = geneSetsList,
-    geneSetsDF = geneSetsDF,
-    verbose = verbose
-  )
+    ) {
+    geneSetsList <- initializeList(
+        geneSetsList = geneSetsList,
+        geneSetsDF = geneSetsDF,
+        verbose = verbose
+    )
 
-  geneSetsList <- clusterGeneSets(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    verbose = verbose,
-    algorithm = cluster_algo,
-    clusterArgs = clusterArgs,
-    K = K,
-    elbow_method = elbow_method
-  )
+    geneSetsList <- clusterGeneSets(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        verbose = verbose,
+        algorithm = cluster_algo,
+        clusterArgs = clusterArgs,
+        K = K,
+        elbow_method = elbow_method
+    )
 
-  geneSetsList <- labelClusters(
-    geneSetsList = geneSetsList,
-    stopWords = stopWords,
-    nLabels = nLabels,
-    removeFirstWord = removeFirstWord,
-    verbose = verbose
-  )
+    geneSetsList <- labelClusters(
+        geneSetsList = geneSetsList,
+        stopWords = stopWords,
+        nLabels = nLabels,
+        removeFirstWord = removeFirstWord,
+        verbose = verbose
+    )
 
-  return(geneSetsList)
+    return(geneSetsList)
 }

@@ -32,16 +32,15 @@
 #' exampleGsList
 #' names(exampleGsList@metadata)
 gsList <- setClass(
-  "gsList",
-  slots = c(
-    genesetsDataframe = "data.frame",
-    enrichmentScore = "data.frame",
-    cluster = "ANY",
-    labels = "list",
-    metadata = "list"
-  ),
-  prototype = list(
-    metadata = list()
-  )
+    "gsList",
+    slots = c(
+        genesetsDataframe = "data.frame",
+        enrichmentScore = "data.frame",
+        cluster = "ANY",
+        labels = "list",
+        metadata = "list"
+    ),
+    prototype = list(
+        metadata = list()
+    )
 )
-

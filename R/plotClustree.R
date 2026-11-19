@@ -27,73 +27,73 @@ plotClustree <- function(
     edge_width = 0.7,
     node_text_angle = 30,
     resolutionsToPlot = NULL
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  resolutions <- availableResolutionColumns(geneSetsList)
+    resolutions <- availableResolutionColumns(geneSetsList)
 
-  if(!is.null(resolutionsToPlot)) {
-    resolutionsToUse <- resolutionColumnName(resolutionsToPlot)
+    if(!is.null(resolutionsToPlot)) {
+        resolutionsToUse <- resolutionColumnName(resolutionsToPlot)
 
-    if(! all(resolutionsToUse %in% resolutions)) {
-      stop(
-        "All 'resolutionsToPlot' must be among the resolutions analyzed: ",
-        paste(sub("^GSEA_snn_res\\.", "", resolutions), collapse = ", "), "."
-      )
+        if(! all(resolutionsToUse %in% resolutions)) {
+            stop(
+                "All 'resolutionsToPlot' must be among the resolutions analyzed: ",
+                paste(sub("^GSEA_snn_res\\.", "", resolutions), collapse = ", "), "."
+            )
+        }
+
+        notToAnalyze <- setdiff(resolutions, resolutionsToUse)
+
+        resolutions <- intersect(resolutions, resolutionsToUse)
+
+        geneSetsList@cluster@meta.data[,notToAnalyze] <-list(NULL)
+
     }
 
-    notToAnalyze <- setdiff(resolutions, resolutionsToUse)
+    for (resolution in resolutions) {
+        ### Top label per cluster, keyed by its cluster id
+        labelMap <-
+            geneSetsList@labels[[resolution]][["labelsDefault"]] %>%
+            dplyr::group_by(cluster) %>%
+            dplyr::slice_max(weighted_score, with_ties = FALSE) %>%
+            dplyr::ungroup() %>%
+            dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
+            dplyr::select(cluster, label)
 
-    resolutions <- intersect(resolutions, resolutionsToUse)
+        ### Match labels to levels by cluster id; level order need not be numeric
+        clusterFactor <- geneSetsList@cluster@meta.data[[resolution]]
+        matchedLabels <- labelMap$label[
+            match(as.character(levels(clusterFactor)),
+                as.character(labelMap$cluster))
+        ]
 
-    geneSetsList@cluster@meta.data[,notToAnalyze] <-list(NULL)
+        ### Fall back to the raw cluster id for any level without a label
+        missingLabel <- is.na(matchedLabels)
+        matchedLabels[missingLabel] <- levels(clusterFactor)[missingLabel]
 
-  }
-
-  for (resolution in resolutions) {
-    ### Top label per cluster, keyed by its cluster id
-    labelMap <-
-      geneSetsList@labels[[resolution]][["labelsDefault"]] %>%
-      dplyr::group_by(cluster) %>%
-      dplyr::slice_max(weighted_score, with_ties = FALSE) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(label = paste0(cluster, ": ", label)) %>%
-      dplyr::select(cluster, label)
-
-    ### Match labels to levels by cluster id; level order need not be numeric
-    clusterFactor <- geneSetsList@cluster@meta.data[[resolution]]
-    matchedLabels <- labelMap$label[
-      match(as.character(levels(clusterFactor)),
-            as.character(labelMap$cluster))
-    ]
-
-    ### Fall back to the raw cluster id for any level without a label
-    missingLabel <- is.na(matchedLabels)
-    matchedLabels[missingLabel] <- levels(clusterFactor)[missingLabel]
-
-    levels(clusterFactor) <- matchedLabels
-    geneSetsList@cluster@meta.data[[resolution]] <- clusterFactor
-  }
-  p <- clustree::clustree(
-    geneSetsList@cluster,
-    prefix = "GSEA_snn_res.",
-    label_nodes = TRUE,
-    node_alpha = node_alpha,
-    node_text_size = node_text_size,
-    node_size_range = node_size_range,
-    edge_width = edge_width,
-    node_text_angle = node_text_angle
-  )
-
-  # clustree's edge color scale names its guide ("edge_colourbar"), which
-  # ggplot2 can only find when ggraph is attached. Use the guide object itself
-  # so the plot prints without changing the user's search path.
-  for (scale in p$scales$scales) {
-    if (any(grepl("^edge_colour", scale$aesthetics)) &&
-        is.character(scale$guide) && scale$guide == "edge_colourbar") {
-      scale$guide <- ggraph::guide_edge_colourbar()
+        levels(clusterFactor) <- matchedLabels
+        geneSetsList@cluster@meta.data[[resolution]] <- clusterFactor
     }
-  }
+    p <- clustree::clustree(
+        geneSetsList@cluster,
+        prefix = "GSEA_snn_res.",
+        label_nodes = TRUE,
+        node_alpha = node_alpha,
+        node_text_size = node_text_size,
+        node_size_range = node_size_range,
+        edge_width = edge_width,
+        node_text_angle = node_text_angle
+    )
 
-  return(p)
+    # clustree's edge color scale names its guide ("edge_colourbar"), which
+    # ggplot2 can only find when ggraph is attached. Use the guide object itself
+    # so the plot prints without changing the user's search path.
+    for (scale in p$scales$scales) {
+        if (any(grepl("^edge_colour", scale$aesthetics)) &&
+            is.character(scale$guide) && scale$guide == "edge_colourbar") {
+            scale$guide <- ggraph::guide_edge_colourbar()
+        }
+    }
+
+    return(p)
 }

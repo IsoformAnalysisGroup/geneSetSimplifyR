@@ -33,35 +33,35 @@ load(file.path("data", "exampleEnrichment.rda"))
 load(file.path("data", "exampleGeneSets.rda"))
 
 fgseaCoad <- rbind(
-  data.frame(source = "Expression", as.data.frame(tcgaDgeFsc$COAD)[, c("gene_set", "pval", "padj", "NES")]),
-  data.frame(source = "Splicing", as.data.frame(tcgaDguFsc$COAD)[, c("gene_set", "pval", "padj", "NES")])
+    data.frame(source = "Expression", as.data.frame(tcgaDgeFsc$COAD)[, c("gene_set", "pval", "padj", "NES")]),
+    data.frame(source = "Splicing", as.data.frame(tcgaDguFsc$COAD)[, c("gene_set", "pval", "padj", "NES")])
 )
 
 ## The example is exactly the significant results for its gene sets
 significant <- fgseaCoad[fgseaCoad$padj < 0.05 & !is.na(fgseaCoad$padj) &
-                           fgseaCoad$gene_set %in% names(exampleGeneSets), ]
+    fgseaCoad$gene_set %in% names(exampleGeneSets), ]
 stopifnot(setequal(
-  paste(significant$source, significant$gene_set),
-  paste(exampleEnrichment$source, exampleEnrichment$pathway)
+    paste(significant$source, significant$gene_set),
+    paste(exampleEnrichment$source, exampleEnrichment$pathway)
 ))
 
 idx <- match(
-  paste(exampleEnrichment$source, exampleEnrichment$pathway),
-  paste(fgseaCoad$source, fgseaCoad$gene_set)
+    paste(exampleEnrichment$source, exampleEnrichment$pathway),
+    paste(fgseaCoad$source, fgseaCoad$gene_set)
 )
 stopifnot(!anyNA(idx))
 stopifnot(isTRUE(all.equal(exampleEnrichment$enrichment_score, fgseaCoad$NES[idx])))
 
 exampleEnrichment <- tibble::tibble(
-  source = exampleEnrichment$source,
-  pathway = exampleEnrichment$pathway,
-  enrichment_score = exampleEnrichment$enrichment_score,
-  pval = fgseaCoad$pval[idx],
-  padj = fgseaCoad$padj[idx]
+    source = exampleEnrichment$source,
+    pathway = exampleEnrichment$pathway,
+    enrichment_score = exampleEnrichment$enrichment_score,
+    pval = fgseaCoad$pval[idx],
+    padj = fgseaCoad$padj[idx]
 )
 
 save(
-  exampleEnrichment,
-  file = file.path("data", "exampleEnrichment.rda"),
-  compress = "xz"
+    exampleEnrichment,
+    file = file.path("data", "exampleEnrichment.rda"),
+    compress = "xz"
 )

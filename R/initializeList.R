@@ -38,286 +38,286 @@
 #' # Gene sets can also be read from a GMT file
 #' gmtFile <- tempfile(fileext = ".gmt")
 #' writeLines(
-#'   vapply(names(exampleGeneSets), function(name) {
-#'     paste(c(name, "", exampleGeneSets[[name]]), collapse = "\t")
-#'   }, character(1)),
-#'   gmtFile
+#'     vapply(names(exampleGeneSets), function(name) {
+#'         paste(c(name, "", exampleGeneSets[[name]]), collapse = "\t")
+#'     }, character(1)),
+#'     gmtFile
 #' )
 #' gsListObject <- initializeList(gmtFile, exampleEnrichment, verbose = FALSE)
 initializeList <- function(
     geneSetsList,
     geneSetsDF = NULL,
     verbose = TRUE
-) {
+    ) {
 
-  if(verbose) {
-    message("Checking input...")
-  }
-
-  ### Gene sets, possibly from a GMT file
-  if (is.character(geneSetsList) && length(geneSetsList) == 1L) {
-    if (!file.exists(geneSetsList)) {
-      stop(
-        "'geneSetsList' should be a named list of gene sets or the path to a ",
-        "GMT file. File not found: ", geneSetsList
-      )
+    if(verbose) {
+        message("Checking input...")
     }
-    geneSetsList <- fgsea::gmtPathways(geneSetsList)
-  }
 
-  if (!is.list(geneSetsList) || is.data.frame(geneSetsList) ||
-      !length(geneSetsList)) {
-    stop("'geneSetsList' should be a non-empty named list of gene sets.")
-  }
+    ### Gene sets, possibly from a GMT file
+    if (is.character(geneSetsList) && length(geneSetsList) == 1L) {
+        if (!file.exists(geneSetsList)) {
+            stop(
+                "'geneSetsList' should be a named list of gene sets or the path to a ",
+                "GMT file. File not found: ", geneSetsList
+            )
+        }
+        geneSetsList <- fgsea::gmtPathways(geneSetsList)
+    }
 
-  geneSetNames <- names(geneSetsList)
-  if (is.null(geneSetNames) || anyNA(geneSetNames) ||
-      any(!nzchar(geneSetNames))) {
-    stop(
-      "Every element of 'geneSetsList' should be named with its gene set ",
-      "name."
+    if (!is.list(geneSetsList) || is.data.frame(geneSetsList) ||
+        !length(geneSetsList)) {
+        stop("'geneSetsList' should be a non-empty named list of gene sets.")
+    }
+
+    geneSetNames <- names(geneSetsList)
+    if (is.null(geneSetNames) || anyNA(geneSetNames) ||
+        any(!nzchar(geneSetNames))) {
+        stop(
+            "Every element of 'geneSetsList' should be named with its gene set ",
+            "name."
+        )
+    }
+
+    duplicatedNames <- unique(geneSetNames[duplicated(geneSetNames)])
+    if (length(duplicatedNames)) {
+        stop(
+            "Gene set names in 'geneSetsList' should be unique. Duplicated: ",
+            quoteAndCollapse(utils::head(duplicatedNames, 5)),
+            if (length(duplicatedNames) > 5) ", ..." else "", "."
+        )
+    }
+
+    if (!all(vapply(geneSetsList, is.character, logical(1)))) {
+        stop("each element in the 'geneSetsList' should contain a character vector")
+    }
+
+    geneSetsList <- lapply(geneSetsList, function(genes) {
+        unique(genes[!is.na(genes) & nzchar(genes)])
+    })
+
+    no_table <- FALSE
+    if (is.null(geneSetsDF)) {
+        geneSetsDF <- data.frame(
+            pathway = names(geneSetsList),
+            enrichment_score = NA,
+            stringsAsFactors = FALSE
+        )
+        no_table <- TRUE
+    }
+
+    if (!is.data.frame(geneSetsDF)) {
+        stop("'geneSetsDF' should be a data.frame (or NULL).")
+    }
+
+    # Plain data.frame: avoids data.table/tibble specific subsetting rules
+    geneSetsDF <- as.data.frame(geneSetsDF, stringsAsFactors = FALSE)
+
+    if(! 'pathway' %in% colnames(geneSetsDF)) {
+        stop("Column 'pathway' was not found in geneSetsDF.")
+    }
+    geneSetsDF$pathway <- as.character(geneSetsDF$pathway)
+
+    ### Drop list columns such as fgsea's 'leadingEdge'
+    isListColumn <- vapply(geneSetsDF, is.list, logical(1))
+    if (any(isListColumn)) {
+        if (verbose) {
+            message(
+                "Dropping list column(s) from 'geneSetsDF': ",
+                quoteAndCollapse(colnames(geneSetsDF)[isListColumn]), "."
+            )
+        }
+        geneSetsDF <- geneSetsDF[, !isListColumn, drop = FALSE]
+    }
+
+    geneSetsDF <- unique(geneSetsDF)
+
+    if(! 'enrichment_score' %in% colnames(geneSetsDF)) {
+        if( 'NES' %in% colnames(geneSetsDF) ) {
+            if (verbose) {
+                message("enrichment_score was not found in the dataframe. Use NES instead.")
+            }
+            geneSetsDF$enrichment_score <- geneSetsDF$NES
+            geneSetsDF$NES <- NULL
+        } else {
+            geneSetsDF$enrichment_score <- NA
+        }
+    }
+    if (!all(is.na(geneSetsDF$enrichment_score)) &&
+        !is.numeric(geneSetsDF$enrichment_score)) {
+        stop("Column 'enrichment_score' of 'geneSetsDF' should be numeric.")
+    }
+
+    if(! 'pval' %in% colnames(geneSetsDF)) {
+        if( 'pvalue' %in% colnames(geneSetsDF) ) {
+            if (verbose) {
+                message("pval was not found in the dataframe. Use pvalue instead.")
+            }
+            geneSetsDF$pval <- geneSetsDF$pvalue
+            geneSetsDF$pvalue <- NULL
+        } else {
+            geneSetsDF$pval <- NA
+        }
+    }
+
+    if (!all(is.na(geneSetsDF$pval))) {
+        if (!is.numeric(geneSetsDF$pval)) {
+            stop("Column 'pval' (or 'pvalue') of 'geneSetsDF' should be numeric.")
+        }
+        if (any(geneSetsDF$pval < 0 | geneSetsDF$pval > 1, na.rm = TRUE)) {
+            stop("Column 'pval' (or 'pvalue') of 'geneSetsDF' should be between 0 and 1.")
+        }
+    }
+
+    # p-values of 0 are floored to avoid Inf; without p-values the column is NA,
+    # which the plotting functions skip
+    if(! 'nlog10pval' %in% colnames(geneSetsDF)) {
+        geneSetsDF$nlog10pval <- -log10(
+            pmax(as.numeric(geneSetsDF$pval), .Machine$double.xmin)
+        )
+    }
+
+    if( 'source' %in% colnames(geneSetsDF) ) {
+        if (anyNA(geneSetsDF$source)) {
+            stop("Column 'source' of 'geneSetsDF' should not contain missing values.")
+        }
+        geneSetsDF$source <- as.character(geneSetsDF$source)
+        numberOfSources <- dplyr::n_distinct(geneSetsDF$source)
+
+        if(verbose) {
+            message(
+                paste0(
+                    numberOfSources,
+                    " different sources found."
+                )
+            )
+        }
+
+    }  else {
+        geneSetsDF$source <- NA
+
+        if(verbose) {
+            message(
+                paste0(
+                    "Assuming all gene-sets are from same source (multiple sources are supported)"
+                )
+            )
+        }
+    }
+
+    duplicatedKeys <- duplicated(geneSetsDF[, c('pathway', 'source')])
+    if (any(duplicatedKeys)) {
+        stop(
+            "Each combination of 'pathway' and 'source' should appear only once in ",
+            "'geneSetsDF', but these have several (different) rows: ",
+            quoteAndCollapse(utils::head(unique(geneSetsDF$pathway[duplicatedKeys]), 5)),
+            if (sum(duplicatedKeys) > 5) ", ..." else "", "."
+        )
+    }
+
+    if(!no_table){
+        pathways <- unique(geneSetsDF$pathway)
+
+        missingPathways <- setdiff(pathways, names(geneSetsList))
+        if (length(missingPathways)) {
+            stop(
+                length(missingPathways), " pathway(s) of 'geneSetsDF' are not in ",
+                "'geneSetsList', e.g. ",
+                quoteAndCollapse(utils::head(missingPathways, 5)), "."
+            )
+        }
+    } else{
+        pathways <- names(geneSetsList)
+    }
+
+    emptySets <- pathways[lengths(geneSetsList[pathways]) == 0]
+    if (length(emptySets)) {
+        warning(
+            length(emptySets), " gene set(s) contain no genes and were removed: ",
+            quoteAndCollapse(utils::head(emptySets, 5)),
+            if (length(emptySets) > 5) ", ..." else "", ".",
+            call. = FALSE
+        )
+        pathways <- setdiff(pathways, emptySets)
+        geneSetsDF <- geneSetsDF[geneSetsDF$pathway %in% pathways, , drop = FALSE]
+    }
+
+    if (!length(pathways)) {
+        stop("No gene sets with genes are left to analyze.")
+    }
+
+    if(verbose) {
+        message("Input is valid. Initializing gsList object...")
+    }
+
+    genesetsGenes <- geneSetsList[pathways]
+
+    genesetsMatrix <-
+        tibble::enframe(
+            genesetsGenes,
+            name = "geneset",
+            value = "gene_ids"
+        ) %>%
+        tidyr::unnest(cols = c(gene_ids)) %>%
+        dplyr::mutate(count = 1) %>%
+        tidyr::pivot_wider(
+            names_from = geneset,
+            values_from = count,
+            values_fill = list(count = 0)
+        ) %>%
+        tibble::column_to_rownames("gene_ids")
+
+    res <- new("gsList", genesetsDataframe = genesetsMatrix)
+
+
+    ### Drop columns added downstream; the rest stay available to 'plotFrom'
+    reservedColumns <- intersect(
+        colnames(geneSetsDF),
+        c('cluster', 'initial_cluster_label')
     )
-  }
+    if( length(reservedColumns) ) {
+        warning(paste0(
+            "The following column(s) of 'geneSetsDF' are reserved for internal use ",
+            'and were removed: ',
+            paste0("'", reservedColumns, "'", collapse = ', '), '.'
+        ))
 
-  duplicatedNames <- unique(geneSetNames[duplicated(geneSetNames)])
-  if (length(duplicatedNames)) {
-    stop(
-      "Gene set names in 'geneSetsList' should be unique. Duplicated: ",
-      quoteAndCollapse(utils::head(duplicatedNames, 5)),
-      if (length(duplicatedNames) > 5) ", ..." else "", "."
-    )
-  }
-
-  if (!all(vapply(geneSetsList, is.character, logical(1)))) {
-    stop("each element in the 'geneSetsList' should contain a character vector")
-  }
-
-  geneSetsList <- lapply(geneSetsList, function(genes) {
-    unique(genes[!is.na(genes) & nzchar(genes)])
-  })
-
-  no_table <- FALSE
-  if (is.null(geneSetsDF)) {
-    geneSetsDF <- data.frame(
-      pathway = names(geneSetsList),
-      enrichment_score = NA,
-      stringsAsFactors = FALSE
-    )
-    no_table <- TRUE
-  }
-
-  if (!is.data.frame(geneSetsDF)) {
-    stop("'geneSetsDF' should be a data.frame (or NULL).")
-  }
-
-  # Plain data.frame: avoids data.table/tibble specific subsetting rules
-  geneSetsDF <- as.data.frame(geneSetsDF, stringsAsFactors = FALSE)
-
-  if(! 'pathway' %in% colnames(geneSetsDF)) {
-    stop("Column 'pathway' was not found in geneSetsDF.")
-  }
-  geneSetsDF$pathway <- as.character(geneSetsDF$pathway)
-
-  ### Drop list columns such as fgsea's 'leadingEdge'
-  isListColumn <- vapply(geneSetsDF, is.list, logical(1))
-  if (any(isListColumn)) {
-    if (verbose) {
-      message(
-        "Dropping list column(s) from 'geneSetsDF': ",
-        quoteAndCollapse(colnames(geneSetsDF)[isListColumn]), "."
-      )
+        geneSetsDF <- geneSetsDF[
+            , setdiff(colnames(geneSetsDF), reservedColumns), drop = FALSE
+        ]
     }
-    geneSetsDF <- geneSetsDF[, !isListColumn, drop = FALSE]
-  }
 
-  geneSetsDF <- unique(geneSetsDF)
+    rownames(geneSetsDF) <- NULL
+    res@enrichmentScore <- geneSetsDF
 
-  if(! 'enrichment_score' %in% colnames(geneSetsDF)) {
-    if( 'NES' %in% colnames(geneSetsDF) ) {
-      if (verbose) {
-        message("enrichment_score was not found in the dataframe. Use NES instead.")
-      }
-      geneSetsDF$enrichment_score <- geneSetsDF$NES
-      geneSetsDF$NES <- NULL
-    } else {
-      geneSetsDF$enrichment_score <- NA
-    }
-  }
-  if (!all(is.na(geneSetsDF$enrichment_score)) &&
-      !is.numeric(geneSetsDF$enrichment_score)) {
-    stop("Column 'enrichment_score' of 'geneSetsDF' should be numeric.")
-  }
-
-  if(! 'pval' %in% colnames(geneSetsDF)) {
-    if( 'pvalue' %in% colnames(geneSetsDF) ) {
-      if (verbose) {
-        message("pval was not found in the dataframe. Use pvalue instead.")
-      }
-      geneSetsDF$pval <- geneSetsDF$pvalue
-      geneSetsDF$pvalue <- NULL
-    } else {
-      geneSetsDF$pval <- NA
-    }
-  }
-
-  if (!all(is.na(geneSetsDF$pval))) {
-    if (!is.numeric(geneSetsDF$pval)) {
-      stop("Column 'pval' (or 'pvalue') of 'geneSetsDF' should be numeric.")
-    }
-    if (any(geneSetsDF$pval < 0 | geneSetsDF$pval > 1, na.rm = TRUE)) {
-      stop("Column 'pval' (or 'pvalue') of 'geneSetsDF' should be between 0 and 1.")
-    }
-  }
-
-  # p-values of 0 are floored to avoid Inf; without p-values the column is NA,
-  # which the plotting functions skip
-  if(! 'nlog10pval' %in% colnames(geneSetsDF)) {
-    geneSetsDF$nlog10pval <- -log10(
-      pmax(as.numeric(geneSetsDF$pval), .Machine$double.xmin)
-    )
-  }
-
-  if( 'source' %in% colnames(geneSetsDF) ) {
-    if (anyNA(geneSetsDF$source)) {
-      stop("Column 'source' of 'geneSetsDF' should not contain missing values.")
-    }
-    geneSetsDF$source <- as.character(geneSetsDF$source)
     numberOfSources <- dplyr::n_distinct(geneSetsDF$source)
 
+    pkgVersion <- tryCatch(
+        as.character(utils::packageVersion("geneSetSimplifyR")),
+        error = function(e) NA_character_
+    )
+    res@metadata <- list(
+        n_genes = nrow(res@genesetsDataframe),
+        n_pathways = ncol(res@genesetsDataframe),
+        n_sources = numberOfSources,
+        package_version = pkgVersion,
+        initialized_at = Sys.time()
+    )
+
     if(verbose) {
-      message(
-        paste0(
-          numberOfSources,
-          " different sources found."
+        message(
+            paste(
+                "gsList object created with",
+                dim(res@genesetsDataframe)[1],
+                "genes and",
+                dim(res@genesetsDataframe)[2],
+                "gene sets",
+                'from', numberOfSources, 'sources',
+                sep = ' '
+            )
         )
-      )
+        message("Initialization of gsList object DONE")
     }
 
-  }  else {
-    geneSetsDF$source <- NA
-
-    if(verbose) {
-      message(
-        paste0(
-          "Assuming all gene-sets are from same source (multiple sources are supported)"
-        )
-      )
-    }
-  }
-
-  duplicatedKeys <- duplicated(geneSetsDF[, c('pathway', 'source')])
-  if (any(duplicatedKeys)) {
-    stop(
-      "Each combination of 'pathway' and 'source' should appear only once in ",
-      "'geneSetsDF', but these have several (different) rows: ",
-      quoteAndCollapse(utils::head(unique(geneSetsDF$pathway[duplicatedKeys]), 5)),
-      if (sum(duplicatedKeys) > 5) ", ..." else "", "."
-    )
-  }
-
-  if(!no_table){
-    pathways <- unique(geneSetsDF$pathway)
-
-    missingPathways <- setdiff(pathways, names(geneSetsList))
-    if (length(missingPathways)) {
-      stop(
-        length(missingPathways), " pathway(s) of 'geneSetsDF' are not in ",
-        "'geneSetsList', e.g. ",
-        quoteAndCollapse(utils::head(missingPathways, 5)), "."
-      )
-    }
-  } else{
-    pathways <- names(geneSetsList)
-  }
-
-  emptySets <- pathways[lengths(geneSetsList[pathways]) == 0]
-  if (length(emptySets)) {
-    warning(
-      length(emptySets), " gene set(s) contain no genes and were removed: ",
-      quoteAndCollapse(utils::head(emptySets, 5)),
-      if (length(emptySets) > 5) ", ..." else "", ".",
-      call. = FALSE
-    )
-    pathways <- setdiff(pathways, emptySets)
-    geneSetsDF <- geneSetsDF[geneSetsDF$pathway %in% pathways, , drop = FALSE]
-  }
-
-  if (!length(pathways)) {
-    stop("No gene sets with genes are left to analyze.")
-  }
-
-  if(verbose) {
-    message("Input is valid. Initializing gsList object...")
-  }
-
-  genesetsGenes <- geneSetsList[pathways]
-
-  genesetsMatrix <-
-    tibble::enframe(
-      genesetsGenes,
-      name = "geneset",
-      value = "gene_ids"
-    ) %>%
-    tidyr::unnest(cols = c(gene_ids)) %>%
-    dplyr::mutate(count = 1) %>%
-    tidyr::pivot_wider(
-      names_from = geneset,
-      values_from = count,
-      values_fill = list(count = 0)
-    ) %>%
-    tibble::column_to_rownames("gene_ids")
-
-  res <- new("gsList", genesetsDataframe = genesetsMatrix)
-
-
-  ### Drop columns added downstream; the rest stay available to 'plotFrom'
-  reservedColumns <- intersect(
-    colnames(geneSetsDF),
-    c('cluster', 'initial_cluster_label')
-  )
-  if( length(reservedColumns) ) {
-    warning(paste0(
-      "The following column(s) of 'geneSetsDF' are reserved for internal use ",
-      'and were removed: ',
-      paste0("'", reservedColumns, "'", collapse = ', '), '.'
-    ))
-
-    geneSetsDF <- geneSetsDF[
-      , setdiff(colnames(geneSetsDF), reservedColumns), drop = FALSE
-    ]
-  }
-
-  rownames(geneSetsDF) <- NULL
-  res@enrichmentScore <- geneSetsDF
-
-  numberOfSources <- dplyr::n_distinct(geneSetsDF$source)
-
-  pkgVersion <- tryCatch(
-    as.character(utils::packageVersion("geneSetSimplifyR")),
-    error = function(e) NA_character_
-  )
-  res@metadata <- list(
-    n_genes = nrow(res@genesetsDataframe),
-    n_pathways = ncol(res@genesetsDataframe),
-    n_sources = numberOfSources,
-    package_version = pkgVersion,
-    initialized_at = Sys.time()
-  )
-
-  if(verbose) {
-    message(
-      paste(
-        "gsList object created with",
-        dim(res@genesetsDataframe)[1],
-        "genes and",
-        dim(res@genesetsDataframe)[2],
-        "gene sets",
-        'from', numberOfSources, 'sources',
-        sep = ' '
-      )
-    )
-    message("Initialization of gsList object DONE")
-  }
-
-  return(res)
+    return(res)
 }

@@ -19,226 +19,225 @@
 #'
 #' @examples
 #' plotClusterLabels(geneSetsList = exampleGsList, clusterNumber = 0)
-
 plotClusterLabels <- function(
     geneSetsList,
     clusterNumber,
     resolution = NULL,
     nLabels = 5,
     maxChar = 50
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+    resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
 
-  clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
-  if (missing(clusterNumber) || length(clusterNumber) != 1L ||
-      !as.character(clusterNumber) %in% clusterIds) {
-    stop(
-      "'clusterNumber' should be one of the clusters at resolution ",
-      sub("^GSEA_snn_res\\.", "", resolutionColumn), ": ",
-      paste(clusterIds, collapse = ", "), "."
-    )
-  }
-
-  {
-    ### The TF-IDF panel shows the automatic labels, not renamed ones
-    if( 'org_label' %in% colnames(geneSetsList@labels[[resolutionColumn]]$labelsDefault) ) {
-      geneSetsList@labels[[resolutionColumn]]$labelsDefault$label <-
-        geneSetsList@labels[[resolutionColumn]]$labelsDefault$org_label
-    }
-
-    localIntegrated <-
-      geneSetsList@labels[[resolutionColumn]]$labelsDefault %>%
-      # rows added by updateClusterLabels() have no automatic label or score
-      dplyr::filter(cluster == clusterNumber, !is.na(label)) %>%
-      dplyr::rename(value = weighted_score) %>%
-      dplyr::mutate(
-        label = factor(label, levels=unique(label)),
-        measure = 'Label Weighted TF IDF',
-        index = seq_len(dplyr::n())
-      ) %>%
-      dplyr::filter(index <= nLabels) %>%
-      dplyr::select(
-        label,
-        value,
-        measure
-      )
-
-    localTFIDF <-
-      geneSetsList@labels[[resolutionColumn]]$labelsTFIDF %>%
-      dplyr::filter(cluster == clusterNumber) %>%
-      dplyr::rename(value = tf_idf) %>%
-      dplyr::mutate(
-        label = factor(label, levels=unique(label)),
-        measure = 'Label TF IDF',
-        index = seq_len(dplyr::n())
-      ) %>%
-      dplyr::filter(index <= nLabels) %>%
-      dplyr::select(
-        label,
-        value,
-        measure
-      )
-
-    localCentrality <-
-      geneSetsList@labels[[resolutionColumn]]$labelsCentrality %>%
-      dplyr::filter(cluster == clusterNumber) %>%
-      dplyr::rename(
-        value = centrality_score,
-        label = geneset
-      ) %>%
-      dplyr::mutate(
-        label = factor(label, levels=unique(label)),
-        measure = 'Gene Set Centrality Score',
-        index = seq_len(dplyr::n())
-      ) %>%
-      dplyr::filter(index <= nLabels) %>%
-      dplyr::select(
-        label,
-        value,
-        measure
-      )
-
-    clusterMeta <- geneSetsList@cluster@meta.data
-    gsInCluster <- clusterMeta$gene_set[
-      as.character(clusterMeta[[resolutionColumn]]) == as.character(clusterNumber)
-    ]
-
-    # drop = FALSE keeps this a data.frame for a single-gene-set cluster, which
-    # would otherwise collapse to a plain vector and break colSums()/apply().
-    clusterMembership <-
-      geneSetsList@genesetsDataframe[, gsInCluster, drop = FALSE]
-
-    localGsSize <-
-      tibble::tibble(
-        label = gsInCluster,
-        value = colSums(clusterMembership),
-        measure = 'Gene Set Size'
-      ) %>%
-      dplyr::slice_max(order_by = value, n=nLabels) %>%
-      dplyr::mutate(
-        label = factor(label, levels=unique(label) ),
-      )
-
-    localGeneFreq <-
-      apply(
-        X = clusterMembership,
-        MARGIN = 2,
-        function(x) {
-          rownames(geneSetsList@genesetsDataframe)[which(
-            x == 1
-          )]
-        }
-      ) %>%
-      unlist() %>%
-      table() %>%
-      sort(decreasing = TRUE) %>%
-      head(n=nLabels)
-    localGeneFreqDf <-
-      tibble::tibble(
-        label = names(localGeneFreq),
-        value = as.numeric(localGeneFreq),
-        measure = 'Gene Frequency'
-      ) %>%
-      dplyr::mutate(
-        label = factor(label, levels=unique(label) ),
-      )
-
-    ### Words of the gene-set names, prepared as in labelClusters()
-    labelSettings <- labelingSettings(geneSetsList)
-    nameWords <- stringr::str_replace_all(gsInCluster, "_", " ")
-    if (labelSettings$removeFirstWord) {
-      nameWords <- stringr::str_remove(nameWords, "^\\S+\\s*")
-    }
-
-    topWords <-
-      nameWords %>%
-      stringr::str_split(pattern = ' ') %>%
-      unlist() %>%
-      tolower() %>%
-      tibble::tibble(words = .) %>%
-      dplyr::filter(nzchar(words)) %>%
-      dplyr::anti_join(
-        x = .,
-        y = tibble::tibble(words = tolower(labelSettings$stopWords)),
-        by = 'words'
-      ) %>%
-      dplyr::group_by(words) %>%
-      dplyr::summarise(
-        value = dplyr::n(),
-        .groups = 'drop'
-      ) %>%
-      dplyr::slice_max(order_by = value, n=nLabels) %>%
-      dplyr::rename(label = words) %>%
-      dplyr::mutate(
-        measure = 'Word Frequency',
-        label = factor(label, levels=unique(label) ),
-      )
-
-
-    jointData <-
-      dplyr::bind_rows(
-        localIntegrated,
-        localTFIDF,
-        localCentrality,
-        localGsSize,
-        localGeneFreqDf,
-        topWords
-      ) %>%
-      dplyr::mutate(
-        measure = factor(
-          measure,
-          levels = c(
-            'Label Weighted TF IDF',
-            'Word Frequency',
-            'Gene Set Centrality Score',
-            'Label TF IDF',
-            'Gene Frequency',
-            'Gene Set Size'
-          )
+    clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
+    if (missing(clusterNumber) || length(clusterNumber) != 1L ||
+        !as.character(clusterNumber) %in% clusterIds) {
+        stop(
+            "'clusterNumber' should be one of the clusters at resolution ",
+            sub("^GSEA_snn_res\\.", "", resolutionColumn), ": ",
+            paste(clusterIds, collapse = ", "), "."
         )
-      )
+    }
 
-    ### Shorten long gene-set names, keeping the factor order
-    factorOrder <- match(
-      levels(jointData$label), jointData$label
-    )
-    jointData$label <- cutGeneSetName(
-      aVec = as.character( jointData$label ),
-      maxChar=maxChar
-    )
-    jointData$label <- factor(
-      jointData$label,
-      levels = unique(jointData$label[factorOrder])
-    )
+    {
+        ### The TF-IDF panel shows the automatic labels, not renamed ones
+        if( 'org_label' %in% colnames(geneSetsList@labels[[resolutionColumn]]$labelsDefault) ) {
+            geneSetsList@labels[[resolutionColumn]]$labelsDefault$label <-
+                geneSetsList@labels[[resolutionColumn]]$labelsDefault$org_label
+        }
 
-  }
+        localIntegrated <-
+            geneSetsList@labels[[resolutionColumn]]$labelsDefault %>%
+            # rows added by updateClusterLabels() have no automatic label or score
+            dplyr::filter(cluster == clusterNumber, !is.na(label)) %>%
+            dplyr::rename(value = weighted_score) %>%
+            dplyr::mutate(
+                label = factor(label, levels=unique(label)),
+                measure = 'Label Weighted TF IDF',
+                index = seq_len(dplyr::n())
+            ) %>%
+            dplyr::filter(index <= nLabels) %>%
+            dplyr::select(
+                label,
+                value,
+                measure
+            )
 
-  ### Order the bars by value. Ties keep the order of the label tables, so
-  ### the top bar of 'Label Weighted TF IDF' is the label the cluster got.
-  jointData <- jointData %>%
-    dplyr::filter(value != 0) %>%
-    dplyr::mutate(tableOrder = seq_len(dplyr::n())) %>%
-    dplyr::group_by(measure) %>%
-    dplyr::arrange(dplyr::desc(value), tableOrder, .by_group = TRUE) %>%
-    dplyr::mutate(sortKey = -seq_len(dplyr::n())) %>%
-    dplyr::ungroup()
+        localTFIDF <-
+            geneSetsList@labels[[resolutionColumn]]$labelsTFIDF %>%
+            dplyr::filter(cluster == clusterNumber) %>%
+            dplyr::rename(value = tf_idf) %>%
+            dplyr::mutate(
+                label = factor(label, levels=unique(label)),
+                measure = 'Label TF IDF',
+                index = seq_len(dplyr::n())
+            ) %>%
+            dplyr::filter(index <= nLabels) %>%
+            dplyr::select(
+                label,
+                value,
+                measure
+            )
 
-  p1 <-
-    jointData %>%
-    ggplot(aes(x=tidytext::reorder_within(label, sortKey, measure), y=value)) +
-    geom_bar(stat="identity", position='dodge') +
-    facet_wrap(~measure, ncol=3, scales = 'free') +
-    tidytext::scale_x_reordered() +
-    coord_flip() +
-    theme_bw() +
-    labs(
-      x = NULL,
-      y = NULL
-    )
+        localCentrality <-
+            geneSetsList@labels[[resolutionColumn]]$labelsCentrality %>%
+            dplyr::filter(cluster == clusterNumber) %>%
+            dplyr::rename(
+                value = centrality_score,
+                label = geneset
+            ) %>%
+            dplyr::mutate(
+                label = factor(label, levels=unique(label)),
+                measure = 'Gene Set Centrality Score',
+                index = seq_len(dplyr::n())
+            ) %>%
+            dplyr::filter(index <= nLabels) %>%
+            dplyr::select(
+                label,
+                value,
+                measure
+            )
 
-  return(p1)
+        clusterMeta <- geneSetsList@cluster@meta.data
+        gsInCluster <- clusterMeta$gene_set[
+            as.character(clusterMeta[[resolutionColumn]]) == as.character(clusterNumber)
+        ]
+
+        # drop = FALSE keeps this a data.frame for a single-gene-set cluster, which
+        # would otherwise collapse to a plain vector and break colSums()/apply().
+        clusterMembership <-
+            geneSetsList@genesetsDataframe[, gsInCluster, drop = FALSE]
+
+        localGsSize <-
+            tibble::tibble(
+                label = gsInCluster,
+                value = colSums(clusterMembership),
+                measure = 'Gene Set Size'
+            ) %>%
+            dplyr::slice_max(order_by = value, n=nLabels) %>%
+            dplyr::mutate(
+                label = factor(label, levels=unique(label) ),
+            )
+
+        localGeneFreq <-
+            apply(
+                X = clusterMembership,
+                MARGIN = 2,
+                function(x) {
+                    rownames(geneSetsList@genesetsDataframe)[which(
+                        x == 1
+                    )]
+                }
+            ) %>%
+            unlist() %>%
+            table() %>%
+            sort(decreasing = TRUE) %>%
+            head(n=nLabels)
+        localGeneFreqDf <-
+            tibble::tibble(
+                label = names(localGeneFreq),
+                value = as.numeric(localGeneFreq),
+                measure = 'Gene Frequency'
+            ) %>%
+            dplyr::mutate(
+                label = factor(label, levels=unique(label) ),
+            )
+
+        ### Words of the gene-set names, prepared as in labelClusters()
+        labelSettings <- labelingSettings(geneSetsList)
+        nameWords <- stringr::str_replace_all(gsInCluster, "_", " ")
+        if (labelSettings$removeFirstWord) {
+            nameWords <- stringr::str_remove(nameWords, "^\\S+\\s*")
+        }
+
+        topWords <-
+            nameWords %>%
+            stringr::str_split(pattern = ' ') %>%
+            unlist() %>%
+            tolower() %>%
+            tibble::tibble(words = .) %>%
+            dplyr::filter(nzchar(words)) %>%
+            dplyr::anti_join(
+                x = .,
+                y = tibble::tibble(words = tolower(labelSettings$stopWords)),
+                by = 'words'
+            ) %>%
+            dplyr::group_by(words) %>%
+            dplyr::summarise(
+                value = dplyr::n(),
+                .groups = 'drop'
+            ) %>%
+            dplyr::slice_max(order_by = value, n=nLabels) %>%
+            dplyr::rename(label = words) %>%
+            dplyr::mutate(
+                measure = 'Word Frequency',
+                label = factor(label, levels=unique(label) ),
+            )
+
+
+        jointData <-
+            dplyr::bind_rows(
+                localIntegrated,
+                localTFIDF,
+                localCentrality,
+                localGsSize,
+                localGeneFreqDf,
+                topWords
+            ) %>%
+            dplyr::mutate(
+                measure = factor(
+                    measure,
+                    levels = c(
+                        'Label Weighted TF IDF',
+                        'Word Frequency',
+                        'Gene Set Centrality Score',
+                        'Label TF IDF',
+                        'Gene Frequency',
+                        'Gene Set Size'
+                    )
+                )
+            )
+
+        ### Shorten long gene-set names, keeping the factor order
+        factorOrder <- match(
+            levels(jointData$label), jointData$label
+        )
+        jointData$label <- cutGeneSetName(
+            aVec = as.character( jointData$label ),
+            maxChar=maxChar
+        )
+        jointData$label <- factor(
+            jointData$label,
+            levels = unique(jointData$label[factorOrder])
+        )
+
+    }
+
+    ### Order the bars by value. Ties keep the order of the label tables, so
+    ### the top bar of 'Label Weighted TF IDF' is the label the cluster got.
+    jointData <- jointData %>%
+        dplyr::filter(value != 0) %>%
+        dplyr::mutate(tableOrder = seq_len(dplyr::n())) %>%
+        dplyr::group_by(measure) %>%
+        dplyr::arrange(dplyr::desc(value), tableOrder, .by_group = TRUE) %>%
+        dplyr::mutate(sortKey = -seq_len(dplyr::n())) %>%
+        dplyr::ungroup()
+
+    p1 <-
+        jointData %>%
+        ggplot(aes(x=tidytext::reorder_within(label, sortKey, measure), y=value)) +
+        geom_bar(stat="identity", position='dodge') +
+        facet_wrap(~measure, ncol=3, scales = 'free') +
+        tidytext::scale_x_reordered() +
+        coord_flip() +
+        theme_bw() +
+        labs(
+            x = NULL,
+            y = NULL
+        )
+
+    return(p1)
 }
 
 #' Settings used by labelClusters()
@@ -247,13 +246,13 @@ plotClusterLabels <- function(
 #' @return A list with `removeFirstWord` and `stopWords`.
 #' @keywords internal
 labelingSettings <- function(geneSetsList) {
-  meta <- geneSetsList@metadata
-  list(
-    removeFirstWord = isTRUE(meta$remove_first_word),
-    stopWords = if (is.null(meta$stop_words)) {
-      geneSetSimplifyR::stopWords
-    } else {
-      meta$stop_words
-    }
-  )
+    meta <- geneSetsList@metadata
+    list(
+        removeFirstWord = isTRUE(meta$remove_first_word),
+        stopWords = if (is.null(meta$stop_words)) {
+            geneSetSimplifyR::stopWords
+        } else {
+            meta$stop_words
+        }
+    )
 }

@@ -42,23 +42,23 @@ distinct \code{source} label and \code{rbind()} the resulting \code{geneSetsDF}s
 # A small table in the format of fgsea::fgsea() output
 pathways <- names(exampleGeneSets)[1:60]
 fgseaRes <- data.frame(
-  pathway = pathways,
-  pval = rep(c(0.001, 0.01, 0.3), 20),
-  padj = rep(c(0.004, 0.03, 0.5), 20),
-  NES = seq(-2.5, 2.5, length.out = 60)
+    pathway = pathways,
+    pval = rep(c(0.001, 0.01, 0.3), 20),
+    padj = rep(c(0.004, 0.03, 0.5), 20),
+    NES = seq(-2.5, 2.5, length.out = 60)
 )
 parsed <- parseFgsea(
-  fgseaResult = fgseaRes,
-  geneSets    = exampleGeneSets,
-  cutoff      = 0.05,
-  source      = "treatmentA"
+    fgseaResult = fgseaRes,
+    geneSets    = exampleGeneSets,
+    cutoff      = 0.05,
+    source      = "treatmentA"
 )
 head(parsed$geneSetsDF)
 gss <- geneSetSimplifyR(
-  geneSetsList = parsed$geneSetsList,
-  geneSetsDF   = parsed$geneSetsDF,
-  resolution   = 1.1,
-  verbose      = FALSE
+    geneSetsList = parsed$geneSetsList,
+    geneSetsDF   = parsed$geneSetsDF,
+    resolution   = 1.1,
+    verbose      = FALSE
 )
 
 }

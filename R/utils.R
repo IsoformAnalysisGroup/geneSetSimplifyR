@@ -12,16 +12,16 @@
 #' @return A factor with levels `0, 1, ..., k - 1`.
 #' @keywords internal
 numericClusterFactor <- function(x) {
-  x <- as.character(x)
-  asNumber <- suppressWarnings(as.numeric(x))
-  if (!anyNA(asNumber[!is.na(x)])) {
-    uniqueIds <- sort(unique(asNumber))
-    ids <- match(asNumber, uniqueIds) - 1L
-  } else {
-    uniqueIds <- sort(unique(x))
-    ids <- match(x, uniqueIds) - 1L
-  }
-  factor(ids, levels = seq_along(uniqueIds) - 1L)
+    x <- as.character(x)
+    asNumber <- suppressWarnings(as.numeric(x))
+    if (!anyNA(asNumber[!is.na(x)])) {
+        uniqueIds <- sort(unique(asNumber))
+        ids <- match(asNumber, uniqueIds) - 1L
+    } else {
+        uniqueIds <- sort(unique(x))
+        ids <- match(x, uniqueIds) - 1L
+    }
+    factor(ids, levels = seq_along(uniqueIds) - 1L)
 }
 
 #' Build display labels aligned to a set of cluster ids
@@ -56,38 +56,38 @@ alignedClusterLabels <- function(
     resolutionColumn,
     clusterIds,
     removeClusterId = FALSE
-) {
-  labelTable <- geneSetsList@labels[[resolutionColumn]][["labelsDefault"]]
+    ) {
+    labelTable <- geneSetsList@labels[[resolutionColumn]][["labelsDefault"]]
 
-  if (is.null(labelTable)) {
-    stop(
-      "No labels found for '", resolutionColumn,
-      "'. Please run 'labelClusters()' before plotting."
+    if (is.null(labelTable)) {
+        stop(
+            "No labels found for '", resolutionColumn,
+            "'. Please run 'labelClusters()' before plotting."
+        )
+    }
+
+    topLabels <- labelTable %>%
+        dplyr::mutate(cluster = as.numeric(as.character(cluster))) %>%
+        dplyr::group_by(cluster) %>%
+        dplyr::slice_max(weighted_score, n = 1, with_ties = FALSE) %>%
+        dplyr::ungroup()
+
+    clusterIds <- as.character(clusterIds)
+    idx <- match(clusterIds, as.character(topLabels$cluster))
+    withId <- ifelse(
+        is.na(idx),
+        clusterIds,
+        paste0(clusterIds, ": ", topLabels$label[idx])
     )
-  }
 
-  topLabels <- labelTable %>%
-    dplyr::mutate(cluster = as.numeric(as.character(cluster))) %>%
-    dplyr::group_by(cluster) %>%
-    dplyr::slice_max(weighted_score, n = 1, with_ties = FALSE) %>%
-    dplyr::ungroup()
+    if (!removeClusterId) {
+        return(withId)
+    }
 
-  clusterIds <- as.character(clusterIds)
-  idx <- match(clusterIds, as.character(topLabels$cluster))
-  withId <- ifelse(
-    is.na(idx),
-    clusterIds,
-    paste0(clusterIds, ": ", topLabels$label[idx])
-  )
-
-  if (!removeClusterId) {
-    return(withId)
-  }
-
-  out <- ifelse(is.na(idx), clusterIds, topLabels$label[idx])
-  isDuplicated <- duplicated(out) | duplicated(out, fromLast = TRUE)
-  out[isDuplicated] <- withId[isDuplicated]
-  return(out)
+    out <- ifelse(is.na(idx), clusterIds, topLabels$label[idx])
+    isDuplicated <- duplicated(out) | duplicated(out, fromLast = TRUE)
+    out[isDuplicated] <- withId[isDuplicated]
+    return(out)
 }
 
 #' Relabel the levels of a factor
@@ -100,14 +100,14 @@ alignedClusterLabels <- function(
 #' @return The relabeled factor.
 #' @keywords internal
 relabelFactor <- function(x, from, to) {
-  if (!is.factor(x)) {
-    x <- factor(x)
-  }
-  lev <- levels(x)
-  idx <- match(lev, from)
-  lev[!is.na(idx)] <- to[idx[!is.na(idx)]]
-  levels(x) <- lev
-  return(x)
+    if (!is.factor(x)) {
+        x <- factor(x)
+    }
+    lev <- levels(x)
+    idx <- match(lev, from)
+    lev[!is.na(idx)] <- to[idx[!is.na(idx)]]
+    levels(x) <- lev
+    return(x)
 }
 
 #' Metadata column name of a resolution
@@ -116,7 +116,7 @@ relabelFactor <- function(x, from, to) {
 #' @return The name of the matching column, e.g. `"GSEA_snn_res.1.1"`.
 #' @keywords internal
 resolutionColumnName <- function(resolution) {
-  paste0("GSEA_snn_res.", as.character(as.numeric(resolution)))
+    paste0("GSEA_snn_res.", as.character(as.numeric(resolution)))
 }
 
 #' Resolution columns available in a clustered gsList
@@ -125,11 +125,11 @@ resolutionColumnName <- function(resolution) {
 #' @return Character vector of `GSEA_snn_res.<res>` column names.
 #' @keywords internal
 availableResolutionColumns <- function(geneSetsList) {
-  grep(
-    "^GSEA_snn_res\\.",
-    names(geneSetsList@cluster@meta.data),
-    value = TRUE
-  )
+    grep(
+        "^GSEA_snn_res\\.",
+        names(geneSetsList@cluster@meta.data),
+        value = TRUE
+    )
 }
 
 #' Resolve which resolution a function should use
@@ -144,30 +144,30 @@ availableResolutionColumns <- function(geneSetsList) {
 #' @return The name of the resolution column, e.g. `"GSEA_snn_res.1.1"`.
 #' @keywords internal
 resolveResolutionColumn <- function(geneSetsList, resolution = NULL) {
-  available <- availableResolutionColumns(geneSetsList)
+    available <- availableResolutionColumns(geneSetsList)
 
-  if (!is.null(resolution)) {
-    resolutionNumber <- suppressWarnings(as.numeric(resolution))
-    if (length(resolution) != 1L || is.na(resolutionNumber)) {
-      stop("'resolution' should be a single number (or NULL).")
+    if (!is.null(resolution)) {
+        resolutionNumber <- suppressWarnings(as.numeric(resolution))
+        if (length(resolution) != 1L || is.na(resolutionNumber)) {
+            stop("'resolution' should be a single number (or NULL).")
+        }
+        resolutionColumn <- resolutionColumnName(resolutionNumber)
+        if (!resolutionColumn %in% available) {
+            stop(
+                "Resolution ", resolution, " was not used in 'clusterGeneSets()'. ",
+                "Available resolution(s): ",
+                paste(sub("^GSEA_snn_res\\.", "", available), collapse = ", "), "."
+            )
+        }
+        return(resolutionColumn)
     }
-    resolutionColumn <- resolutionColumnName(resolutionNumber)
-    if (!resolutionColumn %in% available) {
-      stop(
-        "Resolution ", resolution, " was not used in 'clusterGeneSets()'. ",
-        "Available resolution(s): ",
-        paste(sub("^GSEA_snn_res\\.", "", available), collapse = ", "), "."
-      )
+
+    activeColumn <- geneSetsList@metadata$active_resolution
+    if (!is.null(activeColumn) && activeColumn %in% available) {
+        return(activeColumn)
     }
-    return(resolutionColumn)
-  }
 
-  activeColumn <- geneSetsList@metadata$active_resolution
-  if (!is.null(activeColumn) && activeColumn %in% available) {
-    return(activeColumn)
-  }
-
-  return(geneSetsList@cluster@meta.data$best_cluster_res[1])
+    return(geneSetsList@cluster@meta.data$best_cluster_res[1])
 }
 
 #' Check that a gsList is clustered (and optionally labeled)
@@ -177,25 +177,25 @@ resolveResolutionColumn <- function(geneSetsList, resolution = NULL) {
 #' @return `invisible(TRUE)`; errors otherwise.
 #' @keywords internal
 checkGsList <- function(geneSetsList, needLabels = TRUE) {
-  if (!inherits(geneSetsList, "gsList")) {
-    stop("'geneSetsList' should be a gsList object.")
-  }
+    if (!inherits(geneSetsList, "gsList")) {
+        stop("'geneSetsList' should be a gsList object.")
+    }
 
-  if (length(geneSetsList@cluster) == 0) {
-    stop(
-      "No clustering performed for 'geneSetsList'. ",
-      "Please run 'clusterGeneSets()' and 'labelClusters()' first."
-    )
-  }
+    if (length(geneSetsList@cluster) == 0) {
+        stop(
+            "No clustering performed for 'geneSetsList'. ",
+            "Please run 'clusterGeneSets()' and 'labelClusters()' first."
+        )
+    }
 
-  if (needLabels && length(geneSetsList@labels) == 0) {
-    stop(
-      "No labels created for 'geneSetsList'. ",
-      "Please run 'labelClusters()' first."
-    )
-  }
+    if (needLabels && length(geneSetsList@labels) == 0) {
+        stop(
+            "No labels created for 'geneSetsList'. ",
+            "Please run 'labelClusters()' first."
+        )
+    }
 
-  invisible(TRUE)
+    invisible(TRUE)
 }
 
 #' Set the cluster identities used for plotting
@@ -214,29 +214,29 @@ changeUsedResolution <- function(
     geneSetsList,
     resolution = NULL,
     removeClusterId = FALSE
-) {
-  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+    ) {
+    resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
 
-  Seurat::Idents(geneSetsList@cluster) <-
-    geneSetsList@cluster@meta.data[[resolutionColumn]]
+    Seurat::Idents(geneSetsList@cluster) <-
+        geneSetsList@cluster@meta.data[[resolutionColumn]]
 
-  currentClusterLabels <-
-    levels(geneSetsList@cluster@active.ident)
+    currentClusterLabels <-
+        levels(geneSetsList@cluster@active.ident)
 
-  # Match labels to levels by cluster id (see alignedClusterLabels())
-  defaultLabels <- alignedClusterLabels(
-    geneSetsList = geneSetsList,
-    resolutionColumn = resolutionColumn,
-    clusterIds = currentClusterLabels,
-    removeClusterId = removeClusterId
-  )
+    # Match labels to levels by cluster id (see alignedClusterLabels())
+    defaultLabels <- alignedClusterLabels(
+        geneSetsList = geneSetsList,
+        resolutionColumn = resolutionColumn,
+        clusterIds = currentClusterLabels,
+        removeClusterId = removeClusterId
+    )
 
-  geneSetsList@cluster@active.ident <- relabelFactor(
-    x = geneSetsList@cluster@active.ident,
-    from = currentClusterLabels,
-    to = defaultLabels
-  )
-  return(geneSetsList)
+    geneSetsList@cluster@active.ident <- relabelFactor(
+        x = geneSetsList@cluster@active.ident,
+        from = currentClusterLabels,
+        to = defaultLabels
+    )
+    return(geneSetsList)
 }
 
 #' Cluster names to highlight in a plot
@@ -255,31 +255,31 @@ highlightedClusterNames <- function(
     resolution,
     highlightClusterNo,
     removeClusterId
-) {
-  if (is.null(highlightClusterNo)) {
-    return(character(0))
-  }
+    ) {
+    if (is.null(highlightClusterNo)) {
+        return(character(0))
+    }
 
-  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
-  clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
-  highlightClusterNo <- as.character(highlightClusterNo)
+    resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+    clusterIds <- levels(geneSetsList@cluster@meta.data[[resolutionColumn]])
+    highlightClusterNo <- as.character(highlightClusterNo)
 
-  unknown <- setdiff(highlightClusterNo, clusterIds)
-  if (length(unknown)) {
-    warning(
-      "Cluster(s) ", paste(unknown, collapse = ", "),
-      " do not exist at this resolution and cannot be highlighted.",
-      call. = FALSE
+    unknown <- setdiff(highlightClusterNo, clusterIds)
+    if (length(unknown)) {
+        warning(
+            "Cluster(s) ", paste(unknown, collapse = ", "),
+            " do not exist at this resolution and cannot be highlighted.",
+            call. = FALSE
+        )
+    }
+
+    allNames <- alignedClusterLabels(
+        geneSetsList = geneSetsList,
+        resolutionColumn = resolutionColumn,
+        clusterIds = clusterIds,
+        removeClusterId = removeClusterId
     )
-  }
-
-  allNames <- alignedClusterLabels(
-    geneSetsList = geneSetsList,
-    resolutionColumn = resolutionColumn,
-    clusterIds = clusterIds,
-    removeClusterId = removeClusterId
-  )
-  return(allNames[clusterIds %in% highlightClusterNo])
+    return(allNames[clusterIds %in% highlightClusterNo])
 }
 
 #' Update default resolution of gsList
@@ -301,25 +301,25 @@ highlightedClusterNames <- function(
 updateResolution <- function(
     geneSetsList,
     resolution
-) {
-  checkGsList(geneSetsList)
-  if (missing(resolution) || is.null(resolution)) {
-    stop("'resolution' should be a single number.")
-  }
+    ) {
+    checkGsList(geneSetsList)
+    if (missing(resolution) || is.null(resolution)) {
+        stop("'resolution' should be a single number.")
+    }
 
-  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+    resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
 
-  geneSetsList@cluster$best_cluster_res <- resolutionColumn
-  geneSetsList@metadata$selected_resolution <- as.numeric(resolution)
-  geneSetsList@metadata$active_resolution <- resolutionColumn
+    geneSetsList@cluster$best_cluster_res <- resolutionColumn
+    geneSetsList@metadata$selected_resolution <- as.numeric(resolution)
+    geneSetsList@metadata$active_resolution <- resolutionColumn
 
-  geneSetsList <- changeUsedResolution(
-    geneSetsList = geneSetsList,
-    resolution = NULL,
-    removeClusterId = FALSE
-  )
+    geneSetsList <- changeUsedResolution(
+        geneSetsList = geneSetsList,
+        resolution = NULL,
+        removeClusterId = FALSE
+    )
 
-  return(geneSetsList)
+    return(geneSetsList)
 }
 
 #' Extract the resolution currently used by default
@@ -338,14 +338,14 @@ updateResolution <- function(
 #' extractResolution(exampleGsList)
 extractResolution <- function(
     geneSetsList
-) {
-  checkGsList(geneSetsList, needLabels = FALSE)
+    ) {
+    checkGsList(geneSetsList, needLabels = FALSE)
 
-  res <- resolveResolutionColumn(geneSetsList, NULL) %>%
-    sub(pattern = "^GSEA_snn_res\\.", replacement = "") %>%
-    as.numeric()
+    res <- resolveResolutionColumn(geneSetsList, NULL) %>%
+        sub(pattern = "^GSEA_snn_res\\.", replacement = "") %>%
+        as.numeric()
 
-  return(res)
+    return(res)
 }
 
 
@@ -369,39 +369,39 @@ extractResolution <- function(
 #' @return A single column name.
 #' @keywords internal
 validatePlotFrom <- function(geneSetsList, plotFrom) {
-  if (!is.character(plotFrom) || !length(plotFrom) || anyNA(plotFrom)) {
-    stop(
-      "'plotFrom' should be a character vector with the name of a column in ",
-      "the 'enrichmentScore' slot."
+    if (!is.character(plotFrom) || !length(plotFrom) || anyNA(plotFrom)) {
+        stop(
+            "'plotFrom' should be a character vector with the name of a column in ",
+            "the 'enrichmentScore' slot."
+        )
+    }
+
+    plotFrom <- unique(plotFrom)
+
+    enrichmentDF <- geneSetsList@enrichmentScore
+
+    problems <- vapply(
+        plotFrom,
+        function(column) plotFromProblem(enrichmentDF, column),
+        character(1)
     )
-  }
 
-  plotFrom <- unique(plotFrom)
+    ### Use the first column that can actually be plotted
+    isUsable <- is.na(problems)
+    if (any(isUsable)) {
+        return(plotFrom[which(isUsable)[1]])
+    }
 
-  enrichmentDF <- geneSetsList@enrichmentScore
+    ### Nothing left - report why each candidate was rejected
+    availableColumns <- setdiff(colnames(enrichmentDF), c('source', 'pathway'))
 
-  problems <- vapply(
-    plotFrom,
-    function(column) plotFromProblem(enrichmentDF, column),
-    character(1)
-  )
-
-  ### Use the first column that can actually be plotted
-  isUsable <- is.na(problems)
-  if (any(isUsable)) {
-    return(plotFrom[which(isUsable)[1]])
-  }
-
-  ### Nothing left - report why each candidate was rejected
-  availableColumns <- setdiff(colnames(enrichmentDF), c('source', 'pathway'))
-
-  stop(paste0(
-    'Cannot plot ', quoteAndCollapse(plotFrom), ':\n',
-    paste0("  '", plotFrom, "' - ", problems, collapse = '\n'), '\n',
-    '  Available column(s): ', quoteAndCollapse(availableColumns), '.\n',
-    "  Other scores need to be added via the 'geneSetsDF' argument of ",
-    "'initializeList()' (which means redoing the workflow)."
-  ))
+    stop(paste0(
+        'Cannot plot ', quoteAndCollapse(plotFrom), ':\n',
+        paste0("  '", plotFrom, "' - ", problems, collapse = '\n'), '\n',
+        '  Available column(s): ', quoteAndCollapse(availableColumns), '.\n',
+        "  Other scores need to be added via the 'geneSetsDF' argument of ",
+        "'initializeList()' (which means redoing the workflow)."
+    ))
 }
 
 #' Why a column cannot be plotted
@@ -419,19 +419,19 @@ validatePlotFrom <- function(geneSetsList, plotFrom) {
 #'   description of the problem.
 #' @keywords internal
 plotFromProblem <- function(enrichmentDF, column) {
-  if (! column %in% colnames(enrichmentDF)) {
-    return("not found in the 'enrichmentScore' slot.")
-  }
+    if (! column %in% colnames(enrichmentDF)) {
+        return("not found in the 'enrichmentScore' slot.")
+    }
 
-  if (all(is.na(enrichmentDF[[column]]))) {
-    return('all values are NA.')
-  }
+    if (all(is.na(enrichmentDF[[column]]))) {
+        return('all values are NA.')
+    }
 
-  if (! is.numeric(enrichmentDF[[column]])) {
-    return('only numeric columns can be plotted.')
-  }
+    if (! is.numeric(enrichmentDF[[column]])) {
+        return('only numeric columns can be plotted.')
+    }
 
-  return(NA_character_)
+    return(NA_character_)
 }
 
 #' Quote and comma-collapse a character vector for use in messages
@@ -443,10 +443,10 @@ plotFromProblem <- function(enrichmentDF, column) {
 #'   empty vector so error messages stay readable.
 #' @keywords internal
 quoteAndCollapse <- function(x) {
-  if (!length(x)) {
-    return('none')
-  }
-  paste0("'", x, "'", collapse = ", ")
+    if (!length(x)) {
+        return('none')
+    }
+    paste0("'", x, "'", collapse = ", ")
 }
 
 #' Summarize enrichment per cluster and source
@@ -475,43 +475,43 @@ summarizeEnrichment <- function(
     scoreColumn = 'enrichment_score',
     summaryStat = 'mean',
     removeClusterId = FALSE
-) {
-  summaryFun <- switch(
-    summaryStat,
-    mean   = mean,
-    median = median,
-    max    = max,
-    stop("Unknown 'summaryStat': ", summaryStat)
-  )
+    ) {
+    summaryFun <- switch(
+        summaryStat,
+        mean   = mean,
+        median = median,
+        max    = max,
+        stop("Unknown 'summaryStat': ", summaryStat)
+    )
 
-  enrichmentTable <- extractTable(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    summarize = FALSE,
-    removeClusterId = removeClusterId
-  )
+    enrichmentTable <- extractTable(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        summarize = FALSE,
+        removeClusterId = removeClusterId
+    )
 
-  if (! scoreColumn %in% colnames(enrichmentTable)) {
-    stop("Column '", scoreColumn, "' was not found in the 'enrichmentScore' slot.")
-  }
+    if (! scoreColumn %in% colnames(enrichmentTable)) {
+        stop("Column '", scoreColumn, "' was not found in the 'enrichmentScore' slot.")
+    }
 
-  # Copied to a fixed name so the summary below works for any requested column
-  enrichmentTable$scoreToSummarize <- enrichmentTable[[scoreColumn]]
+    # Copied to a fixed name so the summary below works for any requested column
+    enrichmentTable$scoreToSummarize <- enrichmentTable[[scoreColumn]]
 
-  # extractTable() returns the rows in cluster-id order; keep that order
-  clusterOrder <- unique(enrichmentTable$cluster)
+    # extractTable() returns the rows in cluster-id order; keep that order
+    clusterOrder <- unique(enrichmentTable$cluster)
 
-  enrichmentTable %>%
-    dplyr::group_by(source, cluster) %>%
-    dplyr::summarise(
-      enrichmentSummary = round(
-        summarizeScores(scoreToSummarize, summaryFun),
-        digits = 2
-      ),
-      genesets = dplyr::n(),
-      .groups = 'drop'
-    ) %>%
-    dplyr::arrange(match(cluster, clusterOrder))
+    enrichmentTable %>%
+        dplyr::group_by(source, cluster) %>%
+        dplyr::summarise(
+            enrichmentSummary = round(
+                summarizeScores(scoreToSummarize, summaryFun),
+                digits = 2
+            ),
+            genesets = dplyr::n(),
+            .groups = 'drop'
+        ) %>%
+        dplyr::arrange(match(cluster, clusterOrder))
 }
 
 #' Apply a summary statistic while tolerating missing values
@@ -526,13 +526,13 @@ summarizeEnrichment <- function(
 #' @return A single number, or `NA_real_` if `x` holds no non-NA value.
 #' @keywords internal
 summarizeScores <- function(x, summaryFun) {
-  x <- x[!is.na(x)]
+    x <- x[!is.na(x)]
 
-  if (!length(x)) {
-    return(NA_real_)
-  }
+    if (!length(x)) {
+        return(NA_real_)
+    }
 
-  summaryFun(x)
+    summaryFun(x)
 }
 
 #' Axis/legend text describing an enrichment summary
@@ -548,71 +548,71 @@ summarizeScores <- function(x, summaryFun) {
 enrichmentSummaryLabel <- function(
     summaryStat = 'mean',
     scoreColumn = 'enrichment_score'
-) {
-  statLabel <- switch(
-    summaryStat,
-    mean   = 'Mean',
-    median = 'Median',
-    max    = 'Max',
-    ''
-  )
+    ) {
+    statLabel <- switch(
+        summaryStat,
+        mean   = 'Mean',
+        median = 'Median',
+        max    = 'Max',
+        ''
+    )
 
-  scoreLabel <- switch(
-    scoreColumn,
-    enrichment_score = 'Enrichment',
-    nlog10pval       = '-log10(p-value)',
-    scoreColumn
-  )
+    scoreLabel <- switch(
+        scoreColumn,
+        enrichment_score = 'Enrichment',
+        nlog10pval       = '-log10(p-value)',
+        scoreColumn
+    )
 
-  trimws(paste(statLabel, scoreLabel))
+    trimws(paste(statLabel, scoreLabel))
 }
 
 
 countConditions <- function(
     geneSetsList
-) {
-  nCond <- 'Not assigned'
+    ) {
+    nCond <- 'Not assigned'
 
-  condCount <- dplyr::n_distinct(geneSetsList@enrichmentScore$source)
+    condCount <- dplyr::n_distinct(geneSetsList@enrichmentScore$source)
 
-  if( condCount >= 3 ) {
-    nCond <- '3+'
-  }
-  if( condCount == 1 ) {
-    nCond <- '1'
-  }
-  if( condCount == 2 ) {
-    nCond <- '2'
-  }
-  return(nCond)
+    if( condCount >= 3 ) {
+        nCond <- '3+'
+    }
+    if( condCount == 1 ) {
+        nCond <- '1'
+    }
+    if( condCount == 2 ) {
+        nCond <- '2'
+    }
+    return(nCond)
 }
 
 cutGeneSetName <- function(aVec, maxChar = 60) {
-  ### Names ending in a direction suffix keep it after truncation
-  directionPattern <- '_(up|dn|down)$'
-  hasDirection <- grepl(directionPattern, aVec, ignore.case = TRUE)
-  suffix <- rep('', length(aVec))
-  suffix[hasDirection] <- regmatches(
-    aVec[hasDirection],
-    regexpr(directionPattern, aVec[hasDirection], ignore.case = TRUE)
-  )
-
-  toModify <- nchar(aVec) > maxChar
-  if (any(toModify)) {
-    keepChar <- pmax(maxChar - 3 - nchar(suffix[toModify]), 1) # 3 for "..."
-    aVec[toModify] <- paste0(
-      substr(aVec[toModify], 1, keepChar),
-      '...',
-      suffix[toModify]
+    ### Names ending in a direction suffix keep it after truncation
+    directionPattern <- '_(up|dn|down)$'
+    hasDirection <- grepl(directionPattern, aVec, ignore.case = TRUE)
+    suffix <- rep('', length(aVec))
+    suffix[hasDirection] <- regmatches(
+        aVec[hasDirection],
+        regexpr(directionPattern, aVec[hasDirection], ignore.case = TRUE)
     )
-  }
 
-  return(aVec)
+    toModify <- nchar(aVec) > maxChar
+    if (any(toModify)) {
+        keepChar <- pmax(maxChar - 3 - nchar(suffix[toModify]), 1) # 3 for "..."
+        aVec[toModify] <- paste0(
+            substr(aVec[toModify], 1, keepChar),
+            '...',
+            suffix[toModify]
+        )
+    }
+
+    return(aVec)
 }
 
 boldXaxisLabels <- function(src, levelsToBold) {
-  if (!is.factor(src)) src <- factor(src)
-  ifelse(levels(src) %in% levelsToBold, "bold", "plain")
+    if (!is.factor(src)) src <- factor(src)
+    ifelse(levels(src) %in% levelsToBold, "bold", "plain")
 }
 
 
@@ -648,16 +648,16 @@ boldXaxisLabels <- function(src, levelsToBold) {
 #' @examples
 #' \donttest{
 #' if (requireNamespace("msigdbr", quietly = TRUE)) {
-#'   # Hallmark gene sets (gene symbols)
-#'   hallmark <- getGeneSets(collection = "H", gene_id_type = "gene_symbol")
+#'     # Hallmark gene sets (gene symbols)
+#'     hallmark <- getGeneSets(collection = "H", gene_id_type = "gene_symbol")
 #'
-#'   # Just the genes of two specific pathways
-#'   twoSets <- getGeneSets(
-#'     pathway_names = c("HALLMARK_APOPTOSIS", "HALLMARK_HYPOXIA"),
-#'     collection = "H",
-#'     gene_id_type = "gene_symbol"
-#'   )
-#'   lengths(twoSets)
+#'     # Just the genes of two specific pathways
+#'     twoSets <- getGeneSets(
+#'         pathway_names = c("HALLMARK_APOPTOSIS", "HALLMARK_HYPOXIA"),
+#'         collection = "H",
+#'         gene_id_type = "gene_symbol"
+#'     )
+#'     lengths(twoSets)
 #' }
 #' }
 #'
@@ -668,60 +668,60 @@ getGeneSets <- function(
     collection    = "C5",
     subcollection = NULL,
     gene_id_type  = c("ensembl_gene", "gene_symbol", "entrez_gene")
-) {
-  gene_id_type <- match.arg(gene_id_type)
+    ) {
+    gene_id_type <- match.arg(gene_id_type)
 
-  if (!requireNamespace("msigdbr", quietly = TRUE)) {
-    stop(
-      "Package 'msigdbr' is required for getGeneSets(). Install it with ",
-      "install.packages(\"msigdbr\")."
+    if (!requireNamespace("msigdbr", quietly = TRUE)) {
+        stop(
+            "Package 'msigdbr' is required for getGeneSets(). Install it with ",
+            "install.packages(\"msigdbr\")."
+        )
+    }
+
+    tib <- msigdbr::msigdbr(
+        species       = species,
+        collection    = collection,
+        subcollection = subcollection
     )
-  }
 
-  tib <- msigdbr::msigdbr(
-    species       = species,
-    collection    = collection,
-    subcollection = subcollection
-  )
+    if (!nrow(tib)) {
+        stop(sprintf(
+            "No gene sets returned for species='%s', collection='%s', subcollection=%s.",
+            species, collection,
+            if (is.null(subcollection)) "NULL" else sprintf("'%s'", subcollection)
+        ))
+    }
 
-  if (!nrow(tib)) {
-    stop(sprintf(
-      "No gene sets returned for species='%s', collection='%s', subcollection=%s.",
-      species, collection,
-      if (is.null(subcollection)) "NULL" else sprintf("'%s'", subcollection)
-    ))
-  }
-
-  # msigdbr >= 10 calls the Entrez gene id column 'ncbi_gene'
-  idColumn <- if (gene_id_type == "entrez_gene") "ncbi_gene" else gene_id_type
-  if (!idColumn %in% colnames(tib)) {
-    stop(sprintf(
-      "Column '%s' not found in msigdbr output. Available columns include: %s.",
-      idColumn,
-      paste(intersect(colnames(tib),
-                      c("ensembl_gene", "gene_symbol", "ncbi_gene")),
+    # msigdbr >= 10 calls the Entrez gene id column 'ncbi_gene'
+    idColumn <- if (gene_id_type == "entrez_gene") "ncbi_gene" else gene_id_type
+    if (!idColumn %in% colnames(tib)) {
+        stop(sprintf(
+            "Column '%s' not found in msigdbr output. Available columns include: %s.",
+            idColumn,
+            paste(intersect(colnames(tib),
+                c("ensembl_gene", "gene_symbol", "ncbi_gene")),
             collapse = ", ")
-    ))
-  }
-
-  if (!is.null(pathway_names)) {
-    keep <- tib$gs_name %in% pathway_names
-    if (!any(keep)) {
-      stop(
-        "None of the requested 'pathway_names' were found in the specified ",
-        "collection/subcollection."
-      )
+        ))
     }
-    missing <- setdiff(pathway_names, tib$gs_name[keep])
-    if (length(missing)) {
-      warning(sprintf(
-        "%d pathway name(s) not found and will be skipped (first 5: %s).",
-        length(missing),
-        paste(utils::head(missing, 5), collapse = ", ")
-      ), call. = FALSE)
-    }
-    tib <- tib[keep, , drop = FALSE]
-  }
 
-  split(as.character(tib[[idColumn]]), tib$gs_name)
+    if (!is.null(pathway_names)) {
+        keep <- tib$gs_name %in% pathway_names
+        if (!any(keep)) {
+            stop(
+                "None of the requested 'pathway_names' were found in the specified ",
+                "collection/subcollection."
+            )
+        }
+        missing <- setdiff(pathway_names, tib$gs_name[keep])
+        if (length(missing)) {
+            warning(sprintf(
+                "%d pathway name(s) not found and will be skipped (first 5: %s).",
+                length(missing),
+                paste(utils::head(missing, 5), collapse = ", ")
+            ), call. = FALSE)
+        }
+        tib <- tib[keep, , drop = FALSE]
+    }
+
+    split(as.character(tib[[idColumn]]), tib$gs_name)
 }

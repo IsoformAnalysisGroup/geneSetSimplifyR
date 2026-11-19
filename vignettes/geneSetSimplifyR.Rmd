@@ -14,12 +14,12 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = TRUE,
-  out.width = "75%",
-  fig.align = "center"
+    collapse = TRUE,
+    comment = "#>",
+    warning = FALSE,
+    message = TRUE,
+    out.width = "75%",
+    fig.align = "center"
 )
 ```
 
@@ -43,7 +43,7 @@ That is why we created `geneSetSimplifyR`. `geneSetSimplifyR` solves this proble
 
 ```{r installation, eval=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
-  install.packages("BiocManager")
+    install.packages("BiocManager")
 }
 BiocManager::install("geneSetSimplifyR")
 ```
@@ -123,11 +123,11 @@ All functionality is wrapped into the *geneSetSimplifyR()* function:
 
 ```{r geneSetSimplifyR}
 exampleGsList <- geneSetSimplifyR(
-  geneSetsList = exampleGeneSets,
-  geneSetsDF = exampleEnrichment,
-  resolution = c(0.1, 0.6, 1.1, 1.6), # for quick run - delete when running on real data
-  verbose = FALSE,
-  removeFirstWord = TRUE # Set as TRUE because the gene sets we’re using have the authors’ names as their first word.
+    geneSetsList = exampleGeneSets,
+    geneSetsDF = exampleEnrichment,
+    resolution = c(0.1, 0.6, 1.1, 1.6), # for quick run - delete when running on real data
+    verbose = FALSE,
+    removeFirstWord = TRUE # Set as TRUE because the gene sets we’re using have the authors’ names as their first word.
 )
 
 exampleGsList
@@ -166,8 +166,8 @@ To get an overview of the clusters the simplest visualization is a bar chart.
 
 ```{r barchart}
 plotBarchart(
-  geneSetsList = exampleGsList,
-  highlightClusterNo = c(0,1)
+    geneSetsList = exampleGsList,
+    highlightClusterNo = c(0,1)
 )
 ```
 
@@ -179,10 +179,10 @@ We can also visualize the gene-set clusters in a UMAP plot:
 
 ```{r umap highlight}
 plotUMAP(
-  geneSetsList = exampleGsList,
-  highlightClusterNo = c(0,1),
-  removeClusterId = TRUE,
-  pointAlpha = 1 # because there are relatively few gene-sets here
+    geneSetsList = exampleGsList,
+    highlightClusterNo = c(0,1),
+    removeClusterId = TRUE,
+    pointAlpha = 1 # because there are relatively few gene-sets here
 )
 ```
 
@@ -192,9 +192,9 @@ We already mentioned how we see differences in cluster composition. This can nat
 
 ```{r proportion}
 plotProportions(
-  geneSetsList = exampleGsList,
-  highlightClusterNo = c(0,1),
-  removeClusterId = TRUE
+    geneSetsList = exampleGsList,
+    highlightClusterNo = c(0,1),
+    removeClusterId = TRUE
 )
 ```
 
@@ -202,9 +202,9 @@ We can also utilize the p-values and enrichment scores we have for each gene set
 
 ```{r enrichment}
 plotEnrichments(
-  geneSetsList = exampleGsList,
-  highlightClusterNo = c(0,1),
-  removeClusterId = TRUE
+    geneSetsList = exampleGsList,
+    highlightClusterNo = c(0,1),
+    removeClusterId = TRUE
 )
 ```
 
@@ -212,10 +212,10 @@ Which value is plotted is controlled by `plotFrom`, and how the gene sets of a c
 
 ```{r enrichment mean}
 plotEnrichments(
-  geneSetsList = exampleGsList,
-  plotFrom = 'enrichment_score',
-  summaryStat = 'mean',
-  removeClusterId = TRUE
+    geneSetsList = exampleGsList,
+    plotFrom = 'enrichment_score',
+    summaryStat = 'mean',
+    removeClusterId = TRUE
 )
 ```
 
@@ -223,9 +223,9 @@ But we can also visualize the values of all gene sets (by default the -log10 p-v
 
 ```{r violin, warning=FALSE}
 plotViolin(
-  geneSetsList = exampleGsList,
-  highlightClusterNo = c(0,1),
-  removeClusterId = FALSE
+    geneSetsList = exampleGsList,
+    highlightClusterNo = c(0,1),
+    removeClusterId = FALSE
 )
 ```
 
@@ -235,8 +235,8 @@ With many sources (e.g. many conditions or time points), a heatmap with one row 
 
 ```{r heatmap}
 plotHeatmap(
-  geneSetsList = exampleGsList,
-  removeClusterId = TRUE
+    geneSetsList = exampleGsList,
+    removeClusterId = TRUE
 )
 ```
 
@@ -244,8 +244,8 @@ We can investigate how the clusters relate to one another using the per-cluster 
 
 ```{r dendrogram, warning=FALSE}
 plotDendrogram(
-  geneSetsList = exampleGsList,
-  removeClusterId = TRUE
+    geneSetsList = exampleGsList,
+    removeClusterId = TRUE
 )
 ```
 
@@ -257,8 +257,8 @@ The most important thing to get right is the clustering "level" controlled by th
 
 ```{r plotClustree, fig.height=9, fig.width=9, out.width="100%"}
 plotClustree(
-  exampleGsList,
-  resolutionsToPlot = c(0.1, 0.6, 1.1, 1.6, 2.1) # a subset keeps the tree readable
+    exampleGsList,
+    resolutionsToPlot = c(0.1, 0.6, 1.1, 1.6, 2.1) # a subset keeps the tree readable
 )
 ```
 
@@ -268,9 +268,9 @@ This can naturally be followed up by e.g. a UMAP at a different resolution — h
 
 ```{r umap new res}
 plotUMAP(
-  geneSetsList = exampleGsList,
-  resolution = 0.6,
-  pointAlpha = 1
+    geneSetsList = exampleGsList,
+    resolution = 0.6,
+    pointAlpha = 1
 )
 ```
 
@@ -280,8 +280,8 @@ Let's try to update the default resolution:
 
 ```{r update res}
 exampleGsList <- updateResolution(
-  geneSetsList = exampleGsList,
-  resolution = 0.6
+    geneSetsList = exampleGsList,
+    resolution = 0.6
 )
 
 exampleGsList
@@ -293,11 +293,11 @@ Once we have verified the cluster resolution is suitable (for your analysis), we
 
 ```{r plot labels, warning=FALSE, out.width="100%"}
 plotClusterLabels(
-  geneSetsList = exampleGsList,
-  clusterNumber = 1,
-  maxChar = 35 # shorten gene-set names to fit in vignette
+    geneSetsList = exampleGsList,
+    clusterNumber = 1,
+    maxChar = 35 # shorten gene-set names to fit in vignette
 ) +
-  theme_bw(base_size = 8) # make font smaller to fit in vignette
+    theme_bw(base_size = 8) # make font smaller to fit in vignette
 ```
 
 From which a LOT of summary info can be seen for this particular cluster:
@@ -315,14 +315,14 @@ If you think the auto-generated cluster labels could be more precise, you can ma
 
 ```{r update label, warning=FALSE}
 exampleGsList <- updateClusterLabels(
-  geneSetsList = exampleGsList,
-  clusterNumber = 1,
-  newClusterName = 'Serum Response'
+    geneSetsList = exampleGsList,
+    clusterNumber = 1,
+    newClusterName = 'Serum Response'
 )
 
 plotUMAP(
-  geneSetsList = exampleGsList,
-  pointAlpha = 1
+    geneSetsList = exampleGsList,
+    pointAlpha = 1
 )
 ```
 
@@ -330,8 +330,8 @@ To verify the clustering you can naturally also look at all the gene-sets annota
 
 ```{r extract full table, warning=FALSE}
 gsTable <- extractTable(
-  geneSetsList = exampleGsList,
-  summarize = FALSE
+    geneSetsList = exampleGsList,
+    summarize = FALSE
 )
 
 head(gsTable)
@@ -343,8 +343,8 @@ For reporting purposes this table can also be summarized:
 
 ```{r extract summary table, warning=FALSE}
 gsSummary <- extractTable(
-  geneSetsList = exampleGsList,
-  summarize = TRUE
+    geneSetsList = exampleGsList,
+    summarize = TRUE
 )
 
 head(gsSummary)
@@ -358,8 +358,8 @@ All visualization functions return a ggplot2 object, except `plotHeatmap()` (a p
 data("exampleGsList")
 
 p1 <- plotBarchart(
-  geneSetsList = exampleGsList,
-  highlightClusterNo = c(0,1)
+    geneSetsList = exampleGsList,
+    highlightClusterNo = c(0,1)
 )
 inherits(p1, "ggplot")
 
@@ -370,14 +370,14 @@ This also means all plots can easily be modified using standard ggplot2 operatio
 
 ```{r ggplot2 mod}
 p1 +
-  ggtitle('New plot title')
+    ggtitle('New plot title')
 ```
 
 Such ggplot2 operations are *really* easy to google since ggplot2 has millions of users. So if you want to modify any plot in some way, just google that in conjunction with ggplot2 and you will find your answer (e.g. "ggplot2 change fill color").
 
 ```{r ggplot2 mod2}
-p1 + 
-  scale_fill_manual(values = c('black','green'))
+p1 +
+    scale_fill_manual(values = c('black','green'))
 ```
 
 ## Convenience parsers for common GSEA tools
@@ -393,15 +393,15 @@ The two parsers return a list with two elements, `geneSetsList` and `geneSetsDF`
 ```{r parsers example, eval=FALSE}
 # pairedGSEA example
 parsed <- parsePairedGSEA(
-  oraResult       = oraResult, # output from pairedGSEA::paired_ora()
-  geneSets        = mSigDB, # mSigDB gene sets
-  cutoff_exp      = 0.05,
-  cutoff_splicing = 0.05,
-  cutoff_paired   = 0.05
+    oraResult       = oraResult, # output from pairedGSEA::paired_ora()
+    geneSets        = mSigDB, # mSigDB gene sets
+    cutoff_exp      = 0.05,
+    cutoff_splicing = 0.05,
+    cutoff_paired   = 0.05
 )
 gss <- geneSetSimplifyR(
-  geneSetsList = parsed$geneSetsList,
-  geneSetsDF   = parsed$geneSetsDF
+    geneSetsList = parsed$geneSetsList,
+    geneSetsDF   = parsed$geneSetsDF
 )
 
 # fgsea example is shown in the next section.
@@ -432,15 +432,15 @@ Then, we can run a simple over-representation analysis (ORA) or gene set enrichm
 ```{r fora fgsea}
 # ORA example
 oraRes <- fora(
-  pathways = examplePathways,
-  genes    = sigGenes,
-  universe = names(exampleRanks)
+    pathways = examplePathways,
+    genes    = sigGenes,
+    universe = names(exampleRanks)
 )
 head(oraRes[order(padj), ])
 
 # fgsea example
-fgseaRes <- fgsea(pathways = examplePathways, 
-                  stats    = exampleRanks)
+fgseaRes <- fgsea(pathways = examplePathways,
+    stats    = exampleRanks)
 head(fgseaRes[order(padj), ])
 ```
 
@@ -451,10 +451,10 @@ Below, we use the ORA results to demonstrate this workflow.
 parsed <- parseFgsea(oraRes, examplePathways, cutoff=0.05)
 
 oraGsList <- geneSetSimplifyR(
-  geneSetsList = parsed$geneSetsList,
-  geneSetsDF   = parsed$geneSetsDF,
-  verbose      = FALSE,
-  removeFirstWord = TRUE # the names start with an id, e.g. 5990980_Cell_Cycle
+    geneSetsList = parsed$geneSetsList,
+    geneSetsDF   = parsed$geneSetsDF,
+    verbose      = FALSE,
+    removeFirstWord = TRUE # the names start with an id, e.g. 5990980_Cell_Cycle
 )
 oraGsList
 plotEnrichments(oraGsList) # uses the -log10 p-values kept by parseFgsea()

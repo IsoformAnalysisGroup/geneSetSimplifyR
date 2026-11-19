@@ -35,9 +35,9 @@ The original label is kept and reported as \code{initial_cluster_label} by
 }
 \examples{
 gsListObject <- updateClusterLabels(
-  geneSetsList = exampleGsList,
-  clusterNumber = 0,
-  newClusterName = 'cancer response'
+    geneSetsList = exampleGsList,
+    clusterNumber = 0,
+    newClusterName = 'cancer response'
 )
 head(extractTable(gsListObject, summarize = FALSE))
 }

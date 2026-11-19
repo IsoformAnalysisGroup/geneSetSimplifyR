@@ -24,140 +24,140 @@ plotEnrichments <- function(
     summaryStat = c('median', 'max', 'mean'),
     removeClusterId = FALSE,
     highlightClusterNo = NULL
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  summaryStat <- match.arg(summaryStat)
+    summaryStat <- match.arg(summaryStat)
 
-  plotFrom <- validatePlotFrom(
-    geneSetsList = geneSetsList,
-    plotFrom = plotFrom
-  )
-
-  clusterNameToHighlight <- highlightedClusterNames(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    highlightClusterNo = highlightClusterNo,
-    removeClusterId = removeClusterId
-  )
-
-  plotData <-
-    summarizeEnrichment(
-      geneSetsList = geneSetsList,
-      resolution = resolution,
-      scoreColumn = plotFrom,
-      summaryStat = summaryStat,
-      removeClusterId = removeClusterId
+    plotFrom <- validatePlotFrom(
+        geneSetsList = geneSetsList,
+        plotFrom = plotFrom
     )
 
-  yAxisLabel <- enrichmentSummaryLabel(summaryStat, plotFrom)
-
-  plotData$cluster <- factor(
-    plotData$cluster,
-    levels = rev(unique(plotData$cluster))
-  )
-
-
-  nCond <- countConditions(geneSetsList)
-
-  if ( nCond != '1' ) {
-    p1 <-
-      plotData %>%
-      ggplot(aes(x=cluster, y=enrichmentSummary, group=source)) +
-      geom_linerange(
-        mapping = aes(
-          x=cluster,
-          ymin=0,
-          ymax=enrichmentSummary,
-          color=source
-        ),
-        position=position_dodge(width = 0.6),
-        show.legend = FALSE # the dots already carry the color legend
-      ) +
-      geom_point(
-        mapping = aes(
-          color=source,
-          size = genesets
-        ),
-        position=position_dodge(width = 0.6)
-      ) +
-      scale_radius(
-        limits = range(plotData$genesets),
-        breaks = round(seq(
-          min(plotData$genesets),
-          max(plotData$genesets),
-          length.out = 4
-        ))
-      ) +
-      labs(
-        x = "Gene Set Cluster",
-        y = yAxisLabel,
-        color = "Gene set source",
-        size = "Gene Sets"
-      ) +
-      theme_bw() +
-      theme(
-        legend.position = "bottom",
-        legend.box = "vertical" # side by side, the legends get clipped
-      ) +
-      guides(color = guide_legend(order = 1), size = guide_legend(order = 2)) +
-      coord_flip()
-  }
-
-  if ( nCond == '1' ) {
-    p1 <-
-      plotData %>%
-      ggplot(aes(x=cluster, y=enrichmentSummary, group=source)) +
-      geom_linerange(
-        mapping = aes(
-          x=cluster,
-          ymin=0,
-          ymax=enrichmentSummary
-        ),
-        color="#595959",
-        position=position_dodge(width = 0.6)
-      ) +
-      geom_point(
-        mapping = aes(
-          size = genesets
-        ),
-        color="#595959",
-        position=position_dodge(width = 0.6)
-      ) +
-      scale_radius(
-        limits = range(plotData$genesets),
-        breaks = round(seq(
-          min(plotData$genesets),
-          max(plotData$genesets),
-          length.out = 4
-        ))
-      ) +
-      labs(
-        x = "Gene Set Cluster",
-        y = yAxisLabel,
-        size = "Gene Sets"
-      ) +
-      theme_bw() +
-      theme(
-        legend.position = "bottom"
-      ) +
-      coord_flip()
-  }
-
-  ### Make highlighted clusters bold
-  if(! is.null(highlightClusterNo)) {
-    suppressWarnings(
-      p1 <-
-        p1 +
-        theme(axis.text.y=element_text(
-          face=boldXaxisLabels(
-            src = plotData$cluster,
-            clusterNameToHighlight
-          )
-        ))
+    clusterNameToHighlight <- highlightedClusterNames(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        highlightClusterNo = highlightClusterNo,
+        removeClusterId = removeClusterId
     )
 
-  }
+    plotData <-
+        summarizeEnrichment(
+            geneSetsList = geneSetsList,
+            resolution = resolution,
+            scoreColumn = plotFrom,
+            summaryStat = summaryStat,
+            removeClusterId = removeClusterId
+        )
 
-  return(p1)
+    yAxisLabel <- enrichmentSummaryLabel(summaryStat, plotFrom)
+
+    plotData$cluster <- factor(
+        plotData$cluster,
+        levels = rev(unique(plotData$cluster))
+    )
+
+
+    nCond <- countConditions(geneSetsList)
+
+    if ( nCond != '1' ) {
+        p1 <-
+            plotData %>%
+            ggplot(aes(x=cluster, y=enrichmentSummary, group=source)) +
+            geom_linerange(
+                mapping = aes(
+                    x=cluster,
+                    ymin=0,
+                    ymax=enrichmentSummary,
+                    color=source
+                ),
+                position=position_dodge(width = 0.6),
+                show.legend = FALSE # the dots already carry the color legend
+            ) +
+            geom_point(
+                mapping = aes(
+                    color=source,
+                    size = genesets
+                ),
+                position=position_dodge(width = 0.6)
+            ) +
+            scale_radius(
+                limits = range(plotData$genesets),
+                breaks = round(seq(
+                    min(plotData$genesets),
+                    max(plotData$genesets),
+                    length.out = 4
+                ))
+            ) +
+            labs(
+                x = "Gene Set Cluster",
+                y = yAxisLabel,
+                color = "Gene set source",
+                size = "Gene Sets"
+            ) +
+            theme_bw() +
+            theme(
+                legend.position = "bottom",
+                legend.box = "vertical" # side by side, the legends get clipped
+            ) +
+            guides(color = guide_legend(order = 1), size = guide_legend(order = 2)) +
+            coord_flip()
+    }
+
+    if ( nCond == '1' ) {
+        p1 <-
+            plotData %>%
+            ggplot(aes(x=cluster, y=enrichmentSummary, group=source)) +
+            geom_linerange(
+                mapping = aes(
+                    x=cluster,
+                    ymin=0,
+                    ymax=enrichmentSummary
+                ),
+                color="#595959",
+                position=position_dodge(width = 0.6)
+            ) +
+            geom_point(
+                mapping = aes(
+                    size = genesets
+                ),
+                color="#595959",
+                position=position_dodge(width = 0.6)
+            ) +
+            scale_radius(
+                limits = range(plotData$genesets),
+                breaks = round(seq(
+                    min(plotData$genesets),
+                    max(plotData$genesets),
+                    length.out = 4
+                ))
+            ) +
+            labs(
+                x = "Gene Set Cluster",
+                y = yAxisLabel,
+                size = "Gene Sets"
+            ) +
+            theme_bw() +
+            theme(
+                legend.position = "bottom"
+            ) +
+            coord_flip()
+    }
+
+    ### Make highlighted clusters bold
+    if(! is.null(highlightClusterNo)) {
+        suppressWarnings(
+            p1 <-
+                p1 +
+                theme(axis.text.y=element_text(
+                    face=boldXaxisLabels(
+                        src = plotData$cluster,
+                        clusterNameToHighlight
+                    )
+                ))
+        )
+
+    }
+
+    return(p1)
 }

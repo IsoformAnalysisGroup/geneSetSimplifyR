@@ -24,124 +24,124 @@ plotViolin <- function(
     plotFrom = c('nlog10pval', 'enrichment_score'),
     removeClusterId = FALSE,
     highlightClusterNo = NULL
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  plotFrom <- validatePlotFrom(
-    geneSetsList = geneSetsList,
-    plotFrom = plotFrom
-  )
-
-  clusterNameToHighlight <- highlightedClusterNames(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    highlightClusterNo = highlightClusterNo,
-    removeClusterId = removeClusterId
-  )
-
-  geneSetsList <- changeUsedResolution(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    removeClusterId = removeClusterId
-  )
-
-  ### One row per gene set and source, with its cluster label
-  clusterIdents <- geneSetsList@cluster@active.ident
-  df <- geneSetsList@enrichmentScore
-  df$clusterLabel <- clusterIdents[match(df$pathway, names(clusterIdents))]
-  df$value <- df[[plotFrom]]
-  df <- df[!is.na(df$value) & !is.na(df$clusterLabel), , drop = FALSE]
-
-  ### Order the clusters by their median value
-  df$clusterLabel <- droplevels(df$clusterLabel)
-  df$clusterLabel <- stats::reorder(df$clusterLabel, df$value, FUN = median)
-
-  valueLabel <- sub("^ ", "", enrichmentSummaryLabel('', plotFrom))
-
-  # A violin needs at least two values; single gene sets are drawn as points
-  violinData <- df %>%
-    dplyr::group_by(clusterLabel, source) %>%
-    dplyr::filter(dplyr::n() > 1) %>%
-    dplyr::ungroup()
-
-  nCond <- countConditions(geneSetsList)
-
-  if ( nCond != '1' ) {
-    p1 <-
-      df %>%
-      ggplot(aes(
-        x = clusterLabel,
-        y = value,
-        fill = source
-      )) +
-      violinWithMedian(violinData) +
-      geom_point(
-        alpha = 1/3,
-        size = 0.75,
-        position = position_jitterdodge(
-          jitter.width = 0.2,
-          jitter.height = 0,
-          dodge.width = 0.9,
-          seed = 1
-        )
-      ) +
-      labs(x = "Gene Set Cluster",
-           y = valueLabel,
-           fill = "Gene set source") +
-      theme_bw() +
-      theme(
-        legend.position = "bottom"
-      ) +
-      coord_flip()
-  }
-  if ( nCond == '1' ) {
-    df <- df %>%
-      dplyr::group_by(clusterLabel) %>%
-      dplyr::mutate(median_value = median(value)) %>%
-      dplyr::ungroup()
-    violinData <- df %>%
-      dplyr::group_by(clusterLabel) %>%
-      dplyr::filter(dplyr::n() > 1) %>%
-      dplyr::ungroup()
-
-    p1 <-
-      df %>%
-      ggplot(aes(
-        x = clusterLabel,
-        y = value,
-        fill = median_value
-      )) +
-      violinWithMedian(violinData) +
-      geom_point(
-        alpha = 1/3,
-        size = 0.75,
-        position = position_jitter(width = 0.2, height = 0, seed = 1)
-      ) +
-      labs(x = "Gene Set Cluster",
-           y = valueLabel,
-           fill = paste("Median", valueLabel)) +
-      theme_bw() +
-      theme(
-        legend.position = "bottom"
-      ) +
-      coord_flip()
-  }
-
-  ### Make highlighted clusters bold
-  if(length(clusterNameToHighlight)) {
-    suppressWarnings(
-      p1 <-
-        p1 +
-        theme(axis.text.y=element_text(
-          face=boldXaxisLabels(
-            src = df$clusterLabel,
-            clusterNameToHighlight
-          )
-        ))
+    plotFrom <- validatePlotFrom(
+        geneSetsList = geneSetsList,
+        plotFrom = plotFrom
     )
-  }
 
-  return(p1)
+    clusterNameToHighlight <- highlightedClusterNames(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        highlightClusterNo = highlightClusterNo,
+        removeClusterId = removeClusterId
+    )
+
+    geneSetsList <- changeUsedResolution(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        removeClusterId = removeClusterId
+    )
+
+    ### One row per gene set and source, with its cluster label
+    clusterIdents <- geneSetsList@cluster@active.ident
+    df <- geneSetsList@enrichmentScore
+    df$clusterLabel <- clusterIdents[match(df$pathway, names(clusterIdents))]
+    df$value <- df[[plotFrom]]
+    df <- df[!is.na(df$value) & !is.na(df$clusterLabel), , drop = FALSE]
+
+    ### Order the clusters by their median value
+    df$clusterLabel <- droplevels(df$clusterLabel)
+    df$clusterLabel <- stats::reorder(df$clusterLabel, df$value, FUN = median)
+
+    valueLabel <- sub("^ ", "", enrichmentSummaryLabel('', plotFrom))
+
+    # A violin needs at least two values; single gene sets are drawn as points
+    violinData <- df %>%
+        dplyr::group_by(clusterLabel, source) %>%
+        dplyr::filter(dplyr::n() > 1) %>%
+        dplyr::ungroup()
+
+    nCond <- countConditions(geneSetsList)
+
+    if ( nCond != '1' ) {
+        p1 <-
+            df %>%
+            ggplot(aes(
+                x = clusterLabel,
+                y = value,
+                fill = source
+            )) +
+            violinWithMedian(violinData) +
+            geom_point(
+                alpha = 1/3,
+                size = 0.75,
+                position = position_jitterdodge(
+                    jitter.width = 0.2,
+                    jitter.height = 0,
+                    dodge.width = 0.9,
+                    seed = 1
+                )
+            ) +
+            labs(x = "Gene Set Cluster",
+                y = valueLabel,
+                fill = "Gene set source") +
+            theme_bw() +
+            theme(
+                legend.position = "bottom"
+            ) +
+            coord_flip()
+    }
+    if ( nCond == '1' ) {
+        df <- df %>%
+            dplyr::group_by(clusterLabel) %>%
+            dplyr::mutate(median_value = median(value)) %>%
+            dplyr::ungroup()
+        violinData <- df %>%
+            dplyr::group_by(clusterLabel) %>%
+            dplyr::filter(dplyr::n() > 1) %>%
+            dplyr::ungroup()
+
+        p1 <-
+            df %>%
+            ggplot(aes(
+                x = clusterLabel,
+                y = value,
+                fill = median_value
+            )) +
+            violinWithMedian(violinData) +
+            geom_point(
+                alpha = 1/3,
+                size = 0.75,
+                position = position_jitter(width = 0.2, height = 0, seed = 1)
+            ) +
+            labs(x = "Gene Set Cluster",
+                y = valueLabel,
+                fill = paste("Median", valueLabel)) +
+            theme_bw() +
+            theme(
+                legend.position = "bottom"
+            ) +
+            coord_flip()
+    }
+
+    ### Make highlighted clusters bold
+    if(length(clusterNameToHighlight)) {
+        suppressWarnings(
+            p1 <-
+                p1 +
+                theme(axis.text.y=element_text(
+                    face=boldXaxisLabels(
+                        src = df$clusterLabel,
+                        clusterNameToHighlight
+                    )
+                ))
+        )
+    }
+
+    return(p1)
 }
 
 #' Violin layer with a line at the median
@@ -152,10 +152,10 @@ plotViolin <- function(
 #' @return A ggplot2 layer.
 #' @keywords internal
 violinWithMedian <- function(data) {
-  if (utils::packageVersion("ggplot2") >= "4.0.0") {
-    geom_violin(data = data, scale = 'width',
-                quantiles = 0.5, quantile.linetype = 1)
-  } else {
-    geom_violin(data = data, scale = 'width', draw_quantiles = 0.5)
-  }
+    if (utils::packageVersion("ggplot2") >= "4.0.0") {
+        geom_violin(data = data, scale = 'width',
+            quantiles = 0.5, quantile.linetype = 1)
+    } else {
+        geom_violin(data = data, scale = 'width', draw_quantiles = 0.5)
+    }
 }

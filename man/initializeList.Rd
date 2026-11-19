@@ -49,10 +49,10 @@ gsListObject
 # Gene sets can also be read from a GMT file
 gmtFile <- tempfile(fileext = ".gmt")
 writeLines(
-  vapply(names(exampleGeneSets), function(name) {
-    paste(c(name, "", exampleGeneSets[[name]]), collapse = "\t")
-  }, character(1)),
-  gmtFile
+    vapply(names(exampleGeneSets), function(name) {
+        paste(c(name, "", exampleGeneSets[[name]]), collapse = "\t")
+    }, character(1)),
+    gmtFile
 )
 gsListObject <- initializeList(gmtFile, exampleEnrichment, verbose = FALSE)
 }

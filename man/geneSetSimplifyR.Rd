@@ -75,9 +75,9 @@ To read more about the individual functions see their corresponding help pages:
 }
 \examples{
 gsListObject <- geneSetSimplifyR(
-  geneSetsList = exampleGeneSets,
-  geneSetsDF = exampleEnrichment,
-  verbose = FALSE
+    geneSetsList = exampleGeneSets,
+    geneSetsDF = exampleEnrichment,
+    verbose = FALSE
 )
 gsListObject
 }

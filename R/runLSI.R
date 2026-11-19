@@ -24,51 +24,51 @@
 #' @keywords internal
 #' @noRd
 runLSI <- function(object, n = 50, verbose = TRUE) {
-  assay <- Seurat::DefaultAssay(object)
-  counts <- SeuratObject::LayerData(object, assay = assay, layer = "counts")
-  counts <- methods::as(counts, "CsparseMatrix")
+    assay <- Seurat::DefaultAssay(object)
+    counts <- SeuratObject::LayerData(object, assay = assay, layer = "counts")
+    counts <- methods::as(counts, "CsparseMatrix")
 
-  ### TF-IDF (Signac method 1)
-  normData <- tfidfTransform(counts)
-  object <- SeuratObject::SetAssayData(
-    object, assay = assay, layer = "data", new.data = normData
-  )
+    ### TF-IDF (Signac method 1)
+    normData <- tfidfTransform(counts)
+    object <- SeuratObject::SetAssayData(
+        object, assay = assay, layer = "data", new.data = normData
+    )
 
-  ### All features, ordered by total count (Signac min.cutoff = "q0")
-  featureCounts <- Matrix::rowSums(counts)
-  features <- names(featureCounts)[order(featureCounts, decreasing = TRUE)]
-  SeuratObject::VariableFeatures(object, assay = assay) <- features
+    ### All features, ordered by total count (Signac min.cutoff = "q0")
+    featureCounts <- Matrix::rowSums(counts)
+    features <- names(featureCounts)[order(featureCounts, decreasing = TRUE)]
+    SeuratObject::VariableFeatures(object, assay = assay) <- features
 
-  dataUse <- normData[features, , drop = FALSE]
-  n <- min(n, min(dim(dataUse)) - 1)
+    dataUse <- normData[features, , drop = FALSE]
+    n <- min(n, min(dim(dataUse)) - 1)
 
-  components <- truncatedSVD(Matrix::t(dataUse), n = n, verbose = verbose)
+    components <- truncatedSVD(Matrix::t(dataUse), n = n, verbose = verbose)
 
-  ### Embeddings and loadings as in Signac::RunSVD()
-  reductionKey <- "LSI_"
-  featureLoadings <- components$v
-  sdev <- components$d / sqrt(max(1, nrow(dataUse) - 1))
-  cellEmbeddings <- components$u
+    ### Embeddings and loadings as in Signac::RunSVD()
+    reductionKey <- "LSI_"
+    featureLoadings <- components$v
+    sdev <- components$d / sqrt(max(1, nrow(dataUse) - 1))
+    cellEmbeddings <- components$u
 
-  embedMean <- apply(cellEmbeddings, MARGIN = 2, FUN = mean)
-  embedSd <- apply(cellEmbeddings, MARGIN = 2, FUN = stats::sd)
-  normEmbeddings <- t((t(cellEmbeddings) - embedMean) / embedSd)
+    embedMean <- apply(cellEmbeddings, MARGIN = 2, FUN = mean)
+    embedSd <- apply(cellEmbeddings, MARGIN = 2, FUN = stats::sd)
+    normEmbeddings <- t((t(cellEmbeddings) - embedMean) / embedSd)
 
-  rownames(featureLoadings) <- rownames(dataUse)
-  colnames(featureLoadings) <- paste0(reductionKey, seq_len(n))
-  rownames(normEmbeddings) <- colnames(dataUse)
-  colnames(normEmbeddings) <- paste0(reductionKey, seq_len(n))
+    rownames(featureLoadings) <- rownames(dataUse)
+    colnames(featureLoadings) <- paste0(reductionKey, seq_len(n))
+    rownames(normEmbeddings) <- colnames(dataUse)
+    colnames(normEmbeddings) <- paste0(reductionKey, seq_len(n))
 
-  object[["lsi"]] <- Seurat::CreateDimReducObject(
-    embeddings = normEmbeddings,
-    loadings = featureLoadings,
-    assay = assay,
-    stdev = sdev,
-    key = reductionKey,
-    misc = components
-  )
+    object[["lsi"]] <- Seurat::CreateDimReducObject(
+        embeddings = normEmbeddings,
+        loadings = featureLoadings,
+        assay = assay,
+        stdev = sdev,
+        key = reductionKey,
+        misc = components
+    )
 
-  return(object)
+    return(object)
 }
 
 #' TF-IDF transform of a sparse count matrix (Signac method 1)
@@ -79,21 +79,21 @@ runLSI <- function(object, n = 50, verbose = TRUE) {
 #' @keywords internal
 #' @noRd
 tfidfTransform <- function(counts, scaleFactor = 1e4) {
-  npeaks <- Matrix::colSums(counts)
-  if (any(npeaks == 0)) {
-    stop("Some gene sets contain no genes.")
-  }
-  tf <- Matrix::tcrossprod(x = counts, y = Matrix::Diagonal(x = 1 / npeaks))
+    npeaks <- Matrix::colSums(counts)
+    if (any(npeaks == 0)) {
+        stop("Some gene sets contain no genes.")
+    }
+    tf <- Matrix::tcrossprod(x = counts, y = Matrix::Diagonal(x = 1 / npeaks))
 
-  rsums <- Matrix::rowSums(counts)
-  idf <- ncol(counts) / rsums
+    rsums <- Matrix::rowSums(counts)
+    idf <- ncol(counts) / rsums
 
-  normData <- Matrix::Diagonal(n = length(idf), x = idf) %*% tf
-  normData@x <- log1p(normData@x * scaleFactor)
-  normData@x[is.na(normData@x)] <- 0
-  dimnames(normData) <- dimnames(counts)
+    normData <- Matrix::Diagonal(n = length(idf), x = idf) %*% tf
+    normData@x <- log1p(normData@x * scaleFactor)
+    normData@x[is.na(normData@x)] <- 0
+    dimnames(normData) <- dimnames(counts)
 
-  methods::as(normData, "CsparseMatrix")
+    methods::as(normData, "CsparseMatrix")
 }
 
 #' Truncated SVD with a convergence fallback
@@ -105,58 +105,58 @@ tfidfTransform <- function(counts, scaleFactor = 1e4) {
 #' @keywords internal
 #' @noRd
 truncatedSVD <- function(A, n, verbose = TRUE) {
-  ### Small problems: a full SVD is exact and cheap (irlba suits few vectors)
-  if (2 * n >= min(dim(A))) {
-    return(denseSVD(A, n))
-  }
-
-  ### irlba reports non-convergence as a warning ("did not converge"); treat
-  ### that as a failure so the fallback runs, and drop other warnings.
-  result <- tryCatch(
-    withCallingHandlers(
-      # irlba draws a random start vector; keep the user's RNG stream intact
-      withr::with_preserve_seed(
-        irlba::irlba(A = A, nv = n, work = n * 3, tol = 1e-05)
-      ),
-      warning = function(w) {
-        if (grepl("converge", conditionMessage(w), ignore.case = TRUE)) {
-          stop(conditionMessage(w), call. = FALSE)
-        }
-        invokeRestart("muffleWarning")
-      }
-    ),
-    error = function(e) e
-  )
-  if (!inherits(result, "error")) {
-    return(result)
-  }
-
-  if (requireNamespace("RSpectra", quietly = TRUE)) {
-    if (verbose) {
-      message(
-        "The LSI did not converge with irlba (", conditionMessage(result),
-        "); retrying with RSpectra::svds()..."
-      )
+    ### Small problems: a full SVD is exact and cheap (irlba suits few vectors)
+    if (2 * n >= min(dim(A))) {
+        return(denseSVD(A, n))
     }
-    return(svdsWithRetries(A, n = n, verbose = verbose))
-  }
 
-  if (verbose) {
-    message(
-      "The LSI did not converge with irlba (", conditionMessage(result),
-      "); computing a full SVD instead. Installing the 'RSpectra' package ",
-      "makes this fallback faster for large inputs."
+    ### irlba reports non-convergence as a warning ("did not converge"); treat
+    ### that as a failure so the fallback runs, and drop other warnings.
+    result <- tryCatch(
+        withCallingHandlers(
+            # irlba draws a random start vector; keep the user's RNG stream intact
+            withr::with_preserve_seed(
+                irlba::irlba(A = A, nv = n, work = n * 3, tol = 1e-05)
+            ),
+            warning = function(w) {
+                if (grepl("converge", conditionMessage(w), ignore.case = TRUE)) {
+                    stop(conditionMessage(w), call. = FALSE)
+                }
+                invokeRestart("muffleWarning")
+            }
+        ),
+        error = function(e) e
     )
-  }
-  denseSVD(A, n)
+    if (!inherits(result, "error")) {
+        return(result)
+    }
+
+    if (requireNamespace("RSpectra", quietly = TRUE)) {
+        if (verbose) {
+            message(
+                "The LSI did not converge with irlba (", conditionMessage(result),
+                "); retrying with RSpectra::svds()..."
+            )
+        }
+        return(svdsWithRetries(A, n = n, verbose = verbose))
+    }
+
+    if (verbose) {
+        message(
+            "The LSI did not converge with irlba (", conditionMessage(result),
+            "); computing a full SVD instead. Installing the 'RSpectra' package ",
+            "makes this fallback faster for large inputs."
+        )
+    }
+    denseSVD(A, n)
 }
 
 #' Exact SVD via base::svd(), truncated to n components
 #' @keywords internal
 #' @noRd
 denseSVD <- function(A, n) {
-  full <- svd(as.matrix(A), nu = n, nv = n)
-  list(d = full$d[seq_len(n)], u = full$u, v = full$v)
+    full <- svd(as.matrix(A), nu = n, nv = n)
+    list(d = full$d[seq_len(n)], u = full$u, v = full$v)
 }
 
 #' Truncated SVD with RSpectra::svds(), retrying on non-convergence
@@ -167,37 +167,37 @@ denseSVD <- function(A, n) {
 #' @keywords internal
 #' @noRd
 svdsWithRetries <- function(A, n, verbose = TRUE) {
-  maxNcv <- min(dim(A))
-  ncvSteps <- pmin(c(2 * n + 1, 3 * n, 5 * n, maxNcv), maxNcv)
-  ncvSteps <- pmax(ncvSteps, n + 1) # ncv must exceed k = n
-  maxitrSteps <- c(1000, 3000, 10000, 30000)
+    maxNcv <- min(dim(A))
+    ncvSteps <- pmin(c(2 * n + 1, 3 * n, 5 * n, maxNcv), maxNcv)
+    ncvSteps <- pmax(ncvSteps, n + 1) # ncv must exceed k = n
+    maxitrSteps <- c(1000, 3000, 10000, 30000)
 
-  lastError <- NULL
-  for (i in seq_along(ncvSteps)) {
-    if (verbose) {
-      message(sprintf(
-        "Running RSpectra::svds() with ncv = %d, maxitr = %d (attempt %d/%d)...",
-        ncvSteps[i], maxitrSteps[i], i, length(ncvSteps)
-      ))
+    lastError <- NULL
+    for (i in seq_along(ncvSteps)) {
+        if (verbose) {
+            message(sprintf(
+                "Running RSpectra::svds() with ncv = %d, maxitr = %d (attempt %d/%d)...",
+                ncvSteps[i], maxitrSteps[i], i, length(ncvSteps)
+            ))
+        }
+
+        components <- tryCatch(
+            RSpectra::svds(
+                A = A,
+                k = n,
+                opts = list(tol = 1e-5, ncv = ncvSteps[i], maxitr = maxitrSteps[i])
+            ),
+            error = function(e) e
+        )
+
+        if (!inherits(components, "error")) {
+            return(components)
+        }
+        lastError <- components
     }
 
-    components <- tryCatch(
-      RSpectra::svds(
-        A = A,
-        k = n,
-        opts = list(tol = 1e-5, ncv = ncvSteps[i], maxitr = maxitrSteps[i])
-      ),
-      error = function(e) e
+    stop(
+        "The SVD failed to converge after ", length(ncvSteps), " attempts with ",
+        "increasing 'ncv' and 'maxitr': ", conditionMessage(lastError)
     )
-
-    if (!inherits(components, "error")) {
-      return(components)
-    }
-    lastError <- components
-  }
-
-  stop(
-    "The SVD failed to converge after ", length(ncvSteps), " attempts with ",
-    "increasing 'ncv' and 'maxitr': ", conditionMessage(lastError)
-  )
 }

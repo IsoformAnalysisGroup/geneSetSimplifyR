@@ -16,114 +16,115 @@
 #' @examples
 #' # Relabel the shipped example, e.g. with extra stop words
 #' gsListObject <- labelClusters(
-#'   geneSetsList = exampleGsList,
-#'   stopWords = c(stopWords, "regulation"),
-#'   verbose = FALSE
+#'     geneSetsList = exampleGsList,
+#'     stopWords = c(stopWords, "regulation"),
+#'     verbose = FALSE
 #' )
 labelClusters <-
-  function(geneSetsList,
-           stopWords = geneSetSimplifyR::stopWords,
-           nLabels = 10,
-           removeFirstWord = FALSE,
-           verbose = TRUE
+    function(
+        geneSetsList,
+        stopWords = geneSetSimplifyR::stopWords,
+        nLabels = 10,
+        removeFirstWord = FALSE,
+        verbose = TRUE
     ) {
 
-    if (!inherits(geneSetsList, "gsList")) {
-      stop("'geneSetsList' should be a gsList object.")
-    }
+        if (!inherits(geneSetsList, "gsList")) {
+            stop("'geneSetsList' should be a gsList object.")
+        }
 
-    if (length(geneSetsList@cluster) == 0) {
-      stop("No clustering performed for 'geneSetsList'. ",
-           "Please run 'clusterGeneSets()' first.")
-    }
+        if (length(geneSetsList@cluster) == 0) {
+            stop("No clustering performed for 'geneSetsList'. ",
+                "Please run 'clusterGeneSets()' first.")
+        }
 
-    if (is.null(stopWords)) {
-      stopWords <- character(0)
-    }
-    if (!is.character(stopWords)) {
-      stop("'stopWords' should be a character vector.")
-    }
+        if (is.null(stopWords)) {
+            stopWords <- character(0)
+        }
+        if (!is.character(stopWords)) {
+            stop("'stopWords' should be a character vector.")
+        }
 
-    if (!is.numeric(nLabels) || length(nLabels) != 1L || nLabels < 1) {
-      stop("'nLabels' should be a single positive number.")
-    }
+        if (!is.numeric(nLabels) || length(nLabels) != 1L || nLabels < 1) {
+            stop("'nLabels' should be a single positive number.")
+        }
 
-    if(verbose) {
-      message("Generating labels for clusters...")
-    }
+        if(verbose) {
+            message("Generating labels for clusters...")
+        }
 
-    geneSetsList@labels <- list()
+        geneSetsList@labels <- list()
 
-    resolutions <- availableResolutionColumns(geneSetsList)
+        resolutions <- availableResolutionColumns(geneSetsList)
 
-    for (i in resolutions) {
-      geneSetsList@labels[[i]] <- list()
+        for (i in resolutions) {
+            geneSetsList@labels[[i]] <- list()
 
-      Seurat::Idents(geneSetsList@cluster) <- geneSetsList@cluster@meta.data[[i]]
+            Seurat::Idents(geneSetsList@cluster) <- geneSetsList@cluster@meta.data[[i]]
 
-      geneSetsList <-
-        getLabels(
-          geneSetsList = geneSetsList,
-          stopWords = stopWords,
-          clusterResolution = i,
-          nLabels = nLabels,
-          removeFirstWord = removeFirstWord
+            geneSetsList <-
+                getLabels(
+                    geneSetsList = geneSetsList,
+                    stopWords = stopWords,
+                    clusterResolution = i,
+                    nLabels = nLabels,
+                    removeFirstWord = removeFirstWord
+                )
+
+            if(verbose) {
+                message("Labels created for ", i)
+            }
+        }
+
+        defaultResolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
+
+        ### Read ids from meta.data so a labeled object can be labeled again
+        Seurat::Idents(geneSetsList@cluster) <-
+            geneSetsList@cluster@meta.data[[defaultResolutionColumn]]
+        currentClusters <- geneSetsList@cluster@active.ident
+        currentClusterLabels <- levels(currentClusters)
+
+        ### Sanity check: every labeled cluster must exist in the active identity
+        labeledClusters <- as.character(unique(
+            geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]]$cluster
+        ))
+        if( ! all(labeledClusters %in% currentClusterLabels) ){
+            stop('something went wrong with the label transfer. Contact developer')
+        }
+
+        ### Aligned by cluster id; clusters without a label keep their bare id
+        ### rather than becoming NA (see alignedClusterLabels()).
+        defaultLabels <- alignedClusterLabels(
+            geneSetsList = geneSetsList,
+            resolutionColumn = defaultResolutionColumn,
+            clusterIds = currentClusterLabels,
+            removeClusterId = FALSE
         )
 
-      if(verbose) {
-        message("Labels created for ", i)
-      }
+        unlabeled <- setdiff(currentClusterLabels, labeledClusters)
+        if( length(unlabeled) && verbose ) {
+            message(
+                "No label could be generated for cluster(s) ",
+                paste(unlabeled, collapse = ", "),
+                "; they keep their cluster id as label."
+            )
+        }
+
+        geneSetsList@cluster@active.ident <- relabelFactor(
+            x = currentClusters,
+            from = currentClusterLabels,
+            to = defaultLabels
+        )
+
+        geneSetsList@metadata$active_resolution <- defaultResolutionColumn
+        geneSetsList@metadata$n_labels <- nLabels
+        geneSetsList@metadata$remove_first_word <- removeFirstWord
+        geneSetsList@metadata$stop_words <- stopWords
+        geneSetsList@metadata$labeled_at <- Sys.time()
+
+        if(verbose) {
+            message("Labeling of clusters DONE")
+        }
+
+        return(geneSetsList)
     }
-
-    defaultResolutionColumn <- geneSetsList@cluster@meta.data$best_cluster_res[1]
-
-    ### Read ids from meta.data so a labeled object can be labeled again
-    Seurat::Idents(geneSetsList@cluster) <-
-      geneSetsList@cluster@meta.data[[defaultResolutionColumn]]
-    currentClusters <- geneSetsList@cluster@active.ident
-    currentClusterLabels <- levels(currentClusters)
-
-    ### Sanity check: every labeled cluster must exist in the active identity
-    labeledClusters <- as.character(unique(
-      geneSetsList@labels[[defaultResolutionColumn]][["labelsDefault"]]$cluster
-    ))
-    if( ! all(labeledClusters %in% currentClusterLabels) ){
-      stop('something went wrong with the label transfer. Contact developer')
-    }
-
-    ### Aligned by cluster id; clusters without a label keep their bare id
-    ### rather than becoming NA (see alignedClusterLabels()).
-    defaultLabels <- alignedClusterLabels(
-      geneSetsList = geneSetsList,
-      resolutionColumn = defaultResolutionColumn,
-      clusterIds = currentClusterLabels,
-      removeClusterId = FALSE
-    )
-
-    unlabeled <- setdiff(currentClusterLabels, labeledClusters)
-    if( length(unlabeled) && verbose ) {
-      message(
-        "No label could be generated for cluster(s) ",
-        paste(unlabeled, collapse = ", "),
-        "; they keep their cluster id as label."
-      )
-    }
-
-    geneSetsList@cluster@active.ident <- relabelFactor(
-      x = currentClusters,
-      from = currentClusterLabels,
-      to = defaultLabels
-    )
-
-    geneSetsList@metadata$active_resolution <- defaultResolutionColumn
-    geneSetsList@metadata$n_labels <- nLabels
-    geneSetsList@metadata$remove_first_word <- removeFirstWord
-    geneSetsList@metadata$stop_words <- stopWords
-    geneSetsList@metadata$labeled_at <- Sys.time()
-
-    if(verbose) {
-      message("Labeling of clusters DONE")
-    }
-
-    return(geneSetsList)
-  }

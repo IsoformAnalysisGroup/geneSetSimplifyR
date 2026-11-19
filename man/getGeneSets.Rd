@@ -49,16 +49,16 @@ pathways from a cluster after running the workflow).
 \examples{
 \donttest{
 if (requireNamespace("msigdbr", quietly = TRUE)) {
-  # Hallmark gene sets (gene symbols)
-  hallmark <- getGeneSets(collection = "H", gene_id_type = "gene_symbol")
+    # Hallmark gene sets (gene symbols)
+    hallmark <- getGeneSets(collection = "H", gene_id_type = "gene_symbol")
 
-  # Just the genes of two specific pathways
-  twoSets <- getGeneSets(
-    pathway_names = c("HALLMARK_APOPTOSIS", "HALLMARK_HYPOXIA"),
-    collection = "H",
-    gene_id_type = "gene_symbol"
-  )
-  lengths(twoSets)
+    # Just the genes of two specific pathways
+    twoSets <- getGeneSets(
+        pathway_names = c("HALLMARK_APOPTOSIS", "HALLMARK_HYPOXIA"),
+        collection = "H",
+        gene_id_type = "gene_symbol"
+    )
+    lengths(twoSets)
 }
 }
 

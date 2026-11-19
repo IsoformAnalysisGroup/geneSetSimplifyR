@@ -51,16 +51,16 @@ returned ids are named, they are reordered to match \code{colnames(snn)}.
 \examples{
 # A backend built on igraph's fast-greedy modularity optimization
 fastGreedy <- clusterMethod(
-  fn = function(snn, resolution, verbose = FALSE, ...) {
-    g <- snnToIgraph(snn)
-    igraph::membership(
-      igraph::cluster_fast_greedy(g, weights = igraph::E(g)$weight)
-    )
-  },
-  name = "fast_greedy",
-  description = "igraph fast-greedy modularity (ignores resolution)",
-  packages = "igraph",
-  usesResolution = FALSE
+    fn = function(snn, resolution, verbose = FALSE, ...) {
+        g <- snnToIgraph(snn)
+        igraph::membership(
+            igraph::cluster_fast_greedy(g, weights = igraph::E(g)$weight)
+        )
+    },
+    name = "fast_greedy",
+    description = "igraph fast-greedy modularity (ignores resolution)",
+    packages = "igraph",
+    usesResolution = FALSE
 )
 fastGreedy
 
@@ -70,9 +70,9 @@ table(ids)
 
 # Use it in the workflow
 geneSetsList <- initializeList(exampleGeneSets, exampleEnrichment,
-                               verbose = FALSE)
+    verbose = FALSE)
 gsListObject <- clusterGeneSets(geneSetsList, algorithm = fastGreedy,
-                                verbose = FALSE)
+    verbose = FALSE)
 }
 \seealso{
 \code{\link[=registerClusterMethod]{registerClusterMethod()}}, \code{\link[=listClusterMethods]{listClusterMethods()}},

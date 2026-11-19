@@ -27,70 +27,70 @@ extractTable <- function(
     resolution = NULL,
     summarize = TRUE,
     removeClusterId = TRUE
-) {
+    ) {
 
-  checkGsList(geneSetsList)
+    checkGsList(geneSetsList)
 
-  resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
+    resolutionColumn <- resolveResolutionColumn(geneSetsList, resolution)
 
-  geneSetsList <- changeUsedResolution(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    removeClusterId = removeClusterId
-  )
-
-  df_cluster <- data.frame(
-    pathway = names(geneSetsList@cluster@active.ident),
-    cluster = as.character(geneSetsList@cluster@active.ident),
-    stringsAsFactors = FALSE
-  )
-
-  ### Add original label
-  labelsDefault <- geneSetsList@labels[[resolutionColumn]]$labelsDefault
-  if (!summarize && 'org_label' %in% colnames(labelsDefault)) {
-    clusterIds <- as.character(
-      geneSetsList@cluster@meta.data[[resolutionColumn]]
+    geneSetsList <- changeUsedResolution(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        removeClusterId = removeClusterId
     )
-    names(clusterIds) <- rownames(geneSetsList@cluster@meta.data)
 
-    originalLabels <- labelsDefault %>%
-      dplyr::group_by(cluster) %>%
-      dplyr::slice_max(weighted_score, n = 1, with_ties = FALSE) %>%
-      dplyr::ungroup()
+    df_cluster <- data.frame(
+        pathway = names(geneSetsList@cluster@active.ident),
+        cluster = as.character(geneSetsList@cluster@active.ident),
+        stringsAsFactors = FALSE
+    )
 
-    df_cluster$initial_cluster_label <- originalLabels$org_label[match(
-      clusterIds[df_cluster$pathway],
-      as.character(originalLabels$cluster)
-    )]
-  }
+    ### Add original label
+    labelsDefault <- geneSetsList@labels[[resolutionColumn]]$labelsDefault
+    if (!summarize && 'org_label' %in% colnames(labelsDefault)) {
+        clusterIds <- as.character(
+            geneSetsList@cluster@meta.data[[resolutionColumn]]
+        )
+        names(clusterIds) <- rownames(geneSetsList@cluster@meta.data)
 
-  ### Keep the cluster order of the plots (numeric cluster id)
-  clusterOrder <- levels(geneSetsList@cluster@active.ident)
+        originalLabels <- labelsDefault %>%
+            dplyr::group_by(cluster) %>%
+            dplyr::slice_max(weighted_score, n = 1, with_ties = FALSE) %>%
+            dplyr::ungroup()
 
-  clusterScores <-
-    geneSetsList@enrichmentScore %>%
-    dplyr::inner_join(
-      y = df_cluster,
-      by = "pathway"
-    ) %>%
-    dplyr::arrange(match(cluster, clusterOrder))
+        df_cluster$initial_cluster_label <- originalLabels$org_label[match(
+            clusterIds[df_cluster$pathway],
+            as.character(originalLabels$cluster)
+        )]
+    }
 
-  if( summarize ) {
+    ### Keep the cluster order of the plots (numeric cluster id)
+    clusterOrder <- levels(geneSetsList@cluster@active.ident)
+
     clusterScores <-
-      clusterScores %>%
-      dplyr::group_by(source, cluster) %>%
-      dplyr::summarise(
-        `enrichment mean` = round(
-          summarizeScores(enrichment_score, mean), digits = 2
-        ),
-        `enrichment sd` = round(
-          summarizeScores(enrichment_score, stats::sd), digits = 2
-        ),
-        genesets = dplyr::n(),
-        .groups = 'drop'
-      ) %>%
-      dplyr::arrange(match(cluster, clusterOrder))
-  }
+        geneSetsList@enrichmentScore %>%
+        dplyr::inner_join(
+            y = df_cluster,
+            by = "pathway"
+        ) %>%
+        dplyr::arrange(match(cluster, clusterOrder))
 
-  return(as.data.frame(clusterScores))
+    if( summarize ) {
+        clusterScores <-
+            clusterScores %>%
+            dplyr::group_by(source, cluster) %>%
+            dplyr::summarise(
+                `enrichment mean` = round(
+                    summarizeScores(enrichment_score, mean), digits = 2
+                ),
+                `enrichment sd` = round(
+                    summarizeScores(enrichment_score, stats::sd), digits = 2
+                ),
+                genesets = dplyr::n(),
+                .groups = 'drop'
+            ) %>%
+            dplyr::arrange(match(cluster, clusterOrder))
+    }
+
+    return(as.data.frame(clusterScores))
 }

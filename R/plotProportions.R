@@ -22,124 +22,124 @@ plotProportions <- function(
     resolution = NULL,
     removeClusterId = FALSE,
     highlightClusterNo = NULL
-)  {
-  checkGsList(geneSetsList)
+    )  {
+    checkGsList(geneSetsList)
 
-  nCond <- countConditions(geneSetsList)
-  if( nCond == '1' ) {
-    stop(
-      "plotProportions() compares sources and needs gene sets from at least ",
-      "two sources (the 'source' column of 'geneSetsDF' in 'initializeList()')."
-    )
-  }
+    nCond <- countConditions(geneSetsList)
+    if( nCond == '1' ) {
+        stop(
+            "plotProportions() compares sources and needs gene sets from at least ",
+            "two sources (the 'source' column of 'geneSetsDF' in 'initializeList()')."
+        )
+    }
 
-  clusterNameToHighlight <- highlightedClusterNames(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    highlightClusterNo = highlightClusterNo,
-    removeClusterId = removeClusterId
-  )
-
-  geneSetsList <- changeUsedResolution(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    removeClusterId = removeClusterId
-  )
-
-  clusterIdents <- geneSetsList@cluster@active.ident
-  df <- geneSetsList@enrichmentScore
-  df$cluster <- as.character(clusterIdents[match(df$pathway, names(clusterIdents))])
-
-  groupSize <-
-    df %>%
-    dplyr::group_by(source, cluster) %>%
-    dplyr::summarise(
-      n = dplyr::n(),
-      .groups = 'drop_last'
-    ) %>%
-    dplyr::summarise(
-      frac_cluster = sum(n > 0) / length(unique(df$cluster)),
-      mean_size = mean(n),
-      .groups = 'drop'
-    ) %>%
-    dplyr::arrange(dplyr::desc(frac_cluster), dplyr::desc(mean_size))
-
-  fctOrder <-
-    df %>%
-    dplyr::group_by(cluster, source) %>%
-    dplyr::summarise(
-      n = dplyr::n(),
-      .groups = 'drop_last'
-    ) %>%
-    dplyr::mutate(
-      frac = n / sum(n)
-    ) %>%
-    dplyr::filter(
-      source == groupSize$source[1]
-    ) %>%
-    dplyr::arrange(dplyr::desc(frac))
-
-  allClusters <- unique(as.character(df$cluster))
-  orderedLevels <- c(
-    as.character(fctOrder$cluster),
-    setdiff(allClusters, as.character(fctOrder$cluster))
-  )
-  df$cluster <- factor(
-    df$cluster,
-    levels = orderedLevels
-  )
-
-  ### Gene sets found in several sources are counted once, as 'Both' (two
-  ### sources) or 'Multiple' (three or more sources)
-  plotData <-
-    df %>%
-    dplyr::group_by(pathway) %>%
-    dplyr::mutate(
-      n_cond = dplyr::n()
-    ) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      source = dplyr::case_when(
-        n_cond >= 2 & nCond == '2' ~ 'Both',
-        n_cond >= 2 ~ 'Multiple',
-        TRUE ~ source
-      )
-    ) %>%
-    dplyr::distinct(pathway, .keep_all = TRUE)
-
-  p <-
-    plotData %>%
-    ggplot(aes(x = cluster, fill = source)) +
-    geom_bar(position = "fill") +
-    scale_fill_manual(values = sourceColors(df$source)) +
-    labs(y = "Fraction of Gene Sets", x = "Gene Set Cluster", fill = "Gene set source") +
-    theme_bw() +
-    theme(
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank()
-    ) +
-    coord_flip() +
-    theme(
-      legend.position = "bottom"
+    clusterNameToHighlight <- highlightedClusterNames(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        highlightClusterNo = highlightClusterNo,
+        removeClusterId = removeClusterId
     )
 
-  ### Make highlighted clusters bold
-  if(length(clusterNameToHighlight)) {
-    suppressWarnings(
-      p <-
-        p +
-        theme(axis.text.y=element_text(
-          face=boldXaxisLabels(
-            src = df$cluster,
-            clusterNameToHighlight
-          )
-        ))
+    geneSetsList <- changeUsedResolution(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        removeClusterId = removeClusterId
     )
 
-  }
+    clusterIdents <- geneSetsList@cluster@active.ident
+    df <- geneSetsList@enrichmentScore
+    df$cluster <- as.character(clusterIdents[match(df$pathway, names(clusterIdents))])
+
+    groupSize <-
+        df %>%
+        dplyr::group_by(source, cluster) %>%
+        dplyr::summarise(
+            n = dplyr::n(),
+            .groups = 'drop_last'
+        ) %>%
+        dplyr::summarise(
+            frac_cluster = sum(n > 0) / length(unique(df$cluster)),
+            mean_size = mean(n),
+            .groups = 'drop'
+        ) %>%
+        dplyr::arrange(dplyr::desc(frac_cluster), dplyr::desc(mean_size))
+
+    fctOrder <-
+        df %>%
+        dplyr::group_by(cluster, source) %>%
+        dplyr::summarise(
+            n = dplyr::n(),
+            .groups = 'drop_last'
+        ) %>%
+        dplyr::mutate(
+            frac = n / sum(n)
+        ) %>%
+        dplyr::filter(
+            source == groupSize$source[1]
+        ) %>%
+        dplyr::arrange(dplyr::desc(frac))
+
+    allClusters <- unique(as.character(df$cluster))
+    orderedLevels <- c(
+        as.character(fctOrder$cluster),
+        setdiff(allClusters, as.character(fctOrder$cluster))
+    )
+    df$cluster <- factor(
+        df$cluster,
+        levels = orderedLevels
+    )
+
+    ### Gene sets found in several sources are counted once, as 'Both' (two
+    ### sources) or 'Multiple' (three or more sources)
+    plotData <-
+        df %>%
+        dplyr::group_by(pathway) %>%
+        dplyr::mutate(
+            n_cond = dplyr::n()
+        ) %>%
+        dplyr::ungroup() %>%
+        dplyr::mutate(
+            source = dplyr::case_when(
+                n_cond >= 2 & nCond == '2' ~ 'Both',
+                n_cond >= 2 ~ 'Multiple',
+                TRUE ~ source
+            )
+        ) %>%
+        dplyr::distinct(pathway, .keep_all = TRUE)
+
+    p <-
+        plotData %>%
+        ggplot(aes(x = cluster, fill = source)) +
+        geom_bar(position = "fill") +
+        scale_fill_manual(values = sourceColors(df$source)) +
+        labs(y = "Fraction of Gene Sets", x = "Gene Set Cluster", fill = "Gene set source") +
+        theme_bw() +
+        theme(
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank()
+        ) +
+        coord_flip() +
+        theme(
+            legend.position = "bottom"
+        )
+
+    ### Make highlighted clusters bold
+    if(length(clusterNameToHighlight)) {
+        suppressWarnings(
+            p <-
+                p +
+                theme(axis.text.y=element_text(
+                    face=boldXaxisLabels(
+                        src = df$cluster,
+                        clusterNameToHighlight
+                    )
+                ))
+        )
+
+    }
 
 
-  return(p)
+    return(p)
 }
 
 #' Fill colors for sources, matching the other plots
@@ -152,10 +152,10 @@ plotProportions <- function(
 #' @return A named character vector of colors.
 #' @keywords internal
 sourceColors <- function(sources) {
-  sourceLevels <- sort(unique(as.character(sources)))
-  n <- length(sourceLevels)
-  hues <- seq(15, 375, length.out = n + 1)[seq_len(n)]
-  colors <- grDevices::hcl(h = hues, c = 100, l = 65)
-  names(colors) <- sourceLevels
-  c(colors, Both = "grey60", Multiple = "grey60")
+    sourceLevels <- sort(unique(as.character(sources)))
+    n <- length(sourceLevels)
+    hues <- seq(15, 375, length.out = n + 1)[seq_len(n)]
+    colors <- grDevices::hcl(h = hues, c = 100, l = 65)
+    names(colors) <- sourceLevels
+    c(colors, Both = "grey60", Multiple = "grey60")
 }

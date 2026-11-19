@@ -21,78 +21,78 @@ plotBarchart <- function(
     resolution = NULL,
     removeClusterId = FALSE,
     highlightClusterNo = NULL
-) {
-  checkGsList(geneSetsList)
+    ) {
+    checkGsList(geneSetsList)
 
-  clusterNameToHighlight <- highlightedClusterNames(
-    geneSetsList = geneSetsList,
-    resolution = resolution,
-    highlightClusterNo = highlightClusterNo,
-    removeClusterId = removeClusterId
-  )
-
-  plotData <-
-    extractTable(
-      geneSetsList,
-      resolution = resolution,
-      removeClusterId = removeClusterId,
-      summarize = TRUE
+    clusterNameToHighlight <- highlightedClusterNames(
+        geneSetsList = geneSetsList,
+        resolution = resolution,
+        highlightClusterNo = highlightClusterNo,
+        removeClusterId = removeClusterId
     )
 
-  plotData$cluster <- factor(
-    plotData$cluster,
-    levels = rev(unique(plotData$cluster))
-  )
+    plotData <-
+        extractTable(
+            geneSetsList,
+            resolution = resolution,
+            removeClusterId = removeClusterId,
+            summarize = TRUE
+        )
 
-  nCond <- countConditions(geneSetsList)
-
-  if ( nCond != '1' ) {
-    p1 <-
-      plotData %>%
-      ggplot(aes(x=cluster, y=genesets, fill=source)) +
-      geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
-      labs(
-        x = "Gene Set Cluster",
-        y = "Number of gene sets",
-        fill = "Gene set source"
-      ) +
-      theme_bw() +
-      theme(
-        legend.position = "bottom"
-      ) +
-      coord_flip()
-  }
-
-  if ( nCond == '1' ) {
-    p1 <-
-      plotData %>%
-      ggplot(aes(x=cluster, y=genesets)) +
-      geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
-      labs(
-        x = "Gene Set Cluster",
-        y = "Number of gene sets"
-      ) +
-      theme_bw() +
-      theme(
-        legend.position = "bottom"
-      ) +
-      coord_flip()
-  }
-
-  ### Make highlighted clusters bold
-  if(length(clusterNameToHighlight)) {
-    suppressWarnings(
-      p1 <-
-        p1 +
-        theme(axis.text.y=element_text(
-          face=boldXaxisLabels(
-            src = plotData$cluster,
-            clusterNameToHighlight
-          )
-        ))
+    plotData$cluster <- factor(
+        plotData$cluster,
+        levels = rev(unique(plotData$cluster))
     )
 
-  }
+    nCond <- countConditions(geneSetsList)
 
-  return(p1)
+    if ( nCond != '1' ) {
+        p1 <-
+            plotData %>%
+            ggplot(aes(x=cluster, y=genesets, fill=source)) +
+            geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
+            labs(
+                x = "Gene Set Cluster",
+                y = "Number of gene sets",
+                fill = "Gene set source"
+            ) +
+            theme_bw() +
+            theme(
+                legend.position = "bottom"
+            ) +
+            coord_flip()
+    }
+
+    if ( nCond == '1' ) {
+        p1 <-
+            plotData %>%
+            ggplot(aes(x=cluster, y=genesets)) +
+            geom_bar(stat="identity", position=position_dodge2(preserve = "single")) +
+            labs(
+                x = "Gene Set Cluster",
+                y = "Number of gene sets"
+            ) +
+            theme_bw() +
+            theme(
+                legend.position = "bottom"
+            ) +
+            coord_flip()
+    }
+
+    ### Make highlighted clusters bold
+    if(length(clusterNameToHighlight)) {
+        suppressWarnings(
+            p1 <-
+                p1 +
+                theme(axis.text.y=element_text(
+                    face=boldXaxisLabels(
+                        src = plotData$cluster,
+                        clusterNameToHighlight
+                    )
+                ))
+        )
+
+    }
+
+    return(p1)
 }
