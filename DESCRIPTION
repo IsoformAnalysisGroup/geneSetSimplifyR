@@ -11,12 +11,12 @@ Authors@R: c(
   person(given = "Chiao-Yu",
     family = "Hsieh",
     email = "chihs@dtu.dk",
-    role = "aut",
+    role = c("aut", "cre"),
     comment = c(ORCID = "0009-0007-0463-5977")),
   person(given = "Kristoffer",
     family = "Vitting-Seerup",
     email = "krivi@dtu.dk",
-    role = c("cre", "aut"),
+    role = "aut",
     comment = c(ORCID = "0000-0002-6450-0608"))
     )
 Description: Simplifies the results of gene-set enrichment analysis (GSEA) by

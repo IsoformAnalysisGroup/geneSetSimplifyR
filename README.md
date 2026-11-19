@@ -23,6 +23,12 @@ It works on the output of any enrichment tool, with helpers for
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
+BiocManager::install("geneSetSimplifyR")
+```
+
+The development version can be installed from GitHub:
+
+```r
 BiocManager::install("remotes") # needed to install from GitHub
 BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 ```

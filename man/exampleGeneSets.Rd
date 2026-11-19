@@ -5,18 +5,20 @@
 \alias{exampleGeneSets}
 \title{Example Gene Sets}
 \format{
-A named list of gene sets, where the names represent the gene set
-names and each list element contains the corresponding genes for that
-gene set.
+A named list of 197 character vectors of human gene symbols.
 }
 \source{
-A subset of public data.
+Human gene sets from the Molecular Signatures Database (MSigDB):
+the Hallmark collection, the C2 curated collection (chemical and genetic
+perturbations, KEGG, Reactome and WikiPathways) and the C5 Gene Ontology
+collection. \url{https://www.gsea-msigdb.org/gsea/msigdb}
 }
 \usage{
 exampleGeneSets
 }
 \description{
-A named list of gene sets, where the names represent the gene set names and
-each list element contains the corresponding genes for that gene set.
+The 197 gene sets that are significant in \code{exampleEnrichment}, as a named
+list where the names are the gene-set names and each element holds the gene
+symbols of that gene set.
 }
 \keyword{datasets}

@@ -35,22 +35,29 @@
 
 #' Example Gene Sets
 #'
-#' A named list of gene sets, where the names represent the gene set names and
-#' each list element contains the corresponding genes for that gene set.
+#' The 197 gene sets that are significant in `exampleEnrichment`, as a named
+#' list where the names are the gene-set names and each element holds the gene
+#' symbols of that gene set.
 #'
-#' @format A named list of gene sets, where the names represent the gene set
-#'   names and each list element contains the corresponding genes for that
-#'   gene set.
-#' @source A subset of public data.
+#' @format A named list of 197 character vectors of human gene symbols.
+#' @source Human gene sets from the Molecular Signatures Database (MSigDB):
+#'   the Hallmark collection, the C2 curated collection (chemical and genetic
+#'   perturbations, KEGG, Reactome and WikiPathways) and the C5 Gene Ontology
+#'   collection. <https://www.gsea-msigdb.org/gsea/msigdb>
 "exampleGeneSets"
 
 #' Stop Words
 #'
-#' Words ignored when labeling clusters, e.g. "of", "and", "process". Bigrams
+#' Words ignored when labeling clusters, e.g. "of" and "and". Bigrams
 #' (two-word label candidates) containing one of these words are not used as
 #' labels.
 #'
-#' @format A character vector.
+#' @format A character vector of 48 lower-case words: common English words
+#'   (e.g. "of", "the"), gene-set collection prefixes (e.g. "gobp",
+#'   "reactome"), the direction suffixes "up" and "dn" and the word "vs" from
+#'   MSigDB gene-set names, author names that start MSigDB gene-set names, and
+#'   other short fragments of gene-set names (e.g. "a5p4", "2").
+#' @source Curated by the package authors.
 #' @examples
 #' head(stopWords)
 #' # Add your own stop words

@@ -5,13 +5,20 @@
 \alias{stopWords}
 \title{Stop Words}
 \format{
-A character vector.
+A character vector of 48 lower-case words: common English words
+(e.g. "of", "the"), gene-set collection prefixes (e.g. "gobp",
+"reactome"), the direction suffixes "up" and "dn" and the word "vs" from
+MSigDB gene-set names, author names that start MSigDB gene-set names, and
+other short fragments of gene-set names (e.g. "a5p4", "2").
+}
+\source{
+Curated by the package authors.
 }
 \usage{
 stopWords
 }
 \description{
-Words ignored when labeling clusters, e.g. "of", "and", "process". Bigrams
+Words ignored when labeling clusters, e.g. "of" and "and". Bigrams
 (two-word label candidates) containing one of these words are not used as
 labels.
 }

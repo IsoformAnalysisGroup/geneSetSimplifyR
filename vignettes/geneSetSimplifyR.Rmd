@@ -39,12 +39,18 @@ That is why we created `geneSetSimplifyR`. `geneSetSimplifyR` solves this proble
 
 # Installation
 
-`geneSetSimplifyR` can be installed from GitHub by copy pasting this command into R. `BiocManager` installs the dependencies from both CRAN and Bioconductor:
+`geneSetSimplifyR` can be installed from Bioconductor by copy pasting this command into R. `BiocManager` installs the dependencies from both CRAN and Bioconductor:
 
 ```{r installation, eval=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
+BiocManager::install("geneSetSimplifyR")
+```
+
+The development version can be installed from GitHub:
+
+```{r installation-devel, eval=FALSE}
 BiocManager::install("remotes") # needed to install from GitHub
 BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 ```

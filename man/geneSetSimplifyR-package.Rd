@@ -10,18 +10,19 @@ Simplifies the results of gene-set enrichment analysis (GSEA) by clustering the 
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://isoformanalysisgroup.github.io/geneSetSimplifyR/}
   \item \url{https://github.com/IsoformAnalysisGroup/geneSetSimplifyR}
   \item Report bugs at \url{https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Kristoffer Vitting-Seerup \email{krivi@dtu.dk} (\href{https://orcid.org/0000-0002-6450-0608}{ORCID})
+\strong{Maintainer}: Chiao-Yu Hsieh \email{chihs@dtu.dk} (\href{https://orcid.org/0009-0007-0463-5977}{ORCID})
 
 Authors:
 \itemize{
   \item Ella Hedeboe \email{ellahedeboe@hotmail.com} (\href{https://orcid.org/0000-0002-3978-4661}{ORCID})
-  \item Chiao-Yu Hsieh \email{chihs@dtu.dk} (\href{https://orcid.org/0009-0007-0463-5977}{ORCID})
+  \item Kristoffer Vitting-Seerup \email{krivi@dtu.dk} (\href{https://orcid.org/0000-0002-6450-0608}{ORCID})
 }
 
 }
