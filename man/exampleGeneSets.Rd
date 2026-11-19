@@ -8,10 +8,12 @@
 A named list of 197 character vectors of human gene symbols.
 }
 \source{
-Human gene sets from the Molecular Signatures Database (MSigDB):
-the Hallmark collection, the C2 curated collection (chemical and genetic
-perturbations, KEGG, Reactome and WikiPathways) and the C5 Gene Ontology
-collection. \url{https://www.gsea-msigdb.org/gsea/msigdb}
+Human gene sets from the Molecular Signatures Database (MSigDB)
+v7.5.1 (R package msigdbr 7.5.1): the Hallmark collection, the C2 curated
+collection (chemical and genetic perturbations, KEGG, Reactome and
+WikiPathways) and the C5 Gene Ontology collection. Each gene set is
+restricted to the genes tested in the enrichment analysis of
+\code{exampleEnrichment}. \url{https://www.gsea-msigdb.org/gsea/msigdb}
 }
 \usage{
 exampleGeneSets

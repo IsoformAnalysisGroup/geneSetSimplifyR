@@ -16,10 +16,11 @@ A tibble with 206 rows (one per gene set and source) and 5 columns:
 }
 }
 \source{
-Computed with \code{fgsea::fgseaMultilevel()} on MSigDB gene sets; see
-\code{inst/scripts/make-exampleEnrichment.R}. Vitting-Seerup K, Sandelin A.
-The Landscape of Isoform Switches in Human Cancers. Mol Cancer Res.
-2017;15(9):1206-1220.
+Computed with \code{fgsea::fgseaMultilevel()} and MSigDB v7.5.1 gene
+sets on the TCGA results of Vitting-Seerup K, Sandelin A. The Landscape
+of Isoform Switches in Human Cancers. Mol Cancer Res. 2017;15(9):1206-1220.
+\doi{10.1158/1541-7786.MCR-16-0459}. See
+\code{inst/scripts/make-exampleEnrichment.R}.
 }
 \usage{
 exampleEnrichment

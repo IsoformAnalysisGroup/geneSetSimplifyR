@@ -27,10 +27,11 @@
 #'   \item{pval}{p-value from fgsea.}
 #'   \item{padj}{Benjamini-Hochberg adjusted p-value from fgsea.}
 #' }
-#' @source Computed with `fgsea::fgseaMultilevel()` on MSigDB gene sets; see
-#'   `inst/scripts/make-exampleEnrichment.R`. Vitting-Seerup K, Sandelin A.
-#'   The Landscape of Isoform Switches in Human Cancers. Mol Cancer Res.
-#'   2017;15(9):1206-1220.
+#' @source Computed with `fgsea::fgseaMultilevel()` and MSigDB v7.5.1 gene
+#'   sets on the TCGA results of Vitting-Seerup K, Sandelin A. The Landscape
+#'   of Isoform Switches in Human Cancers. Mol Cancer Res. 2017;15(9):1206-1220.
+#'   \doi{10.1158/1541-7786.MCR-16-0459}. See
+#'   `inst/scripts/make-exampleEnrichment.R`.
 "exampleEnrichment"
 
 #' Example Gene Sets
@@ -40,10 +41,12 @@
 #' symbols of that gene set.
 #'
 #' @format A named list of 197 character vectors of human gene symbols.
-#' @source Human gene sets from the Molecular Signatures Database (MSigDB):
-#'   the Hallmark collection, the C2 curated collection (chemical and genetic
-#'   perturbations, KEGG, Reactome and WikiPathways) and the C5 Gene Ontology
-#'   collection. <https://www.gsea-msigdb.org/gsea/msigdb>
+#' @source Human gene sets from the Molecular Signatures Database (MSigDB)
+#'   v7.5.1 (R package msigdbr 7.5.1): the Hallmark collection, the C2 curated
+#'   collection (chemical and genetic perturbations, KEGG, Reactome and
+#'   WikiPathways) and the C5 Gene Ontology collection. Each gene set is
+#'   restricted to the genes tested in the enrichment analysis of
+#'   `exampleEnrichment`. <https://www.gsea-msigdb.org/gsea/msigdb>
 "exampleGeneSets"
 
 #' Stop Words
