@@ -38,7 +38,7 @@ BugReports: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues
 biocViews: Software, GeneSetEnrichment, Pathways, Clustering,
     DimensionReduction, Visualization
 Depends:
-    R (>= 4.4.0)
+    R (>= 4.6.0)
 Imports:
     cluster,
     clustree,
