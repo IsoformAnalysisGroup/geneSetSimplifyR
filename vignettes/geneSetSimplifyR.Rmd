@@ -25,7 +25,7 @@ knitr::opts_chunk$set(
 
 # Background and Rationale
 
-Gene-set enrichment analysis (GSEA) is one of the most useful types of bioinformatic analysis since it summarizes long lists of genes (e.g. TP53, CD1) into more high-level biological concepts (e.g. "cell cycle", "DNA repair"). While GSEA is potentially extremely powerful for profiling the high-level biological changes in a system, this is often hampered by very long lists of significant gene sets. This point is demonstrated by our [recent article](https://link.springer.com/article/10.1186/s12915-023-01724-w) where we re-analyze 100 RNA-seq data sets and show the average dataset had 1700+ gene sets significantly enriched among differentially expressed genes.
+Gene-set enrichment analysis (GSEA) is one of the most useful types of bioinformatic analysis since it summarizes long lists of genes (e.g. TP53, CD1) into more high-level biological concepts (e.g. "cell cycle", "DNA repair"). While GSEA is potentially extremely powerful for profiling the high-level biological changes in a system, this is often hampered by very long lists of significant gene sets. This point is demonstrated by our [recent article](https://link.springer.com/article/10.1186/s12915-023-01724-w) where we re-analyze 100 RNA-seq data sets and show the average dataset had 1829 gene sets significantly enriched among differentially expressed genes.
 
 It is naturally not possible to manually analyze such long lists, so in practice scientists often just show the most significant/enriched gene-sets or cherry-pick gene-sets based on prior biological hypothesis. Neither is naturally desirable (or good scientific practice?), hence approaches to analyzing such long lists of gene sets are needed.
 
