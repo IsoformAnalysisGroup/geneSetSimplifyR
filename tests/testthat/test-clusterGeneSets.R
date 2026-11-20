@@ -3,8 +3,8 @@ test_that("the workflow reproduces the shipped example object", {
         exampleGeneSets, exampleEnrichment,
         removeFirstWord = TRUE, verbose = FALSE
     )
-    # Resolutions above 1 split a few gene sets differently between Seurat
-    # versions
+    # Resolutions above 1 split a few gene sets differently with older
+    # dependencies (e.g. Seurat 5.0.0, igraph 2.1.1, irlba 2.3.5.1)
     resCols <- grep("^GSEA_snn_res[.]0[.]",
         names(exampleGsList@cluster@meta.data),
         value = TRUE
