@@ -1,5 +1,5 @@
 ---
-title: 'Vignette for geneSetSimplifyR'
+title: 'Clustering and labeling enriched gene sets with geneSetSimplifyR'
 author: "Ella Hedeboe, Chiao-Yu Hsieh, and Kristoffer Vitting-Seerup"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 package: geneSetSimplifyR
@@ -7,7 +7,7 @@ output:
     BiocStyle::html_document:
         toc_float: true
 vignette: >
-  %\VignetteIndexEntry{geneSetSimplifyR}
+  %\VignetteIndexEntry{Clustering and labeling enriched gene sets}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -118,11 +118,11 @@ library(ggplot2) # for modifying the plots
 
 data("exampleGeneSets")
 data("exampleEnrichment")
-
-### Or load your own gmt file (you can also pass the file path directly
-### as 'geneSetsList' to geneSetSimplifyR()):
-# exampleGeneSets <- fgsea::gmtPathways(path_to_your_gmt_file)
 ```
+
+Your own gene sets can be read from a GMT file with `fgsea::gmtPathways()`, or
+the path to the GMT file can be passed directly as `geneSetsList` to
+`geneSetSimplifyR()`.
 
 Let's explore the data to see what it should look like
 
@@ -144,10 +144,10 @@ with the p-value of each gene set can also be added; it is then shown as
 -log10(p-value) by the plots that summarize the clusters. Here the enrichment
 scores, p-values and adjusted p-values come from `fgsea`. In this case the
 example data is a subset of the colorectal data analyzed in [Vitting-Seerup &
-Sandelin
-(2017)](https://aacrjournals.org/mcr/article/15/9/1206/268100/The-Landscape-of-Isoform-Switches-in-Human?guestAccessKey=)
-where gene-set enrichment was done both for differentially expressed genes
-("Expression") and differentially spliced genes ("Splicing").
+Sandelin (2017)](https://doi.org/10.1158/1541-7786.MCR-16-0459) where gene-set
+enrichment was done both for differentially expressed genes ("Expression") and
+differentially spliced genes ("Splicing"). The gene sets are from MSigDB
+v7.5.1.
 
 With the data read we are now ready to use `geneSetSimplifyR`. The main
 functionalities are:
@@ -524,24 +524,8 @@ enrichment-analysis tools into the `geneSetsList` + `geneSetsDF` pair
 
 The two parsers return a list with two elements, `geneSetsList` and
 `geneSetsDF`, ready to pass straight into `geneSetSimplifyR()`. `getGeneSets()`
-returns a named list of gene sets that can be used as `geneSetsList`:
-
-```{r parsers example, eval=FALSE}
-# pairedGSEA example
-parsed <- parsePairedGSEA(
-    oraResult       = oraResult, # output from pairedGSEA::paired_ora()
-    geneSets        = mSigDB, # mSigDB gene sets
-    cutoff_exp      = 0.05,
-    cutoff_splicing = 0.05,
-    cutoff_paired   = 0.05
-)
-gss <- geneSetSimplifyR(
-    geneSetsList = parsed$geneSetsList,
-    geneSetsDF   = parsed$geneSetsDF
-)
-
-# fgsea example is shown in the next section.
-```
+returns a named list of gene sets that can be used as `geneSetsList`. The next
+section runs `parseFgsea()` on `fgsea` results.
 
 See `?parsePairedGSEA`, `?parseFgsea`, and `?getGeneSets` for the full argument
 list.
