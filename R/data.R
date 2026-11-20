@@ -1,7 +1,7 @@
 #' Example clustered and labeled gene sets
 #'
 #' A 'gsList' object made with `geneSetSimplifyR(exampleGeneSets,
-#' exampleEnrichment, removeFirstWord = TRUE)`: 197 gene sets from 2 sources
+#' exampleEnrichment, removeFirstWord = TRUE)`: 196 gene sets from 2 sources
 #' ("Expression" and "Splicing") clustered at 10 resolutions. Use it to try the
 #' plotting and table functions without running the workflow. The script that
 #' creates it is in `inst/scripts/make-exampleGsList.R`.
@@ -16,9 +16,9 @@
 #' Vitting-Seerup & Sandelin (2017), where gene-set enrichment was done both
 #' for differentially expressed genes ("Expression") and differentially
 #' spliced genes ("Splicing"). Only gene sets with an adjusted p-value below
-#' 0.05 are included, a subset of 197 gene sets.
+#' 0.05 are included, a subset of 196 gene sets.
 #'
-#' @format A tibble with 206 rows (one per gene set and source) and 5 columns:
+#' @format A tibble with 205 rows (one per gene set and source) and 5 columns:
 #' \describe{
 #'   \item{source}{The analysis the gene set was found in: "Expression" or
 #'     "Splicing".}
@@ -36,17 +36,19 @@
 
 #' Example Gene Sets
 #'
-#' The 197 gene sets that are significant in `exampleEnrichment`, as a named
+#' The 196 gene sets that are significant in `exampleEnrichment`, as a named
 #' list where the names are the gene-set names and each element holds the gene
 #' symbols of that gene set.
 #'
-#' @format A named list of 197 character vectors of human gene symbols.
+#' @format A named list of 196 character vectors of human gene symbols.
 #' @source Human gene sets from the Molecular Signatures Database (MSigDB)
 #'   v7.5.1 (R package msigdbr 7.5.1): the Hallmark collection, the C2 curated
-#'   collection (chemical and genetic perturbations, KEGG, Reactome and
+#'   collection (chemical and genetic perturbations, Reactome and
 #'   WikiPathways) and the C5 Gene Ontology collection. Each gene set is
 #'   restricted to the genes tested in the enrichment analysis of
-#'   `exampleEnrichment`. <https://www.gsea-msigdb.org/gsea/msigdb>
+#'   `exampleEnrichment`. KEGG gene sets are left out because of their
+#'   license. See `inst/scripts/make-exampleGeneSets.R`.
+#'   <https://www.gsea-msigdb.org/gsea/msigdb>
 "exampleGeneSets"
 
 #' Stop Words

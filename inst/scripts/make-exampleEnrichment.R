@@ -10,7 +10,7 @@
 ##   - differential gene usage/splicing ("Splicing"), genes ranked by
 ##     -log10(p-value).
 ## The example keeps the results with padj < 0.05 for the gene sets in
-## 'exampleGeneSets' (206 gene set/source pairs, 197 gene sets).
+## 'exampleGeneSets' (205 gene set/source pairs, 196 gene sets).
 ##
 ## Input (not shipped with the package): 20_1_tcga_paired_fgsea.Rdata with the
 ## fgsea results 'tcgaDgeFsc' and 'tcgaDguFsc', lists by cancer type, for the
@@ -21,7 +21,7 @@
 ## of the example; the enrichment scores are fgsea's NES and are checked
 ## against the fgsea results.
 ##
-## Run from the root of the package source:
+## Run from the root of the package source, after make-exampleGeneSets.R:
 ##   Rscript inst/scripts/make-exampleEnrichment.R \
 ##       path/to/20_1_tcga_paired_fgsea.Rdata
 ## and then inst/scripts/make-exampleGsList.R.

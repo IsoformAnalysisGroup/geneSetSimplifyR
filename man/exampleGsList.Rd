@@ -14,7 +14,7 @@ Made from \code{exampleGeneSets} and \code{exampleEnrichment}.
 exampleGsList
 }
 \description{
-A 'gsList' object made with \code{geneSetSimplifyR(exampleGeneSets, exampleEnrichment, removeFirstWord = TRUE)}: 197 gene sets from 2 sources
+A 'gsList' object made with \code{geneSetSimplifyR(exampleGeneSets, exampleEnrichment, removeFirstWord = TRUE)}: 196 gene sets from 2 sources
 ("Expression" and "Splicing") clustered at 10 resolutions. Use it to try the
 plotting and table functions without running the workflow. The script that
 creates it is in \code{inst/scripts/make-exampleGsList.R}.

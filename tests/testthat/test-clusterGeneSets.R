@@ -3,8 +3,12 @@ test_that("the workflow reproduces the shipped example object", {
         exampleGeneSets, exampleEnrichment,
         removeFirstWord = TRUE, verbose = FALSE
     )
-    resCols <- grep("^GSEA_snn_res", names(exampleGsList@cluster@meta.data),
-        value = TRUE)
+    # Resolutions above 1 split a few gene sets differently between Seurat
+    # versions
+    resCols <- grep("^GSEA_snn_res[.]0[.]",
+        names(exampleGsList@cluster@meta.data),
+        value = TRUE
+    )
     expect_equal(
         g@cluster@meta.data[, resCols],
         exampleGsList@cluster@meta.data[, resCols]

@@ -5,7 +5,7 @@
 \alias{exampleEnrichment}
 \title{Example Enrichment Results}
 \format{
-A tibble with 206 rows (one per gene set and source) and 5 columns:
+A tibble with 205 rows (one per gene set and source) and 5 columns:
 \describe{
 \item{source}{The analysis the gene set was found in: "Expression" or
 "Splicing".}
@@ -30,6 +30,6 @@ fgsea results for the TCGA colon adenocarcinoma data analyzed in
 Vitting-Seerup & Sandelin (2017), where gene-set enrichment was done both
 for differentially expressed genes ("Expression") and differentially
 spliced genes ("Splicing"). Only gene sets with an adjusted p-value below
-0.05 are included, a subset of 197 gene sets.
+0.05 are included, a subset of 196 gene sets.
 }
 \keyword{datasets}

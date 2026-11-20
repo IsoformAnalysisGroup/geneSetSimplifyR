@@ -5,21 +5,23 @@
 \alias{exampleGeneSets}
 \title{Example Gene Sets}
 \format{
-A named list of 197 character vectors of human gene symbols.
+A named list of 196 character vectors of human gene symbols.
 }
 \source{
 Human gene sets from the Molecular Signatures Database (MSigDB)
 v7.5.1 (R package msigdbr 7.5.1): the Hallmark collection, the C2 curated
-collection (chemical and genetic perturbations, KEGG, Reactome and
+collection (chemical and genetic perturbations, Reactome and
 WikiPathways) and the C5 Gene Ontology collection. Each gene set is
 restricted to the genes tested in the enrichment analysis of
-\code{exampleEnrichment}. \url{https://www.gsea-msigdb.org/gsea/msigdb}
+\code{exampleEnrichment}. KEGG gene sets are left out because of their
+license. See \code{inst/scripts/make-exampleGeneSets.R}.
+\url{https://www.gsea-msigdb.org/gsea/msigdb}
 }
 \usage{
 exampleGeneSets
 }
 \description{
-The 197 gene sets that are significant in \code{exampleEnrichment}, as a named
+The 196 gene sets that are significant in \code{exampleEnrichment}, as a named
 list where the names are the gene-set names and each element holds the gene
 symbols of that gene set.
 }

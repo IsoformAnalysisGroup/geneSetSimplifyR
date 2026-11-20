@@ -110,7 +110,7 @@ test_that("long gene-set names are shortened with their direction kept", {
 })
 
 test_that("show prints a summary", {
-    expect_output(show(exampleGsList), "gsList object with 197 gene sets")
+    expect_output(show(exampleGsList), "gsList object with 196 gene sets")
 })
 
 test_that("a renamed cluster without automatic labels plots cleanly", {
