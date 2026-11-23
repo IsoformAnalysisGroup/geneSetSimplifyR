@@ -29,7 +29,8 @@ Description: Simplifies the results of gene-set enrichment analysis (GSEA) by
   combined. The package contains several plotting functions so the user can
   quickly visualize the clustering output and draw biologically meaningful
   insights.
-License: GPL-3
+License: MIT + file LICENSE
+Copyright: See file COPYRIGHTS for the code adapted from Signac.
 Encoding: UTF-8
 Language: en-US
 URL: https://isoformanalysisgroup.github.io/geneSetSimplifyR/,
