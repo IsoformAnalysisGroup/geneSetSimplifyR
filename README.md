@@ -26,7 +26,8 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 BiocManager::install("geneSetSimplifyR")
 ```
 
-The development version can be installed from GitHub:
+The development version can be installed from GitHub. This also works on R
+4.4 and 4.5, which the Bioconductor release does not support:
 
 ```r
 BiocManager::install("remotes") # needed to install from GitHub
