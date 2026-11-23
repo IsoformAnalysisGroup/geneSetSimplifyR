@@ -3,16 +3,16 @@ Type: Package
 Title: Simplify Gene-Set Enrichment Analysis
 Version: 0.99.0
 Authors@R: c(
-  person(given = "Ella",
-    family = "Hedeboe",
-    email = "ellahedeboe@hotmail.com",
-    role = "aut",
-    comment = c(ORCID = "0000-0002-3978-4661")),
   person(given = "Chiao-Yu",
     family = "Hsieh",
     email = "chihs@dtu.dk",
     role = c("aut", "cre"),
     comment = c(ORCID = "0009-0007-0463-5977")),
+  person(given = "Ella",
+    family = "Hedeboe",
+    email = "ellahedeboe@hotmail.com",
+    role = "aut",
+    comment = c(ORCID = "0000-0002-3978-4661")),
   person(given = "Kristoffer",
     family = "Vitting-Seerup",
     email = "krivi@dtu.dk",

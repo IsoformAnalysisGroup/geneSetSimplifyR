@@ -1,6 +1,6 @@
 ---
 title: 'Clustering and labeling enriched gene sets with geneSetSimplifyR'
-author: "Ella Hedeboe, Chiao-Yu Hsieh, and Kristoffer Vitting-Seerup"
+author: "Chiao-Yu Hsieh, Ella Hedeboe, and Kristoffer Vitting-Seerup"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 package: geneSetSimplifyR
 output:
