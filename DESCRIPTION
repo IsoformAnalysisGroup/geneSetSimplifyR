@@ -33,8 +33,7 @@ License: MIT + file LICENSE
 Copyright: See file COPYRIGHTS for the code adapted from Signac.
 Encoding: UTF-8
 Language: en-US
-URL: https://isoformanalysisgroup.github.io/geneSetSimplifyR/,
-    https://github.com/IsoformAnalysisGroup/geneSetSimplifyR
+URL: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR
 BugReports: https://github.com/IsoformAnalysisGroup/geneSetSimplifyR/issues
 biocViews: Software, GeneSetEnrichment, Pathways, Clustering,
     DimensionReduction, Visualization

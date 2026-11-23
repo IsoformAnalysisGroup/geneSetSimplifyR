@@ -68,13 +68,12 @@ extractTable(gsList, summarize = FALSE)
 
 ## Documentation
 
-The full documentation, including the vignette and all help pages, is online
-at <https://isoformanalysisgroup.github.io/geneSetSimplifyR/>. The vignette
-walks through the whole workflow, from fgsea results to renaming clusters:
-[Get started](https://isoformanalysisgroup.github.io/geneSetSimplifyR/articles/geneSetSimplifyR.html).
+The vignette walks through the whole workflow, from fgsea results to renaming
+clusters. After installing from Bioconductor, open it with
+`vignette("geneSetSimplifyR", package = "geneSetSimplifyR")`.
 
-GitHub installs skip the vignette by default. To also read it offline in R,
-install with `build_vignettes = TRUE`. This needs a few extra packages and
+GitHub installs skip the vignette by default. To get it from GitHub, install
+with `build_vignettes = TRUE`. This needs a few extra packages and
 [pandoc](https://pandoc.org/installing.html), which comes with RStudio:
 
 ```r

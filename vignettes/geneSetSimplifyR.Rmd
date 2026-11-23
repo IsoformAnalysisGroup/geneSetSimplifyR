@@ -103,9 +103,6 @@ BiocManager::install("remotes") # needed to install from GitHub
 BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 ```
 
-This vignette is also available online at
-<https://isoformanalysisgroup.github.io/geneSetSimplifyR/>.
-
 # geneSetSimplifyR workflow
 
 ## Overview

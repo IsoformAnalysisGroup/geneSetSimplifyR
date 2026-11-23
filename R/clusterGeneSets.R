@@ -94,7 +94,7 @@ clusterGeneSets <-
 
         elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
 
-        # RunUMAP() reseeds the global RNG; keep the user's random number stream.
+        # RunUMAP() reseeds the global RNG; keep the user's random numbers.
         # The option turns off the notice that older Seurat 5 releases give
         # about the default UMAP method; newer releases do not give it.
         seuratObj <- withr::with_preserve_seed(
