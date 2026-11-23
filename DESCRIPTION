@@ -63,14 +63,11 @@ Imports:
     utils,
     withr
 Suggests:
-    apcluster,
     BiocStyle,
     knitr,
-    leiden,
     msigdbr (>= 10.0.0),
     rmarkdown,
     RSpectra,
-    simplifyEnrichment,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

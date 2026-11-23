@@ -23,9 +23,6 @@ setMethod("show", "gsList", function(object) {
     meta <- object@metadata
     if (length(meta)) {
         cat("Metadata:\n")
-        if (!is.null(meta$cluster_algorithm)) {
-            cat("  algorithm: ", meta$cluster_algorithm, "\n", sep = "")
-        }
         if (!is.null(meta$k)) {
             cat("  k (KNN): ", meta$k, "\n", sep = "")
         }

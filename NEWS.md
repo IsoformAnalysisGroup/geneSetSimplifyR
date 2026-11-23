@@ -5,13 +5,10 @@
   steps are also available on their own: `initializeList()`,
   `clusterGeneSets()` and `labelClusters()`. Clustering needs more than 50
   gene sets.
-* Gene sets are clustered by community detection on a shared nearest neighbor
-  (SNN) graph built from their gene membership. `clusterGeneSets(algorithm =)`
-  accepts a registered method ('louvain', 'louvain.multilevel', 'slm',
-  'leiden', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
-  'binary_cut'), a method made with `clusterMethod()`, or a function. See
-  `registerClusterMethod()`, `listClusterMethods()`, `getClusterMethod()`,
-  `getSNN()`, `snnToIgraph()` and `snnToMatrix()`.
+* Gene sets are clustered with the Louvain algorithm on a shared nearest
+  neighbor (SNN) graph built from their gene membership. `getSNN()`,
+  `snnToIgraph()` and `snnToMatrix()` give the graph for use with other
+  tools.
 * Clusters are labeled with the two-word phrase that best describes their
   gene-set names. Words in `stopWords` are ignored, and
   `labelClusters(removeFirstWord =)` drops author names or database prefixes.

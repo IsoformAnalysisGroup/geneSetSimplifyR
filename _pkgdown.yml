@@ -36,13 +36,9 @@ reference:
       - parseFgsea
       - parsePairedGSEA
       - getGeneSets
-  - title: Clustering methods
-    desc: Use or add community-detection methods for the SNN graph.
+  - title: SNN graph
+    desc: Get the graph the gene sets are clustered on.
     contents:
-      - listClusterMethods
-      - getClusterMethod
-      - clusterMethod
-      - registerClusterMethod
       - getSNN
       - snnToIgraph
       - snnToMatrix

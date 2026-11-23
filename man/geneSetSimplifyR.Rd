@@ -9,9 +9,6 @@ geneSetSimplifyR(
   geneSetsDF = NULL,
   resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 2.6, 3.1, 4.1, 5.1),
   verbose = TRUE,
-  cluster_algo = "louvain",
-  clusterArgs = list(),
-  elbow_method = "distance",
   K = NA,
   removeFirstWord = FALSE,
   stopWords = geneSetSimplifyR::stopWords,
@@ -40,17 +37,6 @@ Higher number usually results in more clusters.}
 
 \item{verbose}{a logic indicating whether to print progress statements.
 Defaults to TRUE.}
-
-\item{cluster_algo}{Clustering method applied to the SNN graph, passed to
-\code{clusterGeneSets()}. Either the name of a registered method (see
-\code{\link{listClusterMethods}}; 'louvain' by default), a
-\code{gsClusterMethod} from \code{\link{clusterMethod}}, or a function.}
-
-\item{clusterArgs}{Named list of extra arguments passed on to the clustering
-method.}
-
-\item{elbow_method}{Method passed to \code{clusterGeneSets()} for selecting
-the number of LSI dimensions. Options: 'distance'(default), 'zscore'.}
 
 \item{K}{Number of nearest neighbors for the KNN graph, passed to
 \code{clusterGeneSets()}. \code{NA} (default) uses \code{round(sqrt(N))} for \code{N}

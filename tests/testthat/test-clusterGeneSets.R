@@ -35,15 +35,6 @@ test_that("arguments are validated", {
     expect_error(
         clusterGeneSets(g, resolution = -1, verbose = FALSE), "positive"
     )
-    expect_error(
-        clusterGeneSets(g, clusterArgs = list(resolution = 1), verbose = FALSE),
-        "cannot contain"
-    )
-    expect_error(
-        clusterGeneSets(g, clusterArgs = list(1), verbose = FALSE),
-        "named"
-    )
-    expect_error(clusterGeneSets(g, elbow_method = "foo", verbose = FALSE))
 })
 
 test_that("clustering does not change the session's random numbers", {
@@ -59,11 +50,13 @@ test_that("clustering does not change the session's random numbers", {
 test_that("an error lists why every resolution failed", {
     input <- smallInput()
     g <- initializeList(input$sets, input$df, verbose = FALSE)
-    failing <- function(snn, resolution) stop("backend exploded")
+    local_mocked_bindings(
+        FindClusters = function(...) stop("clustering exploded"),
+        .package = "Seurat"
+    )
     expect_error(
-        clusterGeneSets(g, algorithm = failing, resolution = c(1, 2),
-            verbose = FALSE),
-        "backend exploded"
+        clusterGeneSets(g, resolution = c(1, 2), verbose = FALSE),
+        "resolution 1: clustering exploded"
     )
 })
 
@@ -88,9 +81,6 @@ test_that("the elbow works on short and flat scree curves", {
     expect_equal(kvsElbow(c(5, 4, 3))$elbow_cutoff, 3)
     expect_gte(kvsElbow(c(10, 5, 3, 2.5, 2.4, 2.3, 2.2))$elbow_cutoff, 2)
     expect_equal(kvsElbow(c(10, rep(1, 10)))$elbow_cutoff, 11)
-    expect_gte(
-        kvsElbow(c(10, rep(1, 20)), method = "zscore")$elbow_cutoff, 2
-    )
     expect_error(kvsElbow(c(1, 2, 3)), "decreasing")
 })
 

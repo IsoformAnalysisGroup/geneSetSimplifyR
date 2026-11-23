@@ -3,33 +3,19 @@
 #' @param variance Standard deviations of the LSI components, stored in a
 #'   Seurat object as `seuratObj@reductions$lsi@stdev`. Must be sorted in
 #'   decreasing order.
-#' @param method Which elbow-detection method to use. One of:
-#'   \describe{
-#'     \item{`"distance"` (default)}{Returns the point of the (smoothed) scree
-#'       curve that lies farthest from the chord connecting its endpoints. Light
-#'       spline smoothing keeps it from being thrown off by jitter in the noisy
-#'       tail, and it needs no threshold.}
-#'     \item{`"zscore"`}{Flags the stepwise drops (1st derivative) that are
-#'       statistical outliers via a robust z-score and returns the last such
-#'       drop. Sensitive to the `zScoreCutoff` threshold.}
-#'   }
-#' @param zScoreCutoff Integer indicating the cut off value for the Z-score.
-#'   Only used when `method = "zscore"`.
 #'
-#' @details Short scree curves (fewer than 50 components, e.g. when there are
+#' @details The elbow is the point of the (lightly smoothed) scree curve that
+#'   lies farthest from the chord connecting its endpoints. The first
+#'   component, which mostly reflects gene-set size, is left out.
+#'
+#'   Short scree curves (fewer than 50 components, e.g. when there are
 #'   fewer than 50 genes) are supported. With fewer than four components after
 #'   dropping the first one, all components are used.
 #'
 #' @return A list with element `elbow_cutoff`: the index of the last LSI
 #'   component to use (at least 2).
 #' @keywords internal
-kvsElbow <- function(
-    variance,
-    method = c("distance", "zscore"),
-    zScoreCutoff = 2.5
-    ) {
-    method <- match.arg(method)
-
+kvsElbow <- function(variance) {
     if (is.unsorted(-variance)) {
         stop("'variance' should be sorted in decreasing order")
     }
@@ -42,65 +28,39 @@ kvsElbow <- function(
         return(list(elbow_cutoff = length(variance)))
     }
 
-    if (method == "zscore") {
-        varianceScaled <- scale(variance, center = TRUE, scale = TRUE)
+    ### Kneedle-style distance to the chord. LSI_1 mostly reflects gene-set
+    ### size and dominates the curve, so it is left out.
+    varianceElbow <- variance[-1]
 
-        stepwiseDecrease <-
-            varianceScaled[-length(varianceScaled)] -
-            varianceScaled[-1]
+    n <- length(varianceElbow)
+    x <- seq_len(n)
 
-        stepwiseMad <- mad(stepwiseDecrease)
-        if (!is.finite(stepwiseMad) || stepwiseMad == 0) {
-            stepwiseZ <- rep(0, length(stepwiseDecrease))
-        } else {
-            stepwiseZ <-
-                (stepwiseDecrease - median(stepwiseDecrease)) / stepwiseMad
-        }
+    ### Light smoothing to suppress point-wise jitter in the tail
+    y <- stats::smooth.spline(x, varianceElbow)$y
 
-        if(!any(stepwiseZ > zScoreCutoff)) {
-            cutoffIndex <- min(13L, length(variance))
-        } else {
-            cutoffIndex <- max(max(which(stepwiseZ > zScoreCutoff)) + 1L, 2L)
-        }
-    } else {
-        ### Kneedle-style distance to the chord. LSI_1 mostly reflects gene-set
-        ### size and dominates the curve, so it is left out.
-        varianceElbow <- variance[-1]
-
-        n <- length(varianceElbow)
-        x <- seq_len(n)
-
-        ### Light smoothing to suppress point-wise jitter in the tail
-        y <- stats::smooth.spline(x, varianceElbow)$y
-
-        ### Normalize both axes to [0, 1] so neither dominates the distance
-        xNorm <- (x - min(x)) / (max(x) - min(x))
-        yRange <- max(y) - min(y)
-        # A flat curve has no elbow (smoothing can leave numerical noise)
-        if (yRange <= sqrt(.Machine$double.eps) * max(abs(y), 1)) {
-            return(list(elbow_cutoff = length(variance)))
-        }
-        yNorm <- (y - min(y)) / yRange
-
-        p1 <- c(xNorm[1], yNorm[1])
-        pN <- c(xNorm[n], yNorm[n])
-
-        chord <- pN - p1
-        chord <- chord / sqrt(sum(chord^2))
-
-        vecFromP1 <- cbind(xNorm - p1[1], yNorm - p1[2])
-        proj <- as.vector(vecFromP1 %*% chord)
-        perp <- vecFromP1 - outer(proj, chord)
-        dist <- sqrt(rowSums(perp^2))
-
-        ### +1 maps the index back to the original numbering (LSI_1 was
-        ### dropped), so the downstream `dims = 2:elbow_cutoff` still lines up.
-        cutoffIndex <- max(which.max(dist) + 1L, 2L)
+    ### Normalize both axes to [0, 1] so neither dominates the distance
+    xNorm <- (x - min(x)) / (max(x) - min(x))
+    yRange <- max(y) - min(y)
+    # A flat curve has no elbow (smoothing can leave numerical noise)
+    if (yRange <= sqrt(.Machine$double.eps) * max(abs(y), 1)) {
+        return(list(elbow_cutoff = length(variance)))
     }
+    yNorm <- (y - min(y)) / yRange
 
-    resList <- list(
-        elbow_cutoff = cutoffIndex
-    )
+    p1 <- c(xNorm[1], yNorm[1])
+    pN <- c(xNorm[n], yNorm[n])
 
-    return(resList)
+    chord <- pN - p1
+    chord <- chord / sqrt(sum(chord^2))
+
+    vecFromP1 <- cbind(xNorm - p1[1], yNorm - p1[2])
+    proj <- as.vector(vecFromP1 %*% chord)
+    perp <- vecFromP1 - outer(proj, chord)
+    dist <- sqrt(rowSums(perp^2))
+
+    ### +1 maps the index back to the original numbering (LSI_1 was
+    ### dropped), so the downstream `dims = 2:elbow_cutoff` still lines up.
+    cutoffIndex <- max(which.max(dist) + 1L, 2L)
+
+    return(list(elbow_cutoff = cutoffIndex))
 }

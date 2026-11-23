@@ -4,34 +4,20 @@
 #'   function.
 #' @param resolution Vector with the desired clustering resolutions to use.
 #'   Higher number usually results in more clusters.
-#' @param algorithm Clustering method applied to the SNN graph. Either the name
-#'   of a registered method (see [listClusterMethods()]; e.g. 'louvain',
-#'   'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
-#'   'binary_cut'), a `gsClusterMethod` built with [clusterMethod()], or a
-#'   function following the same contract. Only this step is swappable -- the
-#'   SNN graph itself is always built the same way.
-#'
-#'   Methods that determine the number of clusters themselves ('kmeans',
-#'   'apcluster', 'binary_cut') ignore `resolution` and are run once; the result
-#'   is stored under the first requested resolution.
-#' @param clusterArgs Named list of extra arguments passed on to the clustering
-#'   method, for example `list(n.start = 20)` for the Seurat backends,
-#'   `list(maxK = 50)` for 'kmeans', `list(p = -1)` for 'apcluster', or
-#'   `list(cutoff = 0.9)` for 'binary_cut'.
 #' @param K Integer or NA. Number of nearest neighbors used when building the
 #'   KNN graph. If `NA` (default) it is set to `round(sqrt(N))`, where `N` is
 #'   the number of gene sets. Must be smaller than `N`.
-#' @param elbow_method Method for choosing the number of LSI dimensions from
-#'   the scree curve: 'distance' (default) or 'zscore'. See the Details.
 #' @param verbose a logic indicating whether to print progress statements.
 #'   Defaults to TRUE.
 #'
 #' @details More than 50 gene sets are needed. The LSI uses up to 50
 #'   dimensions (fewer when there are fewer genes); the first one,
-#'   which mostly reflects gene-set size, is always left out.
+#'   which mostly reflects gene-set size, is always left out. The gene sets
+#'   are clustered with the Louvain algorithm (`Seurat::FindClusters()`) on
+#'   the shared nearest neighbor (SNN) graph; see [getSNN()] to get the graph.
 #'
 #'   Clustering does not change the random number stream of the R session:
-#'   the UMAP and the seeded clustering backends restore it afterwards.
+#'   the UMAP restores it afterwards.
 #'   Re-clustering an object removes its existing labels, so run
 #'   `labelClusters()` again afterwards.
 #'
@@ -39,8 +25,6 @@
 #'  silhouette score) is annotated and used throughout the rest of the
 #'  workflow (unless specified in subsequent functions).
 #' @export
-#'
-#' @seealso [clusterMethod()], [registerClusterMethod()], [listClusterMethods()]
 #'
 #' @examples
 #' data(exampleGeneSets, exampleEnrichment)
@@ -54,22 +38,11 @@
 #'     resolution = c(0.6, 1.1),
 #'     verbose = FALSE
 #' )
-#'
-#' # Swap in a different community-detection implementation
-#' gsListObject <- clusterGeneSets(
-#'     geneSetsList,
-#'     algorithm = "igraph_leiden",
-#'     resolution = 1,
-#'     verbose = FALSE
-#' )
 clusterGeneSets <-
     function(
         geneSetsList,
         resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 2.6, 3.1, 4.1, 5.1),
-        algorithm = "louvain",
-        clusterArgs = list(),
         K = NA,
-        elbow_method = "distance",
         verbose = TRUE
         ) {
 
@@ -83,25 +56,6 @@ clusterGeneSets <-
             stop("'resolution' should be a vector of positive numbers.")
         }
         resolution <- unique(resolution)
-
-        if (!is.list(clusterArgs)) {
-            stop("'clusterArgs' should be a named list.")
-        }
-        if (length(clusterArgs) &&
-            (is.null(names(clusterArgs)) || any(!nzchar(names(clusterArgs))))) {
-            stop("Every element of 'clusterArgs' should be named.")
-        }
-        reservedArgs <- intersect(
-            names(clusterArgs), c("snn", "resolution", "verbose")
-        )
-        if (length(reservedArgs)) {
-            stop(
-                "'clusterArgs' cannot contain ", quoteAndCollapse(reservedArgs),
-                "; these are set by clusterGeneSets()."
-            )
-        }
-
-        elbow_method <- match.arg(elbow_method, c("distance", "zscore"))
 
         nGeneSets <- ncol(geneSetsList@genesetsDataframe)
         if (nGeneSets <= 50) {
@@ -123,24 +77,6 @@ clusterGeneSets <-
             }
         }
 
-        # Resolve the method first so a bad one fails before the slow LSI/UMAP
-        clusterMethodObj <- getClusterMethod(algorithm)
-
-        # Methods that choose their own k give the same result at every
-        # resolution
-        if (!isTRUE(clusterMethodObj$usesResolution) &&
-            length(resolution) > 1) {
-            if (verbose) {
-                message(
-                    "'", clusterMethodObj$name,
-                    "' determines the number of clusters ",
-                    "itself; ignoring all but the first resolution (",
-                    resolution[1], ")."
-                )
-            }
-            resolution <- resolution[1]
-        }
-
         if(verbose) {
             message("Clustering gene sets...")
         }
@@ -156,8 +92,7 @@ clusterGeneSets <-
         # TF-IDF + truncated SVD; the TF-IDF method was chosen by grid search
         seuratObj <- runLSI(seuratObj, verbose = verbose)
 
-        elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev,
-            method = elbow_method)
+        elbowRes <- kvsElbow(variance = seuratObj@reductions$lsi@stdev)
 
         # RunUMAP() reseeds the global RNG; keep the user's random number stream
         seuratObj <- withr::with_preserve_seed(
@@ -191,41 +126,39 @@ clusterGeneSets <-
             verbose = FALSE
         )
 
-        # One resolution at a time, so a failing one is skipped instead of fatal
+        # Louvain (Seurat algorithm 1) on the SNN graph, one resolution at a
+        # time, so a failing one (e.g. a very high one) is skipped
         snnGraph <- seuratObj@graphs$GSEA_snn
 
         resolutionsTested <- c()
         failures <- character(0)
         for (localRes in resolution) {
-            localIds <- suppressWarnings(
+            clusters <- suppressWarnings(
                 tryCatch(
-                    runClusterMethod(
-                        method = clusterMethodObj,
-                        snn = snnGraph,
+                    Seurat::FindClusters(
+                        object = snnGraph,
                         resolution = localRes,
-                        verbose = verbose,
-                        clusterArgs = clusterArgs
+                        algorithm = 1,
+                        verbose = verbose
                     ),
                     error = function(e) e
                 )
             )
 
-            if (inherits(localIds, "error")) {
-                failures[as.character(localRes)] <- conditionMessage(localIds)
+            if (inherits(clusters, "error")) {
+                failures[as.character(localRes)] <- conditionMessage(clusters)
                 if (verbose) {
                     message(
                         "Resolution ", localRes, " failed (",
-                        conditionMessage(localIds), ") - skipping."
+                        conditionMessage(clusters), ") - skipping."
                     )
                 }
                 next
             }
 
-            # Ids start at 0 with numeric level order, whatever the backend
-            # returns
-            clusterResolution <- resolutionColumnName(localRes)
-            seuratObj@meta.data[[clusterResolution]] <-
-                numericClusterFactor(localIds)
+            # Ids start at 0 with numeric level order
+            seuratObj@meta.data[[resolutionColumnName(localRes)]] <-
+                numericClusterFactor(clusters[colnames(snnGraph), 1])
 
             resolutionsTested <- c(resolutionsTested, localRes)
         }
@@ -235,10 +168,7 @@ clusterGeneSets <-
                 "  resolution ", names(failures), ": ", failures,
                 collapse = "\n"
             )
-            stop(
-                "Clustering failed for every resolution with method '",
-                clusterMethodObj$name, "':\n", failureLines
-            )
+            stop("Clustering failed for every resolution:\n", failureLines)
         }
 
         # Mean silhouette width on 1 - SNN; NA (undefined) is never chosen
@@ -273,7 +203,6 @@ clusterGeneSets <-
             stats::setNames(meanSil, as.character(resolutionsTested))
         geneSetsList@metadata$k <- selectedK
         geneSetsList@metadata$lsi_elbow_cutoff <- elbowRes$elbow_cutoff
-        geneSetsList@metadata$cluster_algorithm <- clusterMethodObj$name
         geneSetsList@metadata$resolutions_tested <- resolutionsTested
         geneSetsList@metadata$selected_resolution <- bestRes
         geneSetsList@metadata$active_resolution <- resolutionColumnName(bestRes)

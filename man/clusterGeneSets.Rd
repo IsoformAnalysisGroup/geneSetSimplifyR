@@ -7,10 +7,7 @@
 clusterGeneSets(
   geneSetsList,
   resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 2.6, 3.1, 4.1, 5.1),
-  algorithm = "louvain",
-  clusterArgs = list(),
   K = NA,
-  elbow_method = "distance",
   verbose = TRUE
 )
 }
@@ -21,28 +18,9 @@ function.}
 \item{resolution}{Vector with the desired clustering resolutions to use.
 Higher number usually results in more clusters.}
 
-\item{algorithm}{Clustering method applied to the SNN graph. Either the name
-of a registered method (see \code{\link[=listClusterMethods]{listClusterMethods()}}; e.g. 'louvain',
-'leiden', 'slm', 'igraph_louvain', 'igraph_leiden', 'kmeans', 'apcluster',
-'binary_cut'), a \code{gsClusterMethod} built with \code{\link[=clusterMethod]{clusterMethod()}}, or a
-function following the same contract. Only this step is swappable -- the
-SNN graph itself is always built the same way.
-
-Methods that determine the number of clusters themselves ('kmeans',
-'apcluster', 'binary_cut') ignore \code{resolution} and are run once; the result
-is stored under the first requested resolution.}
-
-\item{clusterArgs}{Named list of extra arguments passed on to the clustering
-method, for example \code{list(n.start = 20)} for the Seurat backends,
-\code{list(maxK = 50)} for 'kmeans', \code{list(p = -1)} for 'apcluster', or
-\code{list(cutoff = 0.9)} for 'binary_cut'.}
-
 \item{K}{Integer or NA. Number of nearest neighbors used when building the
 KNN graph. If \code{NA} (default) it is set to \code{round(sqrt(N))}, where \code{N} is
 the number of gene sets. Must be smaller than \code{N}.}
-
-\item{elbow_method}{Method for choosing the number of LSI dimensions from
-the scree curve: 'distance' (default) or 'zscore'. See the Details.}
 
 \item{verbose}{a logic indicating whether to print progress statements.
 Defaults to TRUE.}
@@ -58,10 +36,12 @@ Cluster gene sets
 \details{
 More than 50 gene sets are needed. The LSI uses up to 50
 dimensions (fewer when there are fewer genes); the first one,
-which mostly reflects gene-set size, is always left out.
+which mostly reflects gene-set size, is always left out. The gene sets
+are clustered with the Louvain algorithm (\code{Seurat::FindClusters()}) on
+the shared nearest neighbor (SNN) graph; see \code{\link[=getSNN]{getSNN()}} to get the graph.
 
 Clustering does not change the random number stream of the R session:
-the UMAP and the seeded clustering backends restore it afterwards.
+the UMAP restores it afterwards.
 Re-clustering an object removes its existing labels, so run
 \code{labelClusters()} again afterwards.
 }
@@ -77,15 +57,4 @@ gsListObject <- clusterGeneSets(
     resolution = c(0.6, 1.1),
     verbose = FALSE
 )
-
-# Swap in a different community-detection implementation
-gsListObject <- clusterGeneSets(
-    geneSetsList,
-    algorithm = "igraph_leiden",
-    resolution = 1,
-    verbose = FALSE
-)
-}
-\seealso{
-\code{\link[=clusterMethod]{clusterMethod()}}, \code{\link[=registerClusterMethod]{registerClusterMethod()}}, \code{\link[=listClusterMethods]{listClusterMethods()}}
 }

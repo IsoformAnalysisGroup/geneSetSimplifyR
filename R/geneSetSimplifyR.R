@@ -25,14 +25,6 @@
 #'   Higher number usually results in more clusters.
 #' @param verbose a logic indicating whether to print progress statements.
 #'   Defaults to TRUE.
-#' @param cluster_algo Clustering method applied to the SNN graph, passed to
-#'   \code{clusterGeneSets()}. Either the name of a registered method (see
-#'   \code{\link{listClusterMethods}}; 'louvain' by default), a
-#'   \code{gsClusterMethod} from \code{\link{clusterMethod}}, or a function.
-#' @param clusterArgs Named list of extra arguments passed on to the clustering
-#'   method.
-#' @param elbow_method Method passed to \code{clusterGeneSets()} for selecting
-#'   the number of LSI dimensions. Options: 'distance'(default), 'zscore'.
 #' @param K Number of nearest neighbors for the KNN graph, passed to
 #'   \code{clusterGeneSets()}. `NA` (default) uses `round(sqrt(N))` for `N`
 #'   gene sets.
@@ -61,9 +53,6 @@ geneSetSimplifyR <- function(
     geneSetsDF = NULL,
     resolution = c(0.1, 0.3, 0.6, 1.1, 1.6, 2.1, 2.6, 3.1, 4.1, 5.1),
     verbose = TRUE,
-    cluster_algo = "louvain",
-    clusterArgs = list(),
-    elbow_method = "distance",
     K = NA,
     removeFirstWord = FALSE,
     stopWords = geneSetSimplifyR::stopWords,
@@ -79,10 +68,7 @@ geneSetSimplifyR <- function(
         geneSetsList = geneSetsList,
         resolution = resolution,
         verbose = verbose,
-        algorithm = cluster_algo,
-        clusterArgs = clusterArgs,
-        K = K,
-        elbow_method = elbow_method
+        K = K
     )
 
     geneSetsList <- labelClusters(
