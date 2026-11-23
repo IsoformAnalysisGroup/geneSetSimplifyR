@@ -50,6 +50,8 @@ BiocManager::install("IsoformAnalysisGroup/geneSetSimplifyR")
 
 ```r
 library(geneSetSimplifyR)
+data("exampleGeneSets")
+data("exampleEnrichment")
 
 # A named list of gene sets and, optionally, a table of enrichment results
 # with the columns 'pathway', 'enrichment_score' (or 'NES'), and optionally
