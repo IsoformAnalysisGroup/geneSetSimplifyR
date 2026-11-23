@@ -135,15 +135,8 @@ plotProportions <- function(
 
     ### Make highlighted clusters bold
     if(length(clusterNameToHighlight)) {
-        suppressWarnings(
-            p <-
-                p +
-                theme(axis.text.y=element_text(
-                    face=boldXaxisLabels(
-                        src = df$cluster,
-                        clusterNameToHighlight
-                    )
-                ))
+        p <- p + scale_x_discrete(
+            labels = function(x) boldLabels(x, clusterNameToHighlight)
         )
 
     }

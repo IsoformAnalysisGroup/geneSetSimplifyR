@@ -90,15 +90,8 @@ plotBarchart <- function(
 
     ### Make highlighted clusters bold
     if(length(clusterNameToHighlight)) {
-        suppressWarnings(
-            p1 <-
-                p1 +
-                theme(axis.text.y=element_text(
-                    face=boldXaxisLabels(
-                        src = plotData$cluster,
-                        clusterNameToHighlight
-                    )
-                ))
+        p1 <- p1 + scale_x_discrete(
+            labels = function(x) boldLabels(x, clusterNameToHighlight)
         )
 
     }

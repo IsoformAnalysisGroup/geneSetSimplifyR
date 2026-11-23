@@ -93,7 +93,8 @@ plotDendrogram <- function(
         geom_segment(aes(x = x, y = y, xend = xend, yend = yend)) +
         scale_x_continuous(
             breaks = seq_along(leafLabels),
-            labels = leafLabels,
+            # highlighted clusters in bold
+            labels = boldLabels(leafLabels, clusterNameToHighlight),
             expand = expansion(add = 0.5)
         ) +
         scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
@@ -107,17 +108,6 @@ plotDendrogram <- function(
             panel.grid.major.y = element_blank(),
             panel.grid.minor = element_blank()
         )
-
-    ### Make highlighted clusters bold
-    if (length(clusterNameToHighlight)) {
-        suppressWarnings(
-            p1 <- p1 + theme(axis.text.y = element_text(
-                face = ifelse(
-                    leafLabels %in% clusterNameToHighlight, "bold", "plain"
-                )
-            ))
-        )
-    }
 
     attr(p1, "hclust") <- hcAvg
     return(p1)

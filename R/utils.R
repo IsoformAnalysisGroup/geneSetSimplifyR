@@ -617,9 +617,12 @@ cutGeneSetName <- function(aVec, maxChar = 60) {
     return(aVec)
 }
 
-boldXaxisLabels <- function(src, levelsToBold) {
-    if (!is.factor(src)) src <- factor(src)
-    ifelse(levels(src) %in% levelsToBold, "bold", "plain")
+# Axis labels with `labelsToBold` in bold (plotmath), for the `labels` of a
+# scale. A per-label `face` in element_text() is not supported by ggplot2.
+boldLabels <- function(labels, labelsToBold) {
+    as.expression(lapply(as.character(labels), function(l) {
+        if (l %in% labelsToBold) bquote(bold(.(l))) else l
+    }))
 }
 
 
