@@ -55,6 +55,34 @@ problem by:
 tool but works especially well with
 [fgsea](https://bioconductor.org/packages/fgsea/).
 
+Several tools have been developed to summarize lists of enriched gene sets,
+but most of them are limited in how they measure gene-set similarity, or do
+not give each cluster a summary label:
+
+-   Semantic similarity, used by
+    [GOSemSim](https://bioconductor.org/packages/GOSemSim/), REVIGO,
+    [clusterProfiler](https://bioconductor.org/packages/clusterProfiler/)
+    and, by default,
+    [simplifyEnrichment](https://bioconductor.org/packages/simplifyEnrichment/),
+    needs an ontology such as the Gene Ontology (GO).
+-   Gene overlap, used by EnrichmentMap, GeneSetCluster,
+    [vissE](https://bioconductor.org/packages/vissE/) and SummArIzeR, gives
+    all genes the same weight. Genes that are in many gene sets then make
+    otherwise unrelated gene sets look similar. The Enrichr visualization
+    weights genes by term frequency-inverse document frequency (TF-IDF),
+    but it was made for visualization, works only with the Enrichr
+    libraries, and has not been systematically benchmarked.
+-   Clusters are summarized by a representative term (REVIGO,
+    clusterProfiler) or a word cloud (GeneSetCluster 2.0,
+    simplifyEnrichment, vissE). SummArIzeR writes a label with a large
+    language model, which needs additional tokens and cannot run offline.
+
+`geneSetSimplifyR` weights genes by TF-IDF, embeds the gene sets with
+latent semantic indexing (LSI) and clusters them on a shared nearest
+neighbor (SNN) graph, with parameters chosen by benchmarking. It works with
+any gene-set collection and gives each cluster one two-word label made
+from the gene-set names.
+
 # Installation
 
 `geneSetSimplifyR` can be installed from Bioconductor by copy pasting this
